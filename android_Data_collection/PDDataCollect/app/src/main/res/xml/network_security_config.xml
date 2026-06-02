@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Network security policy for DopaX.
+    Network security policy for dopa-X.
 
     All upload traffic goes to a single Google Apps Script HTTPS endpoint
     (see CloudUploader). There is no legitimate reason for this app to
@@ -19,3 +19,4 @@
         </trust-anchors>
     </base-config>
 </network-security-config>
+

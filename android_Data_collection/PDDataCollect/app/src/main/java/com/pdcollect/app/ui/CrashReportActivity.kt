@@ -41,7 +41,7 @@ class CrashReportActivity : AppCompatActivity() {
                     val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
                     ShareCompat.IntentBuilder(this)
                         .setType("text/plain")
-                        .setSubject("DopaX Crash Report")
+                        .setSubject("dopa-X Crash Report")
                         .setStream(uri)
                         .setChooserTitle("Send crash report via…")
                         .startChooser()
@@ -52,3 +52,4 @@ class CrashReportActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnDismissCrash).setOnClickListener { finish() }
     }
 }
+

@@ -35,7 +35,7 @@ class CrashHandler(private val context: Context) : Thread.UncaughtExceptionHandl
             }.getOrNull()
 
             logFile.writeText(buildString {
-                appendLine("DopaX Crash Report")
+                appendLine("dopa-X Crash Report")
                 appendLine("==================")
                 appendLine("Time     : ${sdfReadable.format(now)}")
                 appendLine("Thread   : ${thread.name}")
@@ -66,3 +66,4 @@ class CrashHandler(private val context: Context) : Thread.UncaughtExceptionHandl
         defaultHandler?.uncaughtException(thread, throwable)
     }
 }
+

@@ -24,7 +24,7 @@ import com.pdcollect.app.util.PermissionUtils
  *
  * Depending on the selected mode, sampling runs only when:
  *   1. The screen is ON.
- *   2. Either DopaX itself is in the foreground, or another real app is in the foreground.
+ *   2. Either dopa-X itself is in the foreground, or another real app is in the foreground.
  */
 class FaceDistanceService : LifecycleService() {
 
@@ -241,3 +241,4 @@ class FaceDistanceService : LifecycleService() {
         }
     }
 }
+

@@ -30,7 +30,7 @@ class BatteryReminderReceiver : BroadcastReceiver() {
             context, 0, activityIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val title = "DopaX Assessment Time"
+        val title = "dopa-X Assessment Time"
         val text = "It's time to run your complete test battery. Please tap here to start."
 
         val notification = NotificationCompat.Builder(context, "battery_reminders")
@@ -154,3 +154,4 @@ class BatteryReminderReceiver : BroadcastReceiver() {
         }
     }
 }
+

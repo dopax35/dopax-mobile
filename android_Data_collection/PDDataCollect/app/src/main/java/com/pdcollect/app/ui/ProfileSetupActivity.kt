@@ -293,7 +293,7 @@ class ProfileSetupActivity : AppCompatActivity() {
             val pInfo = packageManager.getPackageInfo(packageName, 0)
             val version = pInfo.versionName
             val build = pInfo.longVersionCode
-            findViewById<TextView>(R.id.tvAppVersion)?.text = "DopaX Version: $version ($build)"
+            findViewById<TextView>(R.id.tvAppVersion)?.text = "dopa-X Version: $version ($build)"
         } catch (e: Exception) {
             Log.e("ProfileSetup", "Error getting version info", e)
         }
@@ -393,7 +393,7 @@ class ProfileSetupActivity : AppCompatActivity() {
                         )
                         .setMessage(
                             "This estimates how far your face is from the screen without storing photos or video.\n\n" +
-                                "You can keep it conservative so it runs only while DopaX is open, " +
+                                "You can keep it conservative so it runs only while dopa-X is open, " +
                                 "or use it during passive collection and tests. Faces are processed " +
                                 "on your device by ML Kit; only the distance number is saved."
                         )
@@ -422,7 +422,7 @@ class ProfileSetupActivity : AppCompatActivity() {
                 showAccessibilityGuide(
                     title = "Allow interaction access for background face distance?",
                     featureSummary =
-                        "To measure face distance while other apps are open, DopaX needs to know which app is currently on screen."
+                        "To measure face distance while other apps are open, dopa-X needs to know which app is currently on screen."
                 ) {
                     findViewById<android.widget.RadioButton>(R.id.rbFaceDistanceAppForeground).isChecked = true
                 }
@@ -464,7 +464,7 @@ class ProfileSetupActivity : AppCompatActivity() {
                         .setTitle("Allow recording-status indicator?")
                         .setMessage(
                             "Visual Context shows a small floating dot on your screen whenever recording " +
-                                "is active, so you always know when DopaX is capturing.\n\n" +
+                                "is active, so you always know when dopa-X is capturing.\n\n" +
                                 "The next screen asks for \"Display over other apps\" — this is what lets " +
                                 "the dot stay visible above whatever app you're using."
                         )
@@ -480,8 +480,8 @@ class ProfileSetupActivity : AppCompatActivity() {
                         .setTitle("Allow app-usage detection?")
                         .setMessage(
                             "So research data can be matched to the right activity (e.g. \"typed for " +
-                                "5 min in WhatsApp\"), DopaX needs to know which app is in the foreground.\n\n" +
-                                "On the next screen, scroll to \"DopaX\" and toggle \"Permit usage access\" on. " +
+                                "5 min in WhatsApp\"), dopa-X needs to know which app is in the foreground.\n\n" +
+                                "On the next screen, scroll to \"dopa-X\" and toggle \"Permit usage access\" on. " +
                                 "No app contents are read — only the package name (e.g. com.whatsapp)."
                         )
                         .setPositiveButton("Go to Settings") { _, _ ->
@@ -504,7 +504,7 @@ class ProfileSetupActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Permission still granted")
             .setMessage(
-                "You turned off \"$featureName\", so DopaX has stopped using it — but Android still " +
+                "You turned off \"$featureName\", so dopa-X has stopped using it — but Android still " +
                     "lists the \"$permName\" permission as allowed in your phone settings.\n\n" +
                     "If you'd like to remove it for full peace of mind, open Settings now."
             )
@@ -632,7 +632,7 @@ class ProfileSetupActivity : AppCompatActivity() {
             ),
             PermissionEntry(
                 name = "Recording Indicator",
-                purpose = "A small floating dot shows whenever DopaX is recording. Needs \"Display over other apps\".",
+                purpose = "A small floating dot shows whenever dopa-X is recording. Needs \"Display over other apps\".",
                 isGranted = PermissionUtils.canDrawOverlays(this),
                 openSettings = { PermissionUtils.openOverlaySettings(this) }
             ),
@@ -648,7 +648,7 @@ class ProfileSetupActivity : AppCompatActivity() {
             entries.add(
                 PermissionEntry(
                     name = "Test Reminders",
-                    purpose = "Lets DopaX post the daily prompt notifications at your scheduled times.",
+                    purpose = "Lets dopa-X post the daily prompt notifications at your scheduled times.",
                     isGranted = PermissionUtils.hasNotificationPermission(this),
                     openSettings = { PermissionUtils.openAppSettings(this) }
                 )
@@ -757,3 +757,4 @@ class ProfileSetupActivity : AppCompatActivity() {
         }
     }
 }
+

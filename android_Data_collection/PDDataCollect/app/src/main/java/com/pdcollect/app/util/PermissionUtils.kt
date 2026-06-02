@@ -128,11 +128,11 @@ object PermissionUtils {
         val manufacturer = Build.MANUFACTURER.orEmpty().lowercase(Locale.US)
         return when {
             manufacturer.contains("samsung") ->
-                "Samsung: Settings > Accessibility > Installed apps > DopaX Data Logger"
+                "Samsung: Settings > Accessibility > Installed apps > dopa-X Data Logger"
             manufacturer.contains("google") ->
-                "Pixel: Settings > Accessibility > Downloaded apps or Installed apps > DopaX Data Logger"
+                "Pixel: Settings > Accessibility > Downloaded apps or Installed apps > dopa-X Data Logger"
             else ->
-                "Android: Settings > Accessibility > Installed apps, Downloaded apps, or Services > DopaX Data Logger"
+                "Android: Settings > Accessibility > Installed apps, Downloaded apps, or Services > dopa-X Data Logger"
         }
     }
 
@@ -140,10 +140,10 @@ object PermissionUtils {
         return buildString {
             append(featureSummary)
             append("\n\n")
-            append("DopaX cannot turn this switch on or off itself. Use this path on your phone:\n")
+            append("dopa-X cannot turn this switch on or off itself. Use this path on your phone:\n")
             append(accessibilitySettingsPathLabel())
             append("\n\n")
-            append("Open that page and use the DopaX Data Logger switch to enable or disable access.")
+            append("Open that page and use the dopa-X Data Logger switch to enable or disable access.")
         }
     }
 
@@ -162,3 +162,4 @@ object PermissionUtils {
         context.startActivity(backup)
     }
 }
+

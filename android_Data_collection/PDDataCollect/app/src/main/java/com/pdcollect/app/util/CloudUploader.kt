@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 
 object CloudUploader {
-    // Google Apps Script Web App URL for DopaX Data Upload API
+    // Google Apps Script Web App URL for dopa-X Data Upload API
     const val APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxwRiXDXhUmKER4wdplH2lwtEeLXDlKfP0AZQaU2fqzcmgwjD7NHAr_RkDHdUsTgudXQw/exec"
 
     // Target Google Drive folder where uploaded ZIPs are stored.
@@ -99,3 +99,4 @@ object CloudUploader {
         }
     }
 }
+

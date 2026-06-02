@@ -37,7 +37,7 @@
     <string name="label_visual_context">Visual Context (every 10s)</string>
     <string name="label_interaction_logging">Interaction Logging</string>
     <string name="label_spatial_tracking">Face Distance</string>
-    <string name="label_face_distance_app_foreground">Conservative: only while DopaX is open</string>
+    <string name="label_face_distance_app_foreground">Conservative: only while dopa-X is open</string>
     <string name="label_face_distance_always">Background: while the phone is in use</string>
     <string name="label_face_distance_tmt_only">Measure only during Trail Making Tests</string>
     <string name="label_auto_sync">Automated Cloud Sync (Wi-Fi 2AM)</string>
@@ -45,3 +45,4 @@
     <string name="btn_continue_sanctuary">Continue to Sanctuary</string>
     <string name="label_version_placeholder">Version: —</string>
 </resources>
+

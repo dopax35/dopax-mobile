@@ -8,7 +8,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * PerformanceTrendChartView — Premium dual-series canvas chart for the DopaX dashboard.
+ * PerformanceTrendChartView — Premium dual-series canvas chart for the dopa-X dashboard.
  *
  * Series 1 (primary):  Smooth line chart (e.g., TMT Time in ms or Tapping Bias)
  * Series 2 (optional): Dot overlay (e.g., Error Count on a secondary scale)
@@ -278,3 +278,4 @@ class PerformanceTrendChartView @JvmOverloads constructor(
         canvas.drawText("No trends captured yet", width / 2f, height / 2f, emptyPaint)
     }
 }
+

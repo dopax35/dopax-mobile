@@ -21,10 +21,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:layout_marginTop="32dp"
-                app:title="DopaX Sanctuary"
+                app:title="dopa-X Sanctuary"
                 app:titleTextColor="@color/white"
-                app:navigationIcon="@android:drawable/ic_menu_preferences"
-                app:navigationIconTint="@color/white" />
+                app:navigationIcon="@drawable/dopax_icon_fg"
+                app:navigationIconTint="@null" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -533,3 +533,4 @@ android:textStyle="bold" />
         app:menu="@menu/nav_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
+

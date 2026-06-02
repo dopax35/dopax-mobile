@@ -242,7 +242,7 @@ class SettingsActivity : AppCompatActivity() {
                         .setTitle("Allow camera for face distance?")
                         .setMessage(
                             "This estimates how far your face is from the screen without storing photos or video. " +
-                                "You can keep it conservative so it runs only while DopaX is open."
+                                "You can keep it conservative so it runs only while dopa-X is open."
                         )
                         .setPositiveButton("Continue") { _, _ ->
                             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
@@ -280,7 +280,7 @@ class SettingsActivity : AppCompatActivity() {
                 showAccessibilityGuide(
                     title = "Allow interaction access for background face distance?",
                     featureSummary =
-                        "To measure face distance while other apps are open, DopaX needs to know which app is currently on screen."
+                        "To measure face distance while other apps are open, dopa-X needs to know which app is currently on screen."
                 ) {
                     findViewById<android.widget.RadioButton>(R.id.rbFaceDistanceAppForeground).isChecked = true
                 }
@@ -587,7 +587,7 @@ class SettingsActivity : AppCompatActivity() {
                     showAccessibilityGuide(
                         title = "Manage interaction access",
                         featureSummary =
-                            "Use this screen to turn DopaX interaction access on or off."
+                            "Use this screen to turn dopa-X interaction access on or off."
                     ) {}
                 }
             ),
@@ -617,7 +617,7 @@ class SettingsActivity : AppCompatActivity() {
             entries.add(
                 PermissionEntry(
                     name = "Notifications",
-                    purpose = "Lets DopaX show daily prompts and ongoing collection status.",
+                    purpose = "Lets dopa-X show daily prompts and ongoing collection status.",
                     isGranted = PermissionUtils.hasNotificationPermission(this),
                     requiredNow = false,
                     openSettings = { PermissionUtils.openNotificationSettings(this) }
@@ -741,7 +741,7 @@ class SettingsActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Permission still granted")
             .setMessage(
-                "You turned off \"$featureName\", so DopaX has stopped using it — but Android still " +
+                "You turned off \"$featureName\", so dopa-X has stopped using it — but Android still " +
                     "lists the \"$permName\" permission as allowed in your phone settings.\n\n" +
                     "If you'd like to remove it fully, open Settings now."
             )
@@ -766,7 +766,7 @@ class SettingsActivity : AppCompatActivity() {
         runCatching { profile.clearAll() }
 
         val msg = if (wiped) {
-            "Your data has been deleted. Please also disable \"DopaX\" in Accessibility Settings to fully stop background capture."
+            "Your data has been deleted. Please also disable \"dopa-X\" in Accessibility Settings to fully stop background capture."
         } else {
             "Withdrawal completed but some files could not be deleted. Please uninstall the app to fully remove residual data."
         }
@@ -776,3 +776,4 @@ class SettingsActivity : AppCompatActivity() {
         finishAffinity()
     }
 }
+
