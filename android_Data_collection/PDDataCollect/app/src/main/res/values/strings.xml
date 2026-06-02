@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">DopaX</string>
+    <string name="app_name">dopa-X</string>
     <string name="accessibility_service_description">Collects touch, keystroke, and app usage data for Parkinson\'s Disease research.</string>
     <string-array name="gender_options">
         <item>Male</item>

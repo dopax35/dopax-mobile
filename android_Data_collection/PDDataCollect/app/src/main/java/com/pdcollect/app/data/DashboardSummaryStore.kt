@@ -1074,6 +1074,7 @@ class DashboardSummaryStore(
             "max_tremor_power" -> value in 0.0..100.0
             "tmt_a", "tmt_b" -> value in 1.0..600_000.0
             "tapping_ratio" -> value in 0.05..20.0
+            "tapping_asymmetry" -> value >= 0.0
             else -> value > 0.0
         }
     }
