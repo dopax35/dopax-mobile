@@ -1,29 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Core Palette (Guided Sanctuary) -->
-    <color name="primary">#004086</color>
-    <color name="primary_container">#1E58A7</color>
-    <color name="secondary">#006874</color>
-    <color name="on_surface">#191B21</color>
+    <!-- Dopa-X Brand Palette -->
+    <color name="blue_dark">#0F0F3D</color>
+    <color name="blue">#2828C6</color>
+    <color name="orange">#FF5C35</color>
+    <color name="purple">#5B34A4</color>
+    <color name="warm_gray">#F0F4F8</color>
+    <color name="black">#000000</color>
+    <color name="black_90">#3D3D3D</color>
+    <color name="black_80">#525252</color>
+    <color name="black_70">#666666</color>
+    <color name="gray_50">#8F8F8F</color>
+    <color name="gray_30">#CCCCCC</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Semantic Mapping -->
+    <color name="primary">@color/blue</color>
+    <color name="primary_container">@color/blue_dark</color>
+    <color name="secondary">@color/purple</color>
+    <color name="tertiary">@color/orange</color>
+    <color name="on_surface">@color/black_90</color>
     
     <!-- Surfaces -->
-    <color name="surface">#FAF9FF</color>
-    <color name="surface_container_low">#F3F3FB</color>
-    <color name="surface_container_lowest">#FFFFFF</color>
-    <color name="surface_container_high">#E7E7F0</color>
+    <color name="surface">@color/white</color>
+    <color name="surface_container_low">@color/warm_gray</color>
+    <color name="surface_container_lowest">@color/white</color>
+    <color name="surface_container_high">@color/gray_30</color>
     
-    <!-- Premium Palette -->
-    <color name="premium_indigo_deep">#1A237E</color>
-    <color name="premium_indigo_light">#3F51B5</color>
-    <color name="premium_slate_dark">#263238</color>
-    <color name="premium_gold_accent">#FFD600</color>
-    <color name="gradient_start">#004086</color>
-    <color name="gradient_end">#1A237E</color>
+    <!-- Legacy aliases for backwards compatibility -->
+    <color name="premium_indigo_deep">@color/blue_dark</color>
+    <color name="premium_indigo_light">@color/blue</color>
+    <color name="premium_slate_dark">@color/black_90</color>
+    <color name="premium_gold_accent">@color/orange</color>
+    <color name="gradient_start">@color/orange</color>
+    <color name="gradient_end">@color/purple</color>
     
-    <!-- Alerts & Accents -->
-    <color name="tertiary">#702E00</color>
-    <color name="outline_variant">#C3C6D4</color>
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
+    <color name="outline_variant">@color/gray_30</color>
     <color name="error">#B00020</color>
 </resources>

@@ -19,6 +19,16 @@
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
 
+    <key>UIAppFonts</key>
+    <array>
+        <string>Rajdhani-Regular.ttf</string>
+        <string>Rajdhani-Medium.ttf</string>
+        <string>Rajdhani-Bold.ttf</string>
+        <string>Outfit-Regular.ttf</string>
+        <string>Outfit-Medium.ttf</string>
+        <string>Outfit-Bold.ttf</string>
+    </array>
+
     <!-- iPhone-only -->
     <key>LSRequiresIPhoneOS</key>
     <true/>
