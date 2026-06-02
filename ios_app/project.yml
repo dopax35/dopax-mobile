@@ -1,0 +1,51 @@
+name: PDCollectiOS
+options:
+  bundleIdPrefix: com.pdcollect
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+packages:
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation.git
+    from: "0.9.19"
+
+targets:
+  PDCollectiOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: PDCollectiOS
+        type: group
+    info:
+      path: PDCollectiOS/Info.plist
+    entitlements:
+      path: PDCollectiOS/PDCollectiOS.entitlements
+    capabilities:
+      healthKit:
+        enabled: true
+      backgroundModes:
+        modes:
+          - fetch
+          - processing
+    dependencies:
+      - package: ZIPFoundation
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pdcollect.ios
+        SWIFT_VERSION: 5.9
+        IPHONEOS_DEPLOYMENT_TARGET: 16.0
+        MARKETING_VERSION: 3.7.5
+        CURRENT_PROJECT_VERSION: 87
+        DEVELOPMENT_TEAM: ""
+        INFOPLIST_FILE: PDCollectiOS/Info.plist
+        CODE_SIGN_STYLE: Automatic
+      configs:
+        Debug:
+          DEBUG_INFORMATION_FORMAT: dwarf
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+        Release:
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+          SWIFT_OPTIMIZATION_LEVEL: "-O"

@@ -1,0 +1,507 @@
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="48dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="88dp">
+
+            <!-- Asymmetrical Headline -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="System"
+                android:textSize="20sp"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textSize="42sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="48dp" />
+
+            <!-- Information Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <TextView
+                    android:id="@+id/tvSettingsInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:padding="24dp"
+                    android:textColor="@color/secondary" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Toggles Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_lowest"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchKeyLogging"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Enable Key Logging"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchFaceDistance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Enable Face Distance Tracking"
+                        android:layout_marginBottom="12dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgFaceDistanceMode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <RadioButton
+                            android:id="@+id/rbFaceDistanceAppForeground"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_face_distance_app_foreground" />
+
+                        <RadioButton
+                            android:id="@+id/rbFaceDistanceAlways"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_face_distance_always" />
+
+                        <RadioButton
+                            android:id="@+id/rbFaceDistanceTmtOnly"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_face_distance_tmt_only" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_lowest"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Permissions &amp; privacy"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Tap a row to turn access on or off in the right system screen for your phone."
+                        android:textSize="12sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:id="@+id/permissionStatusContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_lowest"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_medications"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/desc_medications"
+                        android:textSize="12sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:id="@+id/medicationContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddMedication"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_add_medication"
+                        android:textColor="@color/primary"
+                        app:icon="@android:drawable/ic_input_add"
+                        app:iconTint="@color/primary" />
+                        
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPairShelly"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Pair Pillbox Sensor (Shelly)"
+                        app:icon="@drawable/ic_notification" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSaveMedications"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/btn_save_medications" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_lowest"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Beanie"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:id="@+id/tvBeanieDevice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="No Beanie paired"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <View
+                            android:id="@+id/viewBeanieStatusDot"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/shape_dot"
+                            android:backgroundTint="#9E9E9E"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:id="@+id/tvBeanieStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Not set up"
+                            android:textSize="14sp"
+                            android:textColor="@color/secondary" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Skin Temp"
+                                android:textSize="12sp"
+                                android:textColor="@color/secondary" />
+
+                            <TextView
+                                android:id="@+id/tvBeanieTemp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-- C"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/primary" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Heat Flux"
+                                android:textSize="12sp"
+                                android:textColor="@color/secondary" />
+
+                            <TextView
+                                android:id="@+id/tvBeanieHeatFlux"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-- cal/s"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/tertiary" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnManageBeanie"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:text="Manage Beanie Connection" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Body-side metadata card.
+                 Stamped into every motor-test CSV row so analysts can
+                 separate "tested right hand" from "tested DOMINANT hand"
+                 from "tested AFFECTED hand". -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_lowest"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Body side"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Helps researchers compare your dominant vs. non-dominant side, and your PD-affected vs. less-affected side."
+                        android:textSize="12sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="16dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dominant hand"
+                        android:textSize="14sp"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="6dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgDominantHand"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <RadioButton
+                            android:id="@+id/rbDominantRight"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Right" />
+
+                        <RadioButton
+                            android:id="@+id/rbDominantLeft"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Left" />
+
+                        <RadioButton
+                            android:id="@+id/rbDominantUnknown"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Prefer not to say" />
+                    </RadioGroup>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Side more affected by PD"
+                        android:textSize="14sp"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="6dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgAffectedSide"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedRight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Right side" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedLeft"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Left side" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedBoth"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Both sides about equally" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedNone"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Neither / no PD symptoms" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedUnknown"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Prefer not to say" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStopAll"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Stop All Services"
+                android:backgroundTint="@color/tertiary"
+                android:textColor="@color/white"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Withdraw from study: a one-shot, irreversible reset.
+                 Stops collection, cancels uploads + alarms, deletes local data,
+                 clears the saved profile, and prompts to disable the
+                 Accessibility Service in system settings. -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnWithdrawFromStudy"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Withdraw from Study &amp; Delete My Data"
+                android:textColor="@color/tertiary"
+                app:strokeColor="@color/tertiary"
+                android:layout_marginBottom="32dp" />
+
+            <!-- Debug Actions -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Debug Tools"
+                android:textSize="14sp"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnResetConsent"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Reset Consent"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDebugPreview"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="View Recent Data" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

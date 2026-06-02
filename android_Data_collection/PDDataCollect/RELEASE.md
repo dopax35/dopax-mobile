@@ -1,0 +1,154 @@
+# DopaX 3.4.18 (versionCode 81) - release checklist
+
+End-to-end "from clean checkout to AAB uploaded to Play Console
+Internal Testing" steps. Tick items as you go.
+
+---
+
+## 1. One-time setup (skip if your laptop already has it)
+
+- [ ] **JDK 17** installed and `JAVA_HOME` pointing at it.
+      The `jdk17/` folder bundled in this repo is for reference; on
+      Windows you should install a real JDK 17 via Adoptium / Temurin.
+- [ ] **Android SDK** with platform-35 + build-tools-35 + Android
+      SDK Command-line Tools. Easiest path: install Android Studio,
+      open SDK Manager, accept those packages. Then put the SDK path
+      into `local.properties`:
+      ```
+      sdk.dir=C\:\\Users\\you\\AppData\\Local\\Android\\Sdk
+      ```
+- [ ] **Play Console developer account** ($25 one-time).
+- [ ] **App registered** in Play Console with package name
+      `com.pdcollect.app`.
+
+## 2. Pre-flight on the source
+
+- [ ] `git status` is clean. Anything uncommitted goes in or gets
+      reverted before tagging the release.
+- [ ] **Rotate the keystore credentials.** A previous commit
+      (`feeb5a8`, March 25 2026) contained `my-password` and
+      `my-key-alias` in plaintext. Even after the patch that moved
+      these to `keystore.properties`, the *historical* credentials are
+      still in your git log. Either:
+      - Best: generate a NEW keystore + key, update Play App Signing
+        with the new upload key, and rewrite git history with
+        `git filter-repo` to scrub the old strings; or
+      - Acceptable for a private pilot repo: change the keystore
+        password and key password to new values not in the history.
+- [ ] **Confirm `app/keystore.properties` is local-only** (`git ls-files |
+      grep keystore.properties` should be empty). Confirm
+      `my-release-key.jks` is also local-only.
+- [ ] **Confirm `testers.csv` is not committed** — it contains
+      participant emails.
+
+## 3. Build the AAB
+
+```powershell
+cd path\to\PDDataCollect
+.\build-aab.ps1
+```
+
+This script: cleans, runs lint, runs unit tests, and bundles the
+release. It refuses to continue if `app/keystore.properties` is
+missing.
+
+When it finishes you should see:
+```
+================================================================
+  AAB built successfully
+  Path:    .\app\build\outputs\bundle\release\app-release.aab
+  Size:    ~25 MB
+  Mapping: .\app\build\outputs\mapping\release\mapping.txt
+================================================================
+```
+
+## 4. Smoke-test the AAB locally (optional but recommended)
+
+If you have `bundletool` installed, you can install the AAB on a
+connected test device the same way Play would:
+
+```powershell
+bundletool build-apks --bundle=app\build\outputs\bundle\release\app-release.aab `
+                       --output=app\build\outputs\bundle\release\app-release.apks `
+                       --connected-device --ks=app\my-release-key.jks `
+                       --ks-key-alias=YOUR_ALIAS
+bundletool install-apks --apks=app\build\outputs\bundle\release\app-release.apks
+```
+
+Walk through these on the device:
+- [ ] Fresh install → Consent → Profile Setup. The new "Body side"
+      card should appear between Basic Identity and Medications,
+      showing Dominant Hand + Side More Affected by PD radio groups.
+- [ ] Run a Spiral test. Open the resulting `spiral_tracing.csv`
+      (Settings → View Recent Data). Confirm:
+      - First row is `event=START`, `elapsed_ms=0`, x/y/action blank.
+      - Then `event=SAMPLE` rows.
+      - Final row is `event=END`.
+      - Every row has the dominant_hand and affected_side you set.
+- [ ] Settings → Body side → change the affected-side answer. Run
+      another test. Confirm the new value lands in the next test's
+      CSV.
+- [ ] Settings → "Withdraw from study" → confirm dialog → confirm
+      everything is wiped: storage path is empty, prefs are reset,
+      app reopens to Consent screen.
+
+## 5. Upload to Play Console (Internal Testing track)
+
+- [ ] Play Console → DopaX app → Testing → Internal testing →
+      Create new release.
+- [ ] Upload `app-release.aab`.
+- [ ] Upload `mapping.txt` in the same dialog (under "App bundles /
+      mapping file"). Future crash stacks de-obfuscate automatically.
+- [ ] Paste the contents of
+      `fastlane/metadata/android/en-US/changelogs/81.txt` into the
+      "Release notes" box.
+
+## 6. Fill in the Console listing fields
+
+These are one-time per app, but the Console will keep nagging until
+they are all green-ticked.
+
+- [ ] **App content → Privacy policy** → paste the public HTTPS URL
+      where you've hosted `privacy_policy.html`. (If you do not yet
+      have one hosted, GitHub Pages on a private repo backed by a
+      university email is the fastest path.)
+- [ ] **App content → Data safety** → answer using
+      `fastlane/metadata/android/play-console/data-safety.md`.
+- [ ] **App content → Content rating** → run the IARC questionnaire
+      using `fastlane/metadata/android/play-console/content-rating.md`.
+- [ ] **App content → Target audience and content** → 18+, "No, my
+      app is not appealing to children".
+- [ ] **App content → Permissions declaration form** —
+      Console will prompt for `BIND_ACCESSIBILITY_SERVICE`,
+      `SCHEDULE_EXACT_ALARM`, `PACKAGE_USAGE_STATS`,
+      `SYSTEM_ALERT_WINDOW`, `FOREGROUND_SERVICE_SPECIAL_USE`. Paste
+      the per-permission justifications from `data-safety.md`.
+- [ ] **Store listing → App icon, feature graphic, screenshots** —
+      see specs in `play-console/store-listing-checklist.md`. Internal
+      Testing track does NOT require these to roll out, but Play will
+      complain on the dashboard until they are filled in.
+- [ ] **Store settings → App category** → Medical.
+
+## 7. Add testers and roll out
+
+- [ ] Internal testing → Testers tab → create or pick a tester list →
+      paste the participant emails from `testers.csv`. (Reminder: do
+      not commit `testers.csv` back into git.)
+- [ ] Save the **opt-in URL**. This is the link participants tap on
+      their Android phone to install.
+- [ ] Internal testing release → Roll out to Internal Testing.
+      Approval is usually instant.
+- [ ] Send the opt-in URL to participants via the channel agreed in
+      the consent flow (e.g. study-coordinator email, not a public
+      mailing list).
+
+## 8. Post-release
+
+- [ ] Tag the release in git: `git tag v3.4.18 -m "DopaX 3.4.18 (vc 81)"`
+      and push the tag.
+- [ ] Archive a copy of `app-release.aab` and `mapping.txt` outside
+      the repo (e.g. encrypted shared drive). The mapping file is
+      essential for de-obfuscating any crash report from a tester.
+- [ ] Wait 24-48 h for Google's pre-launch report. Address any flags
+      via the Console messages tab; you have 7 days for sensitive-API
+      reviews before the app is auto-removed.

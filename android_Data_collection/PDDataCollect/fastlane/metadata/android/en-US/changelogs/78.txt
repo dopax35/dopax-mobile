@@ -1,0 +1,4 @@
+- Add a clear back button to fullscreen landscape graph views.
+- Clarify daily graph labels so today and recent prior days are easier to distinguish.
+- Show medication times directly on the daily dashboard graph traces.
+- Remove unused legacy external-storage flags for a tighter release security posture.

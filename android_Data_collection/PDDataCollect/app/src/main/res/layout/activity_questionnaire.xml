@@ -1,0 +1,307 @@
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="48dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="88dp">
+
+            <!-- Asymmetrical Headline -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Assessment"
+                android:textSize="20sp"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Questionnaire"
+                android:textSize="42sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="48dp" />
+
+            <!-- Question 1 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="1. Describe how you felt during the assessment."
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:boxBackgroundColor="@color/surface"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeWidth="0dp"
+                        app:boxStrokeWidthFocused="1dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editQ1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="3"
+                            android:gravity="top"
+                            android:hint="Your response..."
+                            android:textSize="14sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Question 2 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="2. How rigid or stiff did you feel?"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="12dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgQ2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q2_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="1" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q2_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="2" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q2_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q2_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q2_5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Question 3 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="3. Level of effort to concentrate?"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="12dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgQ3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q3_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="1" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q3_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="2" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q3_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q3_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q3_5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Question 4 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="4. How much did you tremor in the last hour?"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="12dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgQ4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q4_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="1" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q4_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="2" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q4_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q4_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q4_5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Question 5 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="5. How would you rate your overall day?"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="12dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgQ5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q5_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="1" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q5_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="2" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q5_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="3" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q5_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="4" />
+                        <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/q5_5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="5" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Table Card for symptoms -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_lowest"
+                android:layout_marginBottom="32dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Recent Symptoms"
+                        android:textStyle="bold"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="16dp" />
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:stretchColumns="0">
+
+                        <!-- Simplified rows for brevity in the card -->
+                        <TableRow android:layout_marginBottom="8dp">
+                            <TextView android:text="Sleep Disturbances" android:padding="4dp" />
+                            <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/cbSleep" />
+                            <Spinner android:id="@+id/spnSleep" android:layout_width="80dp" />
+                        </TableRow>
+                        <TableRow android:layout_marginBottom="8dp">
+                            <TextView android:text="Loss of Smell" android:padding="4dp" />
+                            <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/cbSmell" />
+                            <Spinner android:id="@+id/spnSmell" android:layout_width="80dp" />
+                        </TableRow>
+                        <TableRow android:layout_marginBottom="8dp">
+                            <TextView android:text="Chronic Constipation" android:padding="4dp" />
+                            <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/cbConst" />
+                            <Spinner android:id="@+id/spnConst" android:layout_width="80dp" />
+                        </TableRow>
+                        <TableRow android:layout_marginBottom="8dp">
+                            <TextView android:text="Anxiety" android:padding="4dp" />
+                            <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/cbAnxiety" />
+                            <Spinner android:id="@+id/spnAnxiety" android:layout_width="80dp" />
+                        </TableRow>
+                        <TableRow android:layout_marginBottom="8dp">
+                            <TextView android:text="Depression" android:padding="4dp" />
+                            <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/cbDepr" />
+                            <Spinner android:id="@+id/spnDepr" android:layout_width="80dp" />
+                        </TableRow>
+                    </TableLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Final Action -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaveQuestionnaire"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="Save &amp; Finish"
+                app:cornerRadius="16dp"
+                android:backgroundTint="@color/primary"
+                android:textColor="@color/white"
+                android:layout_marginBottom="24dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

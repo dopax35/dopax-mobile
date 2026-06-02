@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network security policy for DopaX.
+
+    All upload traffic goes to a single Google Apps Script HTTPS endpoint
+    (see CloudUploader). There is no legitimate reason for this app to
+    issue cleartext HTTP requests, so we block them explicitly here. This
+    means a misconfiguration or a future dependency that tries to reach
+    an http:// URL will fail loudly instead of silently leaking data
+    over plaintext.
+
+    cleartextTrafficPermitted=false on the base config covers everything;
+    we don't need any per-domain overrides.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

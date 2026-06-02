@@ -1,0 +1,3 @@
+- Fixes deleting large daily log folders from Data Export by moving deletion off the main thread.
+- Avoids expensive sensor-log rescans before removing multi-GB uploaded days.
+- Improves Beanie reconnect reliability for MTU fallback and saved device name variants.

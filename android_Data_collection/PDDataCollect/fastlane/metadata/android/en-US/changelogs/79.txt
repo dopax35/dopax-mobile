@@ -1,0 +1,3 @@
+- Fix daily graph accuracy so today's trace ends at the current time instead of spanning the full day.
+- Style recent comparison days in grey dashed lines, with today's line kept solid blue for clarity.
+- Match medication tick styling to the day: solid for today, dashed for previous days.

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
+
+    <!-- Scrollable story content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Voice Sample"
+                android:textAppearance="?attr/textAppearanceHeadline5"
+                android:textAlignment="center"
+                android:paddingBottom="6dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Read the story aloud at a normal pace when you press Record. The recording stops automatically after 60 seconds."
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textAlignment="center"
+                android:paddingBottom="12dp" />
+
+            <ProgressBar
+                android:id="@+id/progressStory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <!-- Story card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+                <TextView
+                    android:id="@+id/tvStoryText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="טוען כתבה..."
+                    android:textSize="19sp"
+                    android:lineSpacingMultiplier="1.6"
+                    android:padding="16dp"
+                    android:textDirection="rtl"
+                    android:gravity="end|top"
+                    android:textColor="?attr/colorOnSurface"
+                    android:fontFamily="sans-serif" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNewStory"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Load New Story"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Fixed bottom controls -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="?attr/colorSurface">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvTimer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="01:00"
+                android:textSize="52sp"
+                android:textAlignment="center"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                android:paddingBottom="8dp"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRecord"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="Start Recording"
+                android:textSize="18sp"
+                app:cornerRadius="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textAlignment="center"
+                android:textAppearance="?attr/textAppearanceBody2"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:paddingBottom="4dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDone"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:text="Finish and Back to Menu"
+                android:visibility="gone"
+                app:cornerRadius="12dp"
+                style="@style/Widget.Material3.Button.TonalButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExit"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Exit Task"
+                android:layout_marginTop="8dp"
+                app:cornerRadius="12dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="48dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="88dp">
+
+            <!-- Asymmetrical Headline -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/title_start_your"
+                android:textSize="20sp"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/title_journey"
+                android:textSize="42sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="48dp" />
+
+            <!-- Personality & Basic Info Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_basic_identity"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Participant ID"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        android:layout_marginBottom="16dp">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editUserId"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:enabled="false"
+                            android:focusable="false" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="Age"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            android:layout_marginEnd="8dp">
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editAge"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1.5"
+                            android:hint="Gender">
+                            <AutoCompleteTextView
+                                android:id="@+id/spinnerGender"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Body-side metadata: dominant hand + PD-affected side. Stamped
+                 into every motor-test CSV row so analysts can separate
+                 "tested right hand" from "tested DOMINANT hand" from
+                 "tested AFFECTED hand". Editable later in Settings. -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_high"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Body side"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="So researchers can compare your dominant vs. non-dominant side, and your PD-affected vs. less-affected side. You can change this later in Settings."
+                        android:textSize="12sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="20dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Dominant hand"
+                        android:textSize="14sp"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="6dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgDominantHand"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="20dp">
+
+                        <RadioButton
+                            android:id="@+id/rbDominantRight"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Right" />
+
+                        <RadioButton
+                            android:id="@+id/rbDominantLeft"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Left" />
+
+                        <RadioButton
+                            android:id="@+id/rbDominantUnknown"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Prefer not to say" />
+                    </RadioGroup>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Side more affected by PD"
+                        android:textSize="14sp"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="6dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgAffectedSide"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedRight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Right side" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedLeft"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Left side" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedBoth"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Both sides about equally" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedNone"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Neither / no PD symptoms" />
+
+                        <RadioButton
+                            android:id="@+id/rbAffectedUnknown"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Prefer not to say" />
+                    </RadioGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Medications Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_high"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_medications"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="8dp" />
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/desc_medications"
+                        android:textSize="12sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:id="@+id/medicationContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddMedication"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_add_medication"
+                        android:textColor="@color/primary"
+                        app:icon="@android:drawable/ic_input_add"
+                        app:iconTint="@color/primary" />
+                        
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPairShelly"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Pair Pillbox Sensor (Shelly)"
+                        app:icon="@drawable/ic_notification" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Test Battery Reminders Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_test_reminders"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/desc_test_reminders"
+                        android:textSize="12sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="Morning Time"
+                            android:layout_marginEnd="8dp">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editTimeMorning"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:clickable="true"
+                                android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="Noon Time">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editTimeNoon"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:focusable="false"
+                                android:clickable="true"
+                                android:inputType="none" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/hint_random_time"
+                        android:textSize="10sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Collection Options Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_lowest"
+                android:layout_marginBottom="32dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_data_collection"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="16dp" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchScreenCapture"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_visual_context"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchKeylogging"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_interaction_logging"
+                        android:layout_marginBottom="12dp" />
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchFaceDistance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_spatial_tracking"
+                        android:layout_marginBottom="12dp" />
+
+                    <RadioGroup
+                        android:id="@+id/rgFaceDistanceMode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginBottom="12dp">
+
+                        <RadioButton
+                            android:id="@+id/rbFaceDistanceAppForeground"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_face_distance_app_foreground" />
+
+                        <RadioButton
+                            android:id="@+id/rbFaceDistanceAlways"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_face_distance_always" />
+
+                        <RadioButton
+                            android:id="@+id/rbFaceDistanceTmtOnly"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/label_face_distance_tmt_only" />
+                    </RadioGroup>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchAutoUpload"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_auto_sync"
+                        android:layout_marginBottom="24dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/title_system_permissions"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/secondary"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:id="@+id/permissionStatusContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Final Action -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="@string/btn_continue_sanctuary"
+                app:cornerRadius="16dp"
+                android:backgroundTint="@color/primary"
+                android:textColor="@color/white"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:id="@+id/tvAppVersion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label_version_placeholder"
+                android:textSize="12sp"
+                android:textColor="@color/secondary"
+                android:gravity="center"
+                android:layout_marginBottom="32dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

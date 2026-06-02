@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@android:drawable/ic_menu_preferences"
+            android:title="Settings" />
+        <item
+            android:id="@+id/nav_data_privacy"
+            android:icon="@android:drawable/ic_menu_save"
+            android:title="Data &amp; Privacy" />
+        <item
+            android:id="@+id/nav_hr_monitor"
+            android:icon="@android:drawable/ic_dialog_info"
+            android:title="HR Monitor" />
+        <item
+            android:id="@+id/nav_beanie_monitor"
+            android:icon="@android:drawable/ic_menu_compass"
+            android:title="Beanie Monitor" />
+        <item
+            android:id="@+id/nav_debug"
+            android:icon="@android:drawable/ic_menu_manage"
+            android:title="Debug Tools" />
+        <item
+            android:id="@+id/nav_passive_collection"
+            android:icon="@android:drawable/ic_menu_recent_history"
+            android:title="Start Passive Collection" />
+    </group>
+</menu>

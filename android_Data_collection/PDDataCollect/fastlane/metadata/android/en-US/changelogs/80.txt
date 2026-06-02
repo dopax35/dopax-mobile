@@ -1,0 +1,3 @@
+- Add spoken get-ready, start, and stop cues to the Hand Turning test, with audible beep fallback if TTS is unavailable.
+- Improve hand-turning teardown so countdown and speech resources shut down cleanly during navigation or activity destruction.
+- Re-verify the Android release path with lint, unit tests, and signed AAB bundling before shipping.

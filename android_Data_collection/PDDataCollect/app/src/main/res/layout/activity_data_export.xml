@@ -1,0 +1,75 @@
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="88dp">
+
+        <!-- Asymmetrical Headline -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Data"
+            android:textSize="20sp"
+            android:textColor="@color/secondary"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Export"
+            android:textSize="42sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Empty State -->
+        <TextView
+            android:id="@+id/tvEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="No data collected yet"
+            android:textSize="16sp"
+            android:textColor="@color/secondary"
+            android:visibility="gone" />
+
+        <!-- List Container -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_container_low"
+            android:layout_marginBottom="24dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerDates"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:padding="16dp" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Final Action -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="Return to Sanctuary"
+            app:cornerRadius="16dp"
+            android:backgroundTint="@color/surface_container_high"
+            android:textColor="@color/secondary"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

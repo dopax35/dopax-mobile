@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Privacy Policy - DopaX / PD Data Collection</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #333; }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { margin-top: 30px; }
+        code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Privacy Policy &mdash; DopaX / PD Data Collection</h1>
+    <p><strong>Effective Date:</strong> April 23, 2026</p>
+
+    <p>This policy describes how the DopaX research app (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;the app&rdquo;) collects and uses your information. The app is intended only for participants in our Parkinson&rsquo;s Disease research pilot.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>When the matching toggle is enabled, the app collects:</p>
+    <ul>
+        <li><strong>Motion sensor data</strong> &mdash; accelerometer, gyroscope, and magnetometer readings, sampled continuously while the app runs.</li>
+        <li><strong>Touch interactions</strong> &mdash; tap, focus and scroll coordinates and timing across apps you use, captured via Android&rsquo;s Accessibility Service.</li>
+        <li><strong>Keystroke metadata</strong> &mdash; the timing of each key press and a non-identifying category (letter, digit, space, punctuation, backspace, enter). <strong>The literal characters you type are never recorded.</strong> Password fields and known sensitive apps (banking, password managers, messengers, system IMEs) are skipped entirely.</li>
+        <li><strong>App usage patterns</strong> &mdash; the package name and screen of apps you open and close.</li>
+        <li><strong>Active motor tests &amp; questionnaires</strong> &mdash; results of the Trail Making Test, Finger Tapping, Hand Turning, Spiral Tracing, Leg Agility, and the daily symptom questionnaire.</li>
+        <li><strong>Face distance</strong> &mdash; front-camera frames are processed locally on the device by Google ML Kit. Only numeric distance and head-pose values are saved. Raw images are never stored or transmitted.</li>
+        <li><strong>Heart rate</strong> &mdash; only if you pair a Bluetooth/ANT+ heart-rate monitor.</li>
+        <li><strong>Profile information you provide</strong> &mdash; age, gender, current medications, and a randomly generated User ID. We do <em>not</em> ask for your name, email, phone number, or address.</li>
+    </ul>
+
+    <h2>2. Where Data Is Stored</h2>
+    <p>All raw data is first written to the app&rsquo;s private storage on your device at <code>Android/data/com.pdcollect.app/files/PDCollect/</code>. Files older than 365 days are automatically deleted from the device.</p>
+
+    <h2>3. Automatic Upload</h2>
+    <p><strong>By default, the app uploads a daily ZIP archive of the previous day&rsquo;s data to a study-controlled cloud endpoint, identified only by your User ID.</strong> Uploads are scheduled around 02:00 over Wi-Fi, with a fallback to mobile data later in the day if Wi-Fi is unavailable. You can disable automatic upload in Settings, in which case data stays only on your device until you choose to share it.</p>
+
+    <h2>4. How We Use the Data</h2>
+    <p>The data is used exclusively for research into digital biomarkers of Parkinson&rsquo;s Disease. It is not used for advertising, sold, or shared with parties outside the study team.</p>
+
+    <h2>5. Data Sharing</h2>
+    <p>Uploaded data is accessible only to the study team and to the cloud-storage provider hosting the endpoint (Google Cloud, via a Google Apps Script back-end). No data is shared with advertisers, insurers, employers, or other third parties.</p>
+
+    <h2>6. Your Choices &amp; Your Rights</h2>
+    <ul>
+        <li>You can pause or stop any individual data stream from Settings.</li>
+        <li>You can disable automatic upload from Settings.</li>
+        <li>You can withdraw from the study at any time by uninstalling the app and contacting the study coordinator. On request we will delete the data already uploaded under your User ID.</li>
+    </ul>
+
+    <h2>7. Security</h2>
+    <p>Data is transmitted over HTTPS. Locally stored data is held inside this app&rsquo;s private folder, which is not readable by other apps unless you grant them broad file-access permission. We strongly recommend enabling a screen lock on your device.</p>
+
+    <h2>8. Children</h2>
+    <p>The app is intended for adult research participants only and is not designed for use by anyone under 18.</p>
+
+    <h2>9. Contact</h2>
+    <p>If you have any questions about this policy or the study, please contact the study coordinator at the address provided in your consent form.</p>
+</body>
+</html>

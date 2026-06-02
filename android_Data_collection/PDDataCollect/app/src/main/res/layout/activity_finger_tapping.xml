@@ -1,0 +1,143 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/surface">
+
+    <!-- Header / Info -->
+    <LinearLayout
+        android:id="@+id/layoutInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="88dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test"
+            android:textSize="20sp"
+            android:textColor="@color/secondary"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Finger Tapping"
+            android:textSize="42sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface"
+            android:layout_marginBottom="32dp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/surface_container_low"
+            android:layout_marginBottom="32dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Select hand and tap the two buttons alternately as fast as possible for 10 seconds."
+                    android:textSize="16sp"
+                    android:textColor="@color/on_surface"
+                    android:layout_marginBottom="24dp" />
+
+                <RadioGroup
+                    android:id="@+id/rgSide"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp">
+                    <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/rbLeft" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Left Hand" android:paddingEnd="24dp" />
+                    <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/rbRight" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Right Hand" android:checked="true" />
+                </RadioGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStartTapping"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="Start Test"
+            app:cornerRadius="16dp"
+            android:backgroundTint="@color/primary"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+    <!-- Test UI (Hidden initially) -->
+    <RelativeLayout
+        android:id="@+id/layoutTest"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="10s"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="32dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStartTappingStatus"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_below="@id/tvTimer"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="12dp"
+            android:alpha="0.45"
+            android:backgroundTint="@color/primary"
+            android:enabled="false"
+            android:text="Test Running"
+            android:textColor="@color/white"
+            android:visibility="gone"
+            app:cornerRadius="16dp" />
+
+        <TextView
+            android:id="@+id/tvTapCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Taps: 0"
+            android:textSize="20sp"
+            android:layout_below="@id/btnStartTappingStatus"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="12dp" />
+
+        <!-- Whack-a-Mole Game Area -->
+        <FrameLayout
+            android:id="@+id/gameArea"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="160dp"
+            android:background="@color/surface_container_lowest">
+
+            <ImageView
+                android:id="@+id/ivMole"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="32dp"
+                android:src="@drawable/ic_mole"
+                android:contentDescription="Whack Me!"
+                android:padding="8dp" />
+
+        </FrameLayout>
+    </RelativeLayout>
+</LinearLayout>

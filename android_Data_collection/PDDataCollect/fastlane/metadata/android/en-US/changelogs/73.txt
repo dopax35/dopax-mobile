@@ -1,0 +1,3 @@
+- Align Beanie BLE reconnect behavior with the dedicated Beanie app connection flow.
+- Ignore stale GATT callbacks and restart stuck connects, MTU failures, and service-discovery failures.
+- Clear stale Beanie vitals from the UI while the service is reconnecting.

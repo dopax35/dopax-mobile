@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DopaX</string>
+    <string name="accessibility_service_description">Collects touch, keystroke, and app usage data for Parkinson\'s Disease research.</string>
+    <string-array name="gender_options">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Other</item>
+        <item>Prefer not to say</item>
+    </string-array>
+    <string name="title_critical_setup">⚠️ Critical Setup Required</string>
+    <string name="msg_permissions_missing">System permissions missing. Background collection may not be reliable.</string>
+    <string name="btn_repair_config">Repair Configuration</string>
+    <string name="label_daily_tasks">Daily Tasks</string>
+    <string name="btn_tmt">🧠  Trail Making Test</string>
+    <string name="btn_user_report">📝  User Report</string>
+    <string name="label_active_assessments">Active Assessments</string>
+    <string name="desc_active_assessments">Bradykinesia, tremor, and other structured tests</string>
+    <string name="label_analytics">Symptom Analytics</string>
+    <string name="label_tmt_chart">Trail Making Test – Last 30 Days</string>
+    <string name="label_chart_legend">● Time (ms)   ● Errors</string>
+    <string name="label_part_a">Part A</string>
+    <string name="label_part_b">Part B</string>
+    <string name="label_bias_chart">Finger Tapping Bias (Right – Left)</string>
+    <string name="label_bias_legend">Positive = Right stronger  |  Negative = Left stronger</string>
+    <string name="title_start_your">Start Your</string>
+    <string name="title_journey">Journey</string>
+    <string name="title_basic_identity">Basic Identity</string>
+    <string name="title_medications">Medications</string>
+    <string name="desc_medications">Current therapeutic regimen</string>
+    <string name="btn_add_medication">+ Add Medication</string>
+    <string name="btn_save_medications">Save Medications</string>
+    <string name="title_test_reminders">Test Reminders</string>
+    <string name="desc_test_reminders">Set times to run the full assessment</string>
+    <string name="hint_random_time">* A 3rd random time will trigger between 3PM - 8PM.</string>
+    <string name="title_data_collection">Data Collection</string>
+    <string name="label_visual_context">Visual Context (every 10s)</string>
+    <string name="label_interaction_logging">Interaction Logging</string>
+    <string name="label_spatial_tracking">Face Distance</string>
+    <string name="label_face_distance_app_foreground">Conservative: only while DopaX is open</string>
+    <string name="label_face_distance_always">Background: while the phone is in use</string>
+    <string name="label_face_distance_tmt_only">Measure only during Trail Making Tests</string>
+    <string name="label_auto_sync">Automated Cloud Sync (Wi-Fi 2AM)</string>
+    <string name="title_system_permissions">System Permissions</string>
+    <string name="btn_continue_sanctuary">Continue to Sanctuary</string>
+    <string name="label_version_placeholder">Version: —</string>
+</resources>

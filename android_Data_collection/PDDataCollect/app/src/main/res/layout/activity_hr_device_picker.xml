@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="100dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="88dp">
+
+            <!-- Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Heart Rate"
+                android:textSize="20sp"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connect Device"
+                android:textSize="42sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="32dp" />
+
+            <!-- Current device status card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardCurrentDevice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Current Device"
+                        android:textSize="12sp"
+                        android:textColor="@color/secondary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/tvCurrentDevice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No device paired"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <View
+                            android:id="@+id/viewHrDot"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/shape_dot"
+                            android:backgroundTint="#9E9E9E"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:id="@+id/tvHrStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Disconnected"
+                            android:textSize="14sp"
+                            android:textColor="@color/secondary" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvCurrentBpm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="— bpm"
+                        android:textSize="36sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary"
+                        android:layout_marginTop="12dp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Scan Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScanDevices"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="Scan for HR Devices"
+                app:cornerRadius="16dp"
+                android:backgroundTint="@color/primary"
+                android:textColor="@color/white"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Scanning Progress -->
+            <LinearLayout
+                android:id="@+id/layoutScanning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp">
+
+                <ProgressBar
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scanning for BLE heart rate monitors…"
+                    android:textSize="14sp"
+                    android:textColor="@color/secondary" />
+            </LinearLayout>
+
+            <!-- Discovered devices -->
+            <TextView
+                android:id="@+id/tvDevicesHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nearby Devices"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/secondary"
+                android:visibility="gone"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:id="@+id/deviceListContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <!-- Disconnect button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDisconnect"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Remove Paired Device"
+                app:cornerRadius="16dp"
+                android:textColor="@color/error"
+                app:strokeColor="@color/error"
+                android:layout_marginTop="24dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

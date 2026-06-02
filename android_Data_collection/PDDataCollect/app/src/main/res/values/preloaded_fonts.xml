@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Tells the FontsContractCompat to fetch these fonts at app start so the
+    first screen doesn't briefly render in the system default while the
+    download completes.
+-->
+<resources>
+    <array name="preloaded_fonts" translatable="false">
+        <item>@font/lexend</item>
+        <item>@font/lexend_medium</item>
+        <item>@font/lexend_bold</item>
+    </array>
+</resources>

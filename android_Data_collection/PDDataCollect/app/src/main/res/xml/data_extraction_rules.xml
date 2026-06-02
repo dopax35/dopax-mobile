@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    PRIVACY: Exclude all PD research data and credentials from Android cloud
+    backup and device-to-device transfer. Participant CSVs, screenshots,
+    user profile and any cached zips MUST NOT leave the device through Auto
+    Backup or D2D transfer; they leave only through the explicit upload path
+    documented in the privacy policy.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database" path="."/>
+        <exclude domain="file" path="."/>
+        <exclude domain="external" path="."/>
+        <exclude domain="root" path="."/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="."/>
+        <exclude domain="database" path="."/>
+        <exclude domain="file" path="."/>
+        <exclude domain="external" path="."/>
+        <exclude domain="root" path="."/>
+    </device-transfer>
+</data-extraction-rules>

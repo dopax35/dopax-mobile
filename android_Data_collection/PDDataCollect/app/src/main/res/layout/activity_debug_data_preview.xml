@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:id="@+id/llContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Recent Data (Debug)"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/tvDateLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#666666"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Sensors -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="sensors.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvSensors"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <!-- Touch -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="touch.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvTouch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <!-- Keys -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="keys.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvKeys"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <!-- Apps -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="apps.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvApps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <!-- TMT Results -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="tmt_results.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvTmt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <!-- Face Distance -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="face_distance.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvFaceDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <!-- Beanie Temperature -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="beanie_temperature.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvBeanieTemperature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+        <!-- Beanie IMU -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="beanie_imu.csv"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tvBeanieImu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:background="#F0F0F0"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,3 @@
+- Add daily dashboard graphs that show today in blue and the previous two days in grey using moving averages.
+- Tap any graph to open a fullscreen landscape view with pinch-to-zoom, pan, and double-tap reset.
+- Harden release signing by loading keystore credentials from a local-only file instead of tracked build code.

@@ -1,0 +1,3 @@
+- Align Leg Agility with Hand Turning so both motor tests use the same get-ready, start, and stop audio cues, with spoken prompts when TTS is available.
+- Prevent Samsung auto-rotate from interrupting Hand Turning by keeping the test orientation locked during pronation-supination.
+- Re-verify release security checks, Android lint, unit tests, and signed AAB bundling for this internal test build.

@@ -1,0 +1,7 @@
+Version 3.0.1 - distance accuracy and performance-trends update.
+
+- More accurate face-distance measurement with improved camera calibration.
+- New option to measure face distance all the time or only during TMT.
+- New daily graphs for stride length, stride speed, and tremor-window power.
+- New long-term trend graphs for gait peaks, TMT A/B, and tapping ratio.
+- Dashboard summaries are retained on-device even after older uploaded raw logs are removed.

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Downloadable Lexend font from the Google Fonts provider.
+    Lexend is recommended in our DESIGN.md for its proven readability benefits
+    for readers with reading-related disabilities — relevant for our PD pilot
+    population, where motor and visual symptoms can compound reading effort.
+
+    Using Downloadable Fonts (rather than bundling .ttf files) keeps the APK
+    small and lets Google Play Services cache the font system-wide.
+-->
+<font-family xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:fontProviderAuthority="com.google.android.gms.fonts"
+    app:fontProviderPackage="com.google.android.gms"
+    app:fontProviderQuery="name=Lexend&amp;weight=400"
+    app:fontProviderCerts="@array/com_google_android_gms_fonts_certs" />

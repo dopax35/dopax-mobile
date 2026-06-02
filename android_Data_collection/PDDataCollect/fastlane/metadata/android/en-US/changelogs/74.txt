@@ -1,0 +1,3 @@
+- Restore full-resolution passive accelerometer, gyroscope, and magnetometer recording after the storage-conservation regression.
+- Keep batched sensor writes for stability without down-sampling or rounding away raw motion detail.
+- Preserve participant exports so uploaded and manual day archives keep the expected full sensor traces.

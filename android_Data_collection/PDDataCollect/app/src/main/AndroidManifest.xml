@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- SCREEN_CAPTURE_DISABLED: FOREGROUND_SERVICE_MEDIA_PROJECTION removed intentionally -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- MANAGE_EXTERNAL_STORAGE removed: the app only ever writes inside its own
+         private app-specific external storage (getExternalFilesDir), which does
+         NOT require legacy or broad storage permissions. Keeping those flags
+         would be a Play Policy red flag and a privacy risk. -->
+    <!-- <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" /> -->
+    <!-- SYSTEM_ALERT_WINDOW left in only if you actually display overlay UI; if
+         not, remove this too — it is one of the most-scrutinized permissions. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+
+    <!-- Bluetooth LE permissions (Heart Rate Monitor) -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+
+    <application
+        android:name=".PDCollectApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.PDDataCollect"
+        android:supportsRtl="true"
+        android:resizeableActivity="true"
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="35">
+
+        <!-- Preload Lexend so the first screen doesn't render in the system
+             fallback font while the Google Play Services Fonts provider
+             fetches it. See res/values/preloaded_fonts.xml. -->
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+        <!-- Login (launcher) -->
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="true"
+            android:resizeableActivity="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.ConsentActivity"
+            android:exported="false"
+            android:resizeableActivity="true">
+        </activity>
+
+        <activity android:name=".ui.ProfileSetupActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.MainActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.TrailMakingTestActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.ActiveTestsActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.FingerTappingActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.HandTurningActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.SpiralTracingActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.LegAgilityActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.QuestionnaireActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.DataExportActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.DebugDataPreviewActivity"
+            android:exported="false" />
+
+        <activity android:name=".ui.CrashReportActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:excludeFromRecents="true" />
+
+        <activity android:name=".ui.SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.ChartDetailActivity"
+            android:exported="false" />
+
+        <!-- FileProvider for sharing exported zip files -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Passive sensor collection foreground service -->
+        <service
+            android:name=".service.PDCollectService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Research data collection for Parkinson's Disease study" />
+        </service>
+
+        <!-- Face distance foreground service -->
+        <service
+            android:name=".service.FaceDistanceService"
+            android:exported="false"
+            android:foregroundServiceType="camera" />
+
+        <!-- Accessibility service -->
+        <service
+            android:name=".service.DataAccessibilityService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- Boot receiver -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Battery Orchestration and Reminder -->
+        <activity android:name=".ui.TestBatteryCoordinatorActivity"
+            android:exported="false" />
+        <receiver android:name=".receiver.BatteryReminderReceiver"
+            android:exported="false" />
+
+        <!-- Voice Sample -->
+        <activity android:name=".ui.VoiceSampleActivity"
+            android:exported="false" />
+
+        <!-- Evening Reminder -->
+        <receiver android:name=".receiver.EveningReminderReceiver"
+            android:exported="false" />
+
+        <!-- ANT+ / BLE Heart Rate Monitor -->
+        <activity android:name=".ui.HRDevicePickerActivity"
+            android:exported="false" />
+        <activity android:name=".ui.BeanieDevicePickerActivity"
+            android:exported="false" />
+        <service
+            android:name=".service.AntHRService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+        <service
+            android:name=".service.BeanieService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+
+
+    </application>
+</manifest>

@@ -1,0 +1,3 @@
+- Fix fresh setup so passive collection starts by default once onboarding is completed.
+- Restore medication editing in Settings so saved medication lists are available again for reporting.
+- Fix profile setup so new installs are no longer treated as an existing participant profile.

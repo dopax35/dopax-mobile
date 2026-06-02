@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PDDataCollect" parent="Theme.Material3.Light.NoActionBar">
+        <!-- Core Colors -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_container_high</item>
+
+        <!-- Typography: per DESIGN.md, the app uses Lexend everywhere for its
+             improved readability for users with reading-related disabilities.
+             Lexend is loaded as a Downloadable Font from Google Play Services
+             (see res/font/lexend*.xml) so we don't ship the .ttf binaries. -->
+        <item name="android:fontFamily">@font/lexend</item>
+        <item name="fontFamily">@font/lexend</item>
+
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.DopaX.HeadlineLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.DopaX.TitleMedium</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.DopaX.BodyLarge</item>
+
+        <!-- Component Styling -->
+        <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
+        <item name="materialCardViewStyle">@style/Widget.Material3.CardView.Elevated</item>
+    </style>
+
+    <style name="TextAppearance.DopaX.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:fontFamily">@font/lexend_bold</item>
+        <item name="fontFamily">@font/lexend_bold</item>
+    </style>
+
+    <style name="TextAppearance.DopaX.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">@color/secondary</item>
+        <item name="android:fontFamily">@font/lexend_medium</item>
+        <item name="fontFamily">@font/lexend_medium</item>
+    </style>
+
+    <style name="TextAppearance.DopaX.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="android:fontFamily">@font/lexend</item>
+        <item name="fontFamily">@font/lexend</item>
+        <item name="android:lineHeight">24sp</item>
+    </style>
+</resources>

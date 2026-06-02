@@ -1,0 +1,36 @@
+# Android
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/app/build
+captures/
+.externalNativeBuild
+.cxx
+local.properties
+
+# Secrets & Private Data
+my-release-key.jks
+testers.csv
+*.jks
+*.keystore
+keystore.properties
+
+# Gradle
+.gradle/
+build/
+
+# JDK & SDK (if included in scratch)
+jdk17/
+jdk17.zip
+sdk-tools.zip
+android-sdk/
+sdk/
+PDAnalysis_temp/

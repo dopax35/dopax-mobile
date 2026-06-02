@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Leg Agility"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Hold the phone firmly against your thigh. Lift and stomp your foot as fast and as high as possible for 10 seconds."
+        android:textSize="16sp"
+        android:gravity="center"
+        android:layout_marginBottom="32dp" />
+
+    <RadioGroup
+        android:id="@+id/rgSide"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="32dp">
+        <RadioButton android:id="@+id/rbLeft" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Left Leg" android:paddingEnd="24dp" />
+        <RadioButton android:id="@+id/rbRight" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Right Leg" android:checked="true" />
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/tvTimer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="10s"
+        android:textSize="64sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="32dp" />
+
+    <Button
+        android:id="@+id/btnStartLeg"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Start Test" />
+
+</LinearLayout>

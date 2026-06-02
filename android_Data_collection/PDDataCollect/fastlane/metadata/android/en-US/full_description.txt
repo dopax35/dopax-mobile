@@ -1,0 +1,41 @@
+DopaX is a research data-collection app developed for an internal pilot study of digital biomarkers in Parkinson's disease (PD). It is not a diagnostic tool, not a medical device, and is not intended for the general public.
+
+WHAT IT DOES
+
+DopaX combines a short daily test battery with passive background sensing to give researchers a longitudinal picture of motor and behavioural signals that may correlate with PD progression.
+
+The daily test battery (about 5 minutes) includes:
+• Spiral tracing — draw a spiral, recording every touch coordinate.
+• Hand turning — wrist accelerometer + gyroscope while you alternate palm up / palm down.
+• Finger tapping — alternating taps between two on-screen targets.
+• Leg agility — phone strapped to the thigh, lifting and lowering.
+• Trail-Making Test — connect numbered dots in order.
+• Brief PD-related questionnaire.
+
+Each motor test is run on the right hand/leg and then the left, with the dominant hand and the side most affected by PD recorded once in your profile so the data set can be analysed by side.
+
+Passive (background) signals are collected only when you have explicitly enabled them in Settings. Each is optional and has its own toggle.
+
+WHAT IS COLLECTED, AND WHAT IS NOT
+
+We are deliberate about not collecting raw content. From the keyboard we record only the timing of keystrokes and a category for each key (letter / digit / space / punctuation / backspace / enter), never the actual letters typed. Password fields are skipped entirely. We never record your screen, microphone, location, or contacts. The on-device camera, if you enable face-distance tracking, is used only to estimate cm-to-screen and only the cm value is stored — no images leave your device.
+
+Full details of every data stream and its purpose are in the in-app Privacy Policy and Consent screen, which you must accept before any collection starts.
+
+DATA UPLOAD AND DELETION
+
+Data is collected to an app-private folder on your device. With your permission, it is uploaded once a day over Wi-Fi (with a cellular fallback if Wi-Fi has not been available for 12 hours) to a research server. You can disable automatic upload at any time. All collected data is excluded from Android cloud backup and device-to-device transfer.
+
+A Withdraw From Study button in Settings will, in one tap, stop all collection, cancel scheduled uploads and reminders, and irreversibly delete every file the app has saved on your device. It also prompts you to disable the Accessibility Service in system settings to fully stop background capture.
+
+PERMISSIONS, EXPLAINED
+
+Each permission is requested only when the corresponding feature is turned on, with a clear explanation in the app of what it does and why it is needed.
+
+ELIGIBILITY
+
+This app is distributed only to enrolled pilot participants. If you have not been enrolled by the research team, please do not install it.
+
+CONTACT
+
+For questions about the study, the data, or your rights, contact the research team using the email shown in the in-app Privacy Policy.

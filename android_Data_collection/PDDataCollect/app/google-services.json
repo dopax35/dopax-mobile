@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "225458522869",
+    "project_id": "dopa-x-app",
+    "storage_bucket": "dopa-x-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225458522869:android:eda31d672ef87793f653bc",
+        "android_client_info": {
+          "package_name": "com.pdcollect.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "225458522869-1jq422420c8oeml7h3becivbdlphmk3m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pdcollect.app",
+            "certificate_hash": "67af217fe7790f604596924fe401e023dc250e0b"
+          }
+        },
+        {
+          "client_id": "225458522869-pplb3rhtqfk4qvpcbj27cj8jaeugi0ec.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pdcollect.app",
+            "certificate_hash": "d571ba1562d0674c33ee5262819a23fc9128282b"
+          }
+        },
+        {
+          "client_id": "225458522869-hc0g32l8id76fadjjo02cqlqa44700h0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdK73DLwY9uwlyTGiSwKB92edPFKh6qzA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "225458522869-hc0g32l8id76fadjjo02cqlqa44700h0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

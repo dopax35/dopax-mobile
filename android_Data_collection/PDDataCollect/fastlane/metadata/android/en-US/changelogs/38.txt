@@ -1,0 +1,32 @@
+Version 3.0.0 — privacy, reliability and data-quality release.
+
+PRIVACY & SAFETY
+• Keystroke capture is now redacted: only the category of each key
+  (letter / digit / space / punctuation / backspace / enter) is recorded.
+  The actual characters you type are never saved.
+• Password fields and sensitive apps are skipped entirely.
+• New "Withdraw from study" button: one tap stops all collection,
+  cancels scheduled uploads and reminders, and deletes every file the
+  app has stored on your device.
+• All data is now excluded from Android cloud backup and
+  device-to-device transfer.
+• Cleartext (http://) network traffic is now blocked at the OS level.
+• Permission rationale dialogs explain exactly what is captured and
+  what is not for each feature, before any system prompt appears.
+
+RELIABILITY
+• Daily upload split into a periodic dispatcher + one-time worker
+  with proper exponential backoff and a Wi-Fi → cellular fallback;
+  a transient outage no longer means a 24-hour wait.
+
+DATA QUALITY
+• Motor tests now record an explicit START / SAMPLE / END event
+  schema with monotonic elapsed time, so reaction latency is no longer
+  inferred from the first user touch. The Spiral test in particular
+  now logs its true start time.
+• New profile fields for dominant hand and the PD-affected side are
+  stamped on every motor-test row to enable side-by-side analysis.
+
+UI
+• Lexend font applied for improved readability for participants with
+  reading-related disabilities.

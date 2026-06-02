@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>PDCollect</string>
+    <key>CFBundlePackageType</key>
+    <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+
+    <!-- iPhone-only -->
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+
+    <!-- UIApplication principal class — LoggingApplication intercepts in-app touches -->
+    <key>NSPrincipalClass</key>
+    <string>LoggingApplication</string>
+
+    <!-- HealthKit -->
+    <key>NSHealthShareUsageDescription</key>
+    <string>PDCollect reads walking speed, step length, walking steadiness, heart rate, and HRV from HealthKit to track Parkinson's disease symptom progression over time.</string>
+
+    <!-- Motion -->
+    <key>NSMotionUsageDescription</key>
+    <string>PDCollect uses motion sensors continuously to record accelerometer and gyroscope data for Parkinson's disease research. Sensor data is collected both during active tests and passively in the background.</string>
+
+    <!-- Camera (face distance measurement) -->
+    <key>NSCameraUsageDescription</key>
+    <string>PDCollect uses the front camera every 5 seconds to estimate the distance between your face and the phone screen. This provides a facial masking and phone-holding-distance metric relevant to Parkinson's disease research. No video is recorded or stored.</string>
+
+    <!-- Background Modes -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>processing</string>
+    </array>
+
+    <!-- BGTask identifiers (must match BackgroundCollectionManager constants) -->
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.pdcollect.ios.bg-refresh</string>
+        <string>com.pdcollect.ios.bg-processing</string>
+    </array>
+
+    <!-- UI -->
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <key>UIWindowSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>Default Configuration</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+    </array>
+</dict>
+</plist>
