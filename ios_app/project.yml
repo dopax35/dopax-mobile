@@ -37,8 +37,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.pdcollect.ios
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
-        MARKETING_VERSION: 3.7.10
-        CURRENT_PROJECT_VERSION: 94
+        MARKETING_VERSION: 3.7.11
+        CURRENT_PROJECT_VERSION: 95
         DEVELOPMENT_TEAM: ""
         INFOPLIST_FILE: PDCollectiOS/Info.plist
         CODE_SIGN_STYLE: Automatic
