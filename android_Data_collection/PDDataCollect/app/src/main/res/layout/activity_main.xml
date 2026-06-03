@@ -16,24 +16,41 @@
             android:background="@drawable/bg_premium_header"
             app:elevation="0dp">
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/topAppBar"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:layout_marginTop="32dp"
-                app:title="dopa-X Sanctuary"
-                app:titleTextColor="@color/white"
-                app:navigationIcon="@drawable/dopax_icon_fg"
-                app:navigationIconTint="@null" />
+                android:layout_height="match_parent">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="24dp"
-                android:paddingTop="8dp"
-                android:text="Welcome back to your Sanctuary."
-                android:textColor="#CCFFFFFF"
-                android:textSize="16sp" />
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/dopax_graphic_element"
+                    android:scaleType="centerCrop"
+                    android:alpha="0.25"
+                    android:importantForAccessibility="no" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.appbar.MaterialToolbar
+                        android:id="@+id/topAppBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="?attr/actionBarSize"
+                        android:layout_marginTop="32dp"
+                        app:title="dopa-X Sanctuary"
+                        app:titleTextColor="@color/white" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="24dp"
+                        android:paddingTop="8dp"
+                        android:text="Welcome back to your Sanctuary."
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="16sp" />
+                </LinearLayout>
+            </FrameLayout>
         </com.google.android.material.appbar.AppBarLayout>
 
         <!-- Invisible Debug Trigger (Top Right) -->
