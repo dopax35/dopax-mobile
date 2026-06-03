@@ -34,6 +34,7 @@ class DashboardSummaryStore(
         val strideLength: List<TimePoint>,
         val strideSpeed: List<TimePoint>,
         val tremorPower: List<TimePoint>,
+        val asymmetry: List<TimePoint>,
         val markers: List<EventMarker>
     )
     data class DashboardMetrics(
@@ -41,6 +42,7 @@ class DashboardSummaryStore(
         val dailyStrideLength: List<TimePoint>,
         val dailyStrideSpeed: List<TimePoint>,
         val dailyTremorPower: List<TimePoint>,
+        val dailyAsymmetry: List<TimePoint>,
         val dailyMarkers: List<EventMarker>,
         val dailyComparison: List<DailyComparisonDay> = emptyList(),
         val gaitTrend: List<TrendSeries>,
@@ -66,9 +68,11 @@ class DashboardSummaryStore(
         val strideLength: List<TimePoint>,
         val strideSpeed: List<TimePoint>,
         val tremorPower: List<TimePoint>,
+        val asymmetry: List<TimePoint>,
         val maxStrideLength: Float,
         val maxStrideSpeed: Float,
-        val maxTremorPower: Float
+        val maxTremorPower: Float,
+        val maxAsymmetry: Float
     )
 
     private data class MetricBounds(
@@ -131,6 +135,11 @@ class DashboardSummaryStore(
                 points = readTimePoints(dailySelection.second, "tremor_power"),
                 renderContext = renderContext
             ),
+            dailyAsymmetry = clipTimePointsToCurrentTime(
+                dateStr = dailySelection.first,
+                points = readTimePoints(dailySelection.second, "asymmetry"),
+                renderContext = renderContext
+            ),
             dailyMarkers = clipMarkersToCurrentTime(
                 dateStr = dailySelection.first,
                 markers = readMarkers(dailySelection.second),
@@ -174,6 +183,11 @@ class DashboardSummaryStore(
                 tremorPower = clipTimePointsToCurrentTime(
                     dateStr = date,
                     points = readTimePoints(summary, "tremor_power"),
+                    renderContext = renderContext
+                ),
+                asymmetry = clipTimePointsToCurrentTime(
+                    dateStr = date,
+                    points = readTimePoints(summary, "asymmetry"),
                     renderContext = renderContext
                 ),
                 markers = clipMarkersToCurrentTime(
@@ -493,12 +507,14 @@ class DashboardSummaryStore(
                 put("stride_length", writeTimePoints(merged.strideLength))
                 put("stride_speed", writeTimePoints(merged.strideSpeed))
                 put("tremor_power", writeTimePoints(merged.tremorPower))
+                put("asymmetry", writeTimePoints(merged.asymmetry))
                 put("max_stride_length", merged.maxStrideLength.toDouble())
                 put("max_stride_speed", merged.maxStrideSpeed.toDouble())
                 put("max_tremor_power", merged.maxTremorPower.toDouble())
+                put("max_asymmetry", merged.maxAsymmetry.toDouble())
             } else if (existing != null) {
                 put("sensor_scan_pos", existing.optLong("sensor_scan_pos", 0L))
-                listOf("stride_length", "stride_speed", "tremor_power").forEach { key ->
+                listOf("stride_length", "stride_speed", "tremor_power", "asymmetry").forEach { key ->
                     existing.optJSONArray(key)?.let { put(key, it) }
                 }
                 put(
@@ -516,6 +532,11 @@ class DashboardSummaryStore(
                     existing.optDouble("max_tremor_power", Double.NaN)
                         .takeIf { isValidTrendValue("max_tremor_power", it) } ?: 0.0
                 )
+                put(
+                    "max_asymmetry",
+                    existing.optDouble("max_asymmetry", Double.NaN)
+                        .takeIf { isValidTrendValue("max_asymmetry", it) } ?: 0.0
+                )
             }
 
             put("markers", writeMarkers(markers))
@@ -530,9 +551,11 @@ class DashboardSummaryStore(
         val strideLength: List<TimePoint>,
         val strideSpeed: List<TimePoint>,
         val tremorPower: List<TimePoint>,
+        val asymmetry: List<TimePoint>,
         val maxStrideLength: Float,
         val maxStrideSpeed: Float,
         val maxTremorPower: Float,
+        val maxAsymmetry: Float,
         val newScanPos: Long,
         val replacesExisting: Boolean = false
     )
@@ -542,7 +565,7 @@ class DashboardSummaryStore(
         startPos: Long
     ): IncrementalSensorResult {
         val empty = IncrementalSensorResult(
-            emptyList(), emptyList(), emptyList(), 0f, 0f, 0f,
+            emptyList(), emptyList(), emptyList(), emptyList(), 0f, 0f, 0f, 0f,
             newScanPos = startPos
         )
         if (!sensorFile.exists()) return empty
@@ -560,9 +583,11 @@ class DashboardSummaryStore(
                         strideLength = analysis.stepLength.map { TimePoint(it.minuteOfDay, it.value) },
                         strideSpeed = analysis.speed.map { TimePoint(it.minuteOfDay, it.value) },
                         tremorPower = analysis.tremorPower.map { TimePoint(it.minuteOfDay, it.value) },
+                        asymmetry = analysis.asymmetry.map { TimePoint(it.minuteOfDay, it.value) },
                         maxStrideLength = analysis.maxStepLength,
                         maxStrideSpeed = analysis.maxSpeed,
                         maxTremorPower = analysis.maxTremorPower,
+                        maxAsymmetry = analysis.maxAsymmetry,
                         newScanPos = sensorFile.length(),
                         replacesExisting = true
                     )
@@ -717,9 +742,11 @@ class DashboardSummaryStore(
                 bucket.meanOrNull()?.let { TimePoint(index * BIN_MINUTES + BIN_MINUTES / 2, it) }
             },
             tremorPower = tremorPoints,
+            asymmetry = emptyList(), // Legacy parser doesn't compute gait asymmetry
             maxStrideLength = maxStrideLength,
             maxStrideSpeed = maxStrideSpeed,
             maxTremorPower = maxTremorPower,
+            maxAsymmetry = 0f,
             newScanPos = newScanPos
         )
     }
@@ -768,14 +795,20 @@ class DashboardSummaryStore(
             ?.optDouble("max_tremor_power", Double.NaN)
             ?.takeIf { isValidTrendValue("max_tremor_power", it) }
             ?.toFloat() ?: 0f
+        val existingMaxAsymmetry = existing
+            ?.optDouble("max_asymmetry", Double.NaN)
+            ?.takeIf { isValidTrendValue("max_asymmetry", it) }
+            ?.toFloat() ?: 0f
 
         return SensorSummary(
             strideLength    = merge(fresh.strideLength, "stride_length"),
             strideSpeed     = merge(fresh.strideSpeed,  "stride_speed"),
             tremorPower     = merge(fresh.tremorPower,  "tremor_power"),
+            asymmetry       = merge(fresh.asymmetry,    "asymmetry"),
             maxStrideLength = maxOf(existingMaxStride, fresh.maxStrideLength),
             maxStrideSpeed  = maxOf(existingMaxSpeed,  fresh.maxStrideSpeed),
-            maxTremorPower  = maxOf(existingMaxTremor, fresh.maxTremorPower)
+            maxTremorPower  = maxOf(existingMaxTremor, fresh.maxTremorPower),
+            maxAsymmetry    = maxOf(existingMaxAsymmetry, fresh.maxAsymmetry)
         )
     }
 

@@ -79,9 +79,11 @@ object PDAnalysisEngine {
         val stepLength: List<BinnedPoint>,
         val speed: List<BinnedPoint>,
         val tremorPower: List<BinnedPoint>,
+        val asymmetry: List<BinnedPoint>,
         val maxStepLength: Float,
         val maxSpeed: Float,
-        val maxTremorPower: Float
+        val maxTremorPower: Float,
+        val maxAsymmetry: Float
     )
 
     private data class Bucket(var sum: Double = 0.0, var count: Int = 0) {
@@ -114,13 +116,16 @@ object PDAnalysisEngine {
         val win = (2.0 * fs).roundToInt().coerceAtLeast(4)
         val step = (0.5 * fs).roundToInt().coerceAtLeast(1)
         if (n < win) {
+            val tremor = computeTremor(series, binMinutes, zoneId)
             return Result(
                 emptyList(),
                 emptyList(),
-                computeTremor(series, binMinutes, zoneId),
+                tremor,
+                emptyList(),
                 0f,
                 0f,
-                computeTremor(series, binMinutes, zoneId).maxOfOrNull { it.value } ?: 0f
+                tremor.maxOfOrNull { it.value } ?: 0f,
+                0f
             )
         }
 
@@ -203,8 +208,36 @@ object PDAnalysisEngine {
         val binCount = 24 * 60 / binMinutes
         val speedBuckets = Array(binCount) { Bucket() }
         val stepBuckets = Array(binCount) { Bucket() }
+        val asymmetryBuckets = Array(binCount) { Bucket() }
         var maxSpeed = 0f
         var maxStepLength = 0f
+        var maxAsymmetry = 0f
+
+        // Calculate asymmetry from step peaks
+        val walkingRegions = getWalkingRegions(labelsWalking)
+        for (region in walkingRegions) {
+            val regionStart = region.first
+            val regionEnd = region.second
+            if (regionEnd - regionStart < fs * 2) continue
+            
+            // Find peaks in detrended acceleration for this walking region
+            val peaks = findPeaks(accelDetrended, regionStart, regionEnd, 0.5, (0.4 * fs).toInt())
+            if (peaks.size > 3) {
+                // Determine step properties (e.g. interval or amplitude) to compare even/odd
+                val evenMean = peaks.indices.filter { it % 2 == 0 }.map { accelDetrended[peaks[it]] }.average()
+                val oddMean = peaks.indices.filter { it % 2 != 0 }.map { accelDetrended[peaks[it]] }.average()
+                val asym = asymmetryIndex(evenMean, oddMean)
+                
+                val midIdx = regionStart + (regionEnd - regionStart) / 2
+                val minute = minuteOfDay(series.timestampNs[midIdx] / 1_000_000L, zoneId)
+                if (minute in 0 until 24 * 60) {
+                    val bin = minute / binMinutes
+                    asymmetryBuckets[bin].add(asym)
+                    if (asym.toFloat() > maxAsymmetry) maxAsymmetry = asym.toFloat()
+                }
+            }
+        }
+
         for (i in 0 until n) {
             if (!labelsWalking[i]) continue
             val minute = minuteOfDay(series.timestampNs[i] / 1_000_000L, zoneId)
@@ -227,9 +260,11 @@ object PDAnalysisEngine {
             stepLength = pointsFromBuckets(stepBuckets, binMinutes),
             speed = pointsFromBuckets(speedBuckets, binMinutes),
             tremorPower = tremor,
+            asymmetry = pointsFromBuckets(asymmetryBuckets, binMinutes),
             maxStepLength = maxStepLength,
             maxSpeed = maxSpeed,
-            maxTremorPower = tremor.maxOfOrNull { it.value } ?: 0f
+            maxTremorPower = tremor.maxOfOrNull { it.value } ?: 0f,
+            maxAsymmetry = maxAsymmetry
         )
     }
 
@@ -383,7 +418,35 @@ object PDAnalysisEngine {
         return local.hour * 60 + local.minute
     }
 
-    private fun emptyResult(): Result = Result(emptyList(), emptyList(), emptyList(), 0f, 0f, 0f)
+    private fun emptyResult(): Result = Result(emptyList(), emptyList(), emptyList(), emptyList(), 0f, 0f, 0f, 0f)
+
+    private fun getWalkingRegions(labelsWalking: BooleanArray): List<Pair<Int, Int>> {
+        val regions = mutableListOf<Pair<Int, Int>>()
+        var start = -1
+        for (i in labelsWalking.indices) {
+            if (labelsWalking[i] && start == -1) start = i
+            else if (!labelsWalking[i] && start != -1) {
+                regions.add(Pair(start, i))
+                start = -1
+            }
+        }
+        if (start != -1) regions.add(Pair(start, labelsWalking.size))
+        return regions
+    }
+
+    private fun findPeaks(signal: DoubleArray, start: Int, endExclusive: Int, minHeight: Double, minDistance: Int): List<Int> {
+        val peaks = mutableListOf<Int>()
+        var lastPeak = -minDistance
+        for (i in start + 1 until endExclusive - 1) {
+            if (signal[i] > minHeight && signal[i] >= signal[i - 1] && signal[i] >= signal[i + 1]) {
+                if (i - lastPeak >= minDistance) {
+                    peaks.add(i)
+                    lastPeak = i
+                }
+            }
+        }
+        return peaks
+    }
 
     private const val ACCEL_VAR_THRESH = 0.02
     private const val STEP_FREQ_MIN = 0.7

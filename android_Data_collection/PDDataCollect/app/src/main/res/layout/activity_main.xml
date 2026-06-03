@@ -498,6 +498,21 @@ android:textStyle="bold" />
                     app:cardBackgroundColor="@color/surface_container_low"
                     android:layout_marginBottom="16dp">
 
+                    <com.pdcollect.app.ui.view.DailyMetricChartView
+                        android:id="@+id/chartDailyAsymmetry"
+                        android:layout_width="match_parent"
+                        android:layout_height="240dp"
+                        android:padding="20dp" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/surface_container_low"
+                    android:layout_marginBottom="16dp">
+
                     <com.pdcollect.app.ui.view.TrendSummaryChartView
                         android:id="@+id/chartTrendGait"
                         android:layout_width="match_parent"

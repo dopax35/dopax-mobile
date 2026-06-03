@@ -383,8 +383,9 @@ class MainActivity : AppCompatActivity() {
         val (todayStrideLength, previousStrideLength) = dailyComparisonLines(metrics) { it.strideLength }
         val (todayStrideSpeed, previousStrideSpeed) = dailyComparisonLines(metrics) { it.strideSpeed }
         val (todayTremorPower, previousTremorPower) = dailyComparisonLines(metrics) { it.tremorPower }
+        val (todayAsymmetry, previousAsymmetry) = dailyComparisonLines(metrics) { it.asymmetry }
         val dailySubtitle = dailySubtitleOverride ?: buildDailySubtitle(
-            hasTodayData = todayStrideLength.isNotEmpty() || todayStrideSpeed.isNotEmpty() || todayTremorPower.isNotEmpty(),
+            hasTodayData = todayStrideLength.isNotEmpty() || todayStrideSpeed.isNotEmpty() || todayTremorPower.isNotEmpty() || todayAsymmetry.isNotEmpty(),
             hasMarkers = todayMarkers.isNotEmpty() ||
                 previousStrideLength.any { it.markers.isNotEmpty() } ||
                 previousStrideSpeed.any { it.markers.isNotEmpty() } ||
@@ -417,6 +418,15 @@ class MainActivity : AppCompatActivity() {
             comparisonLines = previousTremorPower,
             markers = todayMarkers,
             emptyHint = "Tremor data will appear once sensors are collecting"
+        )
+        findViewById<DailyMetricChartView>(R.id.chartDailyAsymmetry).setData(
+            title = "Gait Asymmetry",
+            subtitle = dailySubtitle,
+            unit = "%",
+            points = todayAsymmetry,
+            comparisonLines = previousAsymmetry,
+            markers = todayMarkers,
+            emptyHint = "Asymmetry data will appear once gait is detected"
         )
         findViewById<TrendSummaryChartView>(R.id.chartTrendGait).setSeries(
             title = "Peak Gait Trends",
@@ -490,6 +500,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<DailyMetricChartView>(R.id.chartDailyTremorPower).setOnClickListener {
             startActivity(ChartDetailActivity.intent(this, ChartDetailActivity.CHART_DAILY_TREMOR_POWER))
         }
+        findViewById<DailyMetricChartView>(R.id.chartDailyAsymmetry).setOnClickListener {
+            startActivity(ChartDetailActivity.intent(this, ChartDetailActivity.CHART_DAILY_ASYMMETRY))
+        }
         findViewById<TrendSummaryChartView>(R.id.chartTrendGait).setOnClickListener {
             startActivity(ChartDetailActivity.intent(this, ChartDetailActivity.CHART_TREND_GAIT))
         }
@@ -507,6 +520,7 @@ class MainActivity : AppCompatActivity() {
             dailyStrideLength = emptyList(),
             dailyStrideSpeed = emptyList(),
             dailyTremorPower = emptyList(),
+            dailyAsymmetry = emptyList(),
             dailyMarkers = emptyList(),
             gaitTrend = listOf(
                 emptyTrend("Max Stride Length", "m"),
@@ -526,6 +540,7 @@ class MainActivity : AppCompatActivity() {
         return metrics.dailyStrideLength.isEmpty() &&
             metrics.dailyStrideSpeed.isEmpty() &&
             metrics.dailyTremorPower.isEmpty() &&
+            metrics.dailyAsymmetry.isEmpty() &&
             metrics.gaitTrend.all { it.points.isEmpty() } &&
             metrics.testTrend.all { it.points.isEmpty() }
     }

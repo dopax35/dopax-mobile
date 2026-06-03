@@ -74,7 +74,8 @@ class ChartDetailActivity : AppCompatActivity() {
         val chartView = when (chartKind) {
             CHART_DAILY_STRIDE_LENGTH,
             CHART_DAILY_STRIDE_SPEED,
-            CHART_DAILY_TREMOR_POWER -> {
+            CHART_DAILY_TREMOR_POWER,
+            CHART_DAILY_ASYMMETRY -> {
                 DailyMetricChartView(this).apply {
                     setInteractiveZoomEnabled(true)
                     this.layoutParams = layoutParams
@@ -255,6 +256,7 @@ class ChartDetailActivity : AppCompatActivity() {
         const val CHART_DAILY_STRIDE_LENGTH = "daily_stride_length"
         const val CHART_DAILY_STRIDE_SPEED = "daily_stride_speed"
         const val CHART_DAILY_TREMOR_POWER = "daily_tremor_power"
+        const val CHART_DAILY_ASYMMETRY = "daily_asymmetry"
         const val CHART_TREND_GAIT = "trend_gait"
         const val CHART_TREND_TESTS = "trend_tests"
 
