@@ -12,13 +12,15 @@
 
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="wrap_content"
             android:background="@drawable/bg_premium_header"
+            android:fitsSystemWindows="true"
             app:elevation="0dp">
 
             <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:minHeight="220dp">
 
                 <ImageView
                     android:layout_width="match_parent"
@@ -30,14 +32,14 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="32dp">
 
                     <com.google.android.material.appbar.MaterialToolbar
                         android:id="@+id/topAppBar"
                         android:layout_width="match_parent"
                         android:layout_height="?attr/actionBarSize"
-                        android:layout_marginTop="32dp"
                         app:navigationIcon="@drawable/ic_menu_white_24dp"
                         app:navigationIconTint="@color/white"
                         app:title="dopa-X Sanctuary"
@@ -50,7 +52,8 @@
                         android:paddingTop="8dp"
                         android:text="Welcome back to your Sanctuary."
                         android:textColor="#CCFFFFFF"
-                        android:textSize="16sp" />
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </FrameLayout>
         </com.google.android.material.appbar.AppBarLayout>
