@@ -33,7 +33,7 @@ struct ProfileSetupView: View {
                             get: { profile.age },
                             set: { profile.age = $0 }
                         ))
-                        .keyboardType(.numberPad)
+                        .keyboardType(.numbersAndPunctuation)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
                     }
@@ -84,6 +84,11 @@ struct ProfileSetupView: View {
             }
             .navigationTitle("Your Profile")
             .toolbar {
+                ToolbarItem(placement: .keyboard) {
+                    Button("Dismiss") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         if profile.gender.isEmpty { profile.gender = "Prefer not to say" }

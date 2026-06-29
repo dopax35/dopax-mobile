@@ -9,8 +9,8 @@ struct MainTabView: View {
             ActiveTestsView()
                 .tabItem { Label("Tests", systemImage: "figure.walk") }
 
-            QuestionnaireView()
-                .tabItem { Label("Daily Survey", systemImage: "list.clipboard") }
+            DailyReportView()
+                .tabItem { Label("Daily Report", systemImage: "list.clipboard") }
 
             DataExportView()
                 .tabItem { Label("Data", systemImage: "square.and.arrow.up") }
@@ -18,6 +18,5 @@ struct MainTabView: View {
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
-        .tint(.dopaxBlue)
     }
 }

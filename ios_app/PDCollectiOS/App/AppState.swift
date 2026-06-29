@@ -20,6 +20,9 @@ class AppState: ObservableObject {
     let appEventLogger = AppEventLogger()
     let bgCollection   = BackgroundCollectionManager()
 
+    // MARK: - Bluetooth
+    let bluetoothManager = BluetoothManager()
+
     /// Whether the user has enabled passive background collection from Settings.
     @Published var isCollecting: Bool {
         didSet {
@@ -56,10 +59,16 @@ class AppState: ObservableObject {
 
     // MARK: - Collection Control
 
+    private let keystrokeSync = KeystrokeSync()
+
     func startCollection() {
         passiveSensor.start(dataManager: dataManager)
         appEventLogger.start(dataManager: dataManager)
         bgCollection.scheduleAll()
+        // Write daily profile snapshot
+        dataManager.writeProfileSnapshot(profile: userProfile)
+        // Import any buffered keystrokes from keyboard extension
+        keystrokeSync.importBufferedKeystrokes(dataManager: dataManager)
         // FaceDistanceManager is started separately after camera permission is granted
     }
 

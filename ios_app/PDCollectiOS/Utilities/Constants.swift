@@ -26,7 +26,7 @@ enum Constants {
         static let faceDistanceFile    = "face_distance.csv"
 
         // Headers
-        static let testResultsHeader   = "timestamp,test_type,part,score,duration_ms,errors,details\n"
+        static let testResultsHeader   = "timestamp,test_type,part,score,duration_ms,errors,details,platform\n"
         static let questionnaireHeader  = "timestamp,symptoms,motor,sleep,mood,overall,notes\n"
         static let sensorsHeader        = "timestamp_ns,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n"
         static let gaitMetricsHeader    = "date,walking_speed_ms,step_length_m,walking_steadiness,double_support_pct,asymmetry_pct,heart_rate_bpm,hrv_sdnn_ms\n"
@@ -42,6 +42,34 @@ enum Constants {
 
         // Face distance — matches Android face_distance.csv
         static let faceDistanceHeader   = "timestamp_ms,distance_ratio,face_x,face_y,confidence,roll_deg,yaw_deg\n"
+
+        // Heart rate — matches Android heart_rate.csv
+        static let heartRateFile        = "heart_rate.csv"
+        static let heartRateHeader      = "timestamp_ms,bpm,rr_interval_ms,device_address,device_name\n"
+
+        // Beanie temperature — matches Android beanie_temperature.csv
+        static let beanieTemperatureFile = "beanie_temperature.csv"
+        static let beanieTemperatureHeader = "timestamp_ms,device_name,device_address,profile_name,inner_c,outer_c,tskin_c,heat_flux_cal_per_sec,battery_pct\n"
+
+        // Beanie IMU — matches Android beanie_imu.csv
+        static let beanieImuFile        = "beanie_imu.csv"
+        static let beanieImuHeader      = "timestamp_ms,device_name,device_address,ax_raw,ay_raw,az_raw,gx_raw,gy_raw,gz_raw,ax_g,ay_g,az_g,accel_mag_g,gx_dps,gy_dps,gz_dps,gyro_mag_dps\n"
+
+        // Keystroke events — matches Android key_events.csv (privacy-first: only key class, never actual characters)
+        static let keyEventsFile        = "key_events.csv"
+        static let keyEventsHeader      = "timestamp_ms,key_class,is_backspace,source_app\n"
+
+        // Medication intake events — matches Android medication.csv
+        static let medicationFile       = "medication.csv"
+        static let medicationHeader     = "timestamp_ms,taken_ms,med_name,dosage\n"
+
+        // Physical activity (user-reported) — matches Android physical_activity.csv
+        static let physicalActivityFile = "physical_activity.csv"
+        static let physicalActivityHeader = "timestamp_ms,activity_type,time_of_day_ms\n"
+
+        // Profile snapshot — matches Android profile.csv
+        static let profileFile          = "profile.csv"
+        static let profileHeader        = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json\n"
     }
 
     // MARK: - Test Durations

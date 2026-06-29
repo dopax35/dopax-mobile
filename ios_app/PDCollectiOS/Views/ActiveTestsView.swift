@@ -21,7 +21,7 @@ struct ActiveTestsView: View {
                             icon: "number.circle",
                             color: .purple,
                             testType: "trail_making_A",
-                            destination: { TrailMakingTestView(part: .A) }
+                            destination: AnyView(TrailMakingTestView(part: .A))
                         ),
                         TestConfig(
                             title: "Trail Making B",
@@ -29,7 +29,7 @@ struct ActiveTestsView: View {
                             icon: "character.cursor.ibeam",
                             color: .indigo,
                             testType: "trail_making_B",
-                            destination: { TrailMakingTestView(part: .B) }
+                            destination: AnyView(TrailMakingTestView(part: .B))
                         ),
                     ])
 
@@ -40,7 +40,7 @@ struct ActiveTestsView: View {
                             icon: "hand.point.up",
                             color: .blue,
                             testType: "finger_tapping",
-                            destination: { FingerTappingView() }
+                            destination: AnyView(FingerTappingView())
                         ),
                         TestConfig(
                             title: "Hand Turning",
@@ -48,7 +48,7 @@ struct ActiveTestsView: View {
                             icon: "arrow.clockwise",
                             color: .green,
                             testType: "hand_turning",
-                            destination: { HandTurningView() }
+                            destination: AnyView(HandTurningView())
                         ),
                         TestConfig(
                             title: "Spiral Tracing",
@@ -56,7 +56,7 @@ struct ActiveTestsView: View {
                             icon: "tornado",
                             color: .orange,
                             testType: "spiral_tracing",
-                            destination: { SpiralTracingView() }
+                            destination: AnyView(SpiralTracingView())
                         ),
                         TestConfig(
                             title: "Leg Agility",
@@ -64,7 +64,7 @@ struct ActiveTestsView: View {
                             icon: "figure.walk.motion",
                             color: .red,
                             testType: "leg_agility",
-                            destination: { LegAgilityView() }
+                            destination: AnyView(LegAgilityView())
                         ),
                     ])
                 }
@@ -151,8 +151,8 @@ struct ActiveTestsView: View {
     // MARK: - Test Group
 
     @ViewBuilder
-    private func testGroup<D: View>(title: String, color: Color,
-                                   tests: [TestConfig<D>]) -> some View {
+    private func testGroup(title: String, color: Color,
+                           tests: [TestConfig]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.headline).padding(.horizontal)
 
@@ -171,23 +171,23 @@ struct ActiveTestsView: View {
 
 // MARK: - TestConfig
 
-private struct TestConfig<D: View> {
+private struct TestConfig {
     let title: String
     let subtitle: String
     let icon: String
     let color: Color
     let testType: String
-    @ViewBuilder let destination: () -> D
+    let destination: AnyView
 }
 
 // MARK: - TestRow
 
-private struct TestRow<D: View>: View {
+private struct TestRow: View {
     @EnvironmentObject var appState: AppState
-    let config: TestConfig<D>
+    let config: TestConfig
 
     var body: some View {
-        NavigationLink(destination: config.destination().environmentObject(appState)) {
+        NavigationLink(destination: config.destination.environmentObject(appState)) {
             HStack(spacing: 14) {
                 // Icon with completion ring overlay
                 ZStack {

@@ -6,9 +6,12 @@ import AVFoundation
 /// inspect raw data files, and reset participant consent.
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+
+    @AppStorage("autoUploadEnabled") private var autoUploadEnabled = false
     @State private var showResetAlert    = false
     @State private var showDeleteAlert   = false
     @State private var cameraStatus      = ""
+    @State private var isUploading       = false
 
     private var profile: UserProfile { appState.userProfile }
 
@@ -75,6 +78,69 @@ struct SettingsView: View {
                                    value: "\(appState.passiveSensor.totalReadingsToday)")
                 } header: {
                     Label("Sensor Service", systemImage: "gyroscope")
+                }
+
+                // MARK: - Bluetooth Devices
+                Section {
+                    NavigationLink {
+                        BluetoothDevicesView(
+                            btManager: appState.bluetoothManager,
+                            hr: appState.bluetoothManager.hrService,
+                            beanie: appState.bluetoothManager.beanieService
+                        )
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Manage Devices")
+                                    .fontWeight(.medium)
+                                Text(bluetoothStatusSummary)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            bluetoothStatusDot
+                        }
+                    }
+                } header: {
+                    Label("Bluetooth Devices", systemImage: "antenna.radiowaves.left.and.right")
+                }
+
+                // MARK: - Cloud Upload
+                Section {
+                    Toggle(isOn: $autoUploadEnabled) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Auto Upload")
+                                .fontWeight(.medium)
+                            Text(autoUploadEnabled
+                                 ? "Data uploads automatically in the background."
+                                 : "Upload manually from the My Data tab.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    if autoUploadEnabled {
+                        Button {
+                            isUploading = true
+                            Task {
+                                await BackgroundCollectionManager.uploadPendingDates(
+                                    dataManager: appState.dataManager
+                                )
+                                await MainActor.run { isUploading = false }
+                            }
+                        } label: {
+                            HStack {
+                                Label("Upload Now", systemImage: "icloud.and.arrow.up")
+                                if isUploading {
+                                    Spacer()
+                                    ProgressView()
+                                }
+                            }
+                        }
+                        .disabled(isUploading)
+                    }
+                } header: {
+                    Label("Cloud Upload", systemImage: "icloud")
                 }
 
                 // MARK: - Participant Info
@@ -167,5 +233,25 @@ struct SettingsView: View {
     }
     private var buildNumber: String {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "–"
+    }
+
+    private var bluetoothStatusSummary: String {
+        let hr = appState.bluetoothManager.hrService
+        let beanie = appState.bluetoothManager.beanieService
+        var parts: [String] = []
+        if hr.isConnected { parts.append("❤️ \(hr.deviceName)") }
+        if beanie.isConnected { parts.append("🌡️ \(beanie.deviceName)") }
+        if parts.isEmpty { return "No devices paired" }
+        return parts.joined(separator: " · ")
+    }
+
+    @ViewBuilder
+    private var bluetoothStatusDot: some View {
+        let hr = appState.bluetoothManager.hrService
+        let beanie = appState.bluetoothManager.beanieService
+        let anyConnected = hr.isConnected || beanie.isConnected
+        Circle()
+            .fill(anyConnected ? Color.green : Color.gray.opacity(0.4))
+            .frame(width: 10, height: 10)
     }
 }

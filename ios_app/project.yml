@@ -19,10 +19,35 @@ targets:
     sources:
       - path: PDCollectiOS
         type: group
+        excludes:
+          - "KeyboardExtension/**"
     info:
       path: PDCollectiOS/Info.plist
+      properties:
+        NSCameraUsageDescription: "This app uses the camera to scan documents"
+        NSHealthShareUsageDescription: "This app uses Health data to monitor Parkinson's symptoms"
+        NSHealthUpdateUsageDescription: "This app writes Health data to track Parkinson's symptoms"
+        NSBluetoothAlwaysUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
+        NSBluetoothPeripheralUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
+        UIRequiresFullScreen: true
+        UILaunchStoryboardName: "Launch Screen"
+        NSPrincipalClass: "$(PRODUCT_MODULE_NAME).LoggingApplication"
+        NSMotionUsageDescription: "This app uses motion data to detect physical activity and monitor movement patterns"
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.pdcollect.ios.bg-refresh
+          - com.pdcollect.ios.bg-processing
     entitlements:
       path: PDCollectiOS/PDCollectiOS.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+        com.apple.security.application-groups:
+          - group.com.oriweissberg.pdcollect.shared
     capabilities:
       healthKit:
         enabled: true
@@ -30,16 +55,18 @@ targets:
         modes:
           - fetch
           - processing
+          - bluetooth-central
     dependencies:
       - package: ZIPFoundation
+      - target: PDCollectKeyboard
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.pdcollect.ios
+        PRODUCT_BUNDLE_IDENTIFIER: com.oriweissberg.pdcollectios
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
         MARKETING_VERSION: 3.7.12
         CURRENT_PROJECT_VERSION: 96
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: YD2UPLT5JG
         INFOPLIST_FILE: PDCollectiOS/Info.plist
         CODE_SIGN_STYLE: Automatic
       configs:
@@ -49,3 +76,34 @@ targets:
         Release:
           DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
           SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+  # Keyboard Extension — logs keystroke types (never actual characters)
+  PDCollectKeyboard:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: PDCollectiOS/KeyboardExtension
+        type: group
+    info:
+      path: PDCollectiOS/KeyboardExtension/Info.plist
+      properties:
+        CFBundleDisplayName: PDCollect Keyboard
+        NSExtension:
+          NSExtensionAttributes:
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            PrimaryLanguage: en-US
+            RequestsOpenAccess: true
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).KeyboardViewController"
+    entitlements:
+      path: PDCollectiOS/KeyboardExtension/KeyboardExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oriweissberg.pdcollectios.keyboard
+        SWIFT_VERSION: 5.9
+        IPHONEOS_DEPLOYMENT_TARGET: 16.0
+        DEVELOPMENT_TEAM: YD2UPLT5JG
+        CODE_SIGN_STYLE: Automatic
+        PRODUCT_NAME: PDCollectKeyboard

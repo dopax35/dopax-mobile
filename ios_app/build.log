@@ -1,0 +1,388 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project PDCollectiOS.xcodeproj -scheme PDCollectiOS -configuration Debug -destination generic/platform=iOS CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  ZIPFoundation: https://github.com/weichsel/ZIPFoundation.git @ 0.9.20
+
+2026-06-02 14:11:33.541 xcodebuild[9465:365981] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (4 targets)
+    Target 'PDCollectiOS' in project 'PDCollectiOS'
+        ➜ Explicit dependency on target 'ZIPFoundation' in project 'ZIPFoundation'
+    Target 'ZIPFoundation' in project 'ZIPFoundation'
+        ➜ Explicit dependency on target 'ZIPFoundation' in project 'ZIPFoundation'
+        ➜ Explicit dependency on target 'ZIPFoundation_ZIPFoundation' in project 'ZIPFoundation'
+    Target 'ZIPFoundation' in project 'ZIPFoundation'
+        ➜ Explicit dependency on target 'ZIPFoundation_ZIPFoundation' in project 'ZIPFoundation'
+    Target 'ZIPFoundation_ZIPFoundation' in project 'ZIPFoundation' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: 7843bf223d651f8922d173733f2283f4
+Build description path: /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/XCBuildData/7843bf223d651f8922d173733f2283f4.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk /Users/dopax/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos26.5-23F73-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -o /Users/dopax/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos26.5-23F73-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache
+
+ProcessInfoPlistFile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/ZIPFoundation_ZIPFoundation.bundle/Info.plist /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/ZIPFoundation.build/Debug-iphoneos/ZIPFoundation_ZIPFoundation.build/empty-ZIPFoundation_ZIPFoundation.plist (in target 'ZIPFoundation_ZIPFoundation' from project 'ZIPFoundation')
+    cd /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/SourcePackages/checkouts/ZIPFoundation
+    builtin-infoPlistUtility /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/ZIPFoundation.build/Debug-iphoneos/ZIPFoundation_ZIPFoundation.build/empty-ZIPFoundation_ZIPFoundation.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphoneos -requiredArchitecture arm64 -o /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/ZIPFoundation_ZIPFoundation.bundle/Info.plist
+
+WriteAuxiliaryFile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-generated-files.hmap (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    write-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-generated-files.hmap
+
+WriteAuxiliaryFile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftConstValuesFileList (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    write-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.LinkFileList (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    write-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.LinkFileList
+
+WriteAuxiliaryFile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftFileList (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    write-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftFileList
+
+WriteAuxiliaryFile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-OutputFileMap.json (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    write-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-OutputFileMap.json
+
+GenerateAssetSymbols /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets --compile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app --output-format human-readable-text --notices --warnings --export-dependency-info /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_dependencies --output-partial-info-plist /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_generated_info.plist --app-icon AppIcon --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphoneos --bundle-identifier com.pdcollect.ios --generate-swift-asset-symbol-extensions NO --generate-swift-asset-symbols /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols.h
+/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+CpResource /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Rajdhani-Regular.ttf /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Rajdhani-Regular.ttf (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Rajdhani-Regular.ttf /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app
+
+CpResource /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Rajdhani-Medium.ttf /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Rajdhani-Medium.ttf (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Rajdhani-Medium.ttf /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app
+
+MkDir /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/unthinned (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /bin/mkdir -p /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/unthinned
+
+MkDir /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/thinned (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /bin/mkdir -p /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/thinned
+
+CpResource /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Outfit.ttf /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Outfit.ttf (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Outfit.ttf /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app
+
+CpResource /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Rajdhani-Bold.ttf /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Rajdhani-Bold.ttf (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Fonts/Rajdhani-Bold.ttf /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app
+
+CompileAssetCatalogVariant thinned /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets --compile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphoneos
+/* com.apple.actool.document.warnings */
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets:./AppIcon.appiconset: warning: A 60x60@2x app icon is required for iPhone apps targeting iOS 7.0 and later
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets:./AppIcon.appiconset: warning: A 76x76@2x app icon is required for iPad apps targeting iOS 7.0 and later
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets:./AppIcon.appiconset: warning: A 83.5x83.5@2x app icon is required for iPad apps targeting iOS 9.0 and later
+/* com.apple.actool.compilation-results */
+/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_generated_info.plist_thinned
+/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/thinned/Assets.car
+
+
+SwiftDriver PDCollectiOS normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PDCollectiOS -Onone @/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios16.0 -g -module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -F /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -c -j6 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos26.5-23F73-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS_const_extract_protocols.json -Xcc -iquote -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-generated-files.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-own-target-headers.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS-0a3c4530aaeb751b9c5e11b315a2e8d2-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-project-headers.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/include -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources-normal/arm64 -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/arm64 -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-Swift.h -working-directory /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ ActiveTestsView.swift,\ HealthKitManager.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/ActiveTestsView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/HealthKitManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/ActiveTestsView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/HealthKitManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 Compiling\ UserProfile.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/UserProfile.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/UserProfile.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 Compiling\ PassiveSensorService.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/PassiveSensorService.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/PassiveSensorService.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ PDCollectiOS (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+EmitSwiftModule normal arm64 (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 Compiling\ MainTabView.swift,\ PDAlgorithms.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/MainTabView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/PDAlgorithms.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/MainTabView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/PDAlgorithms.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/PDAlgorithms.swift:95:13: warning: variable 'mag' was never mutated; consider changing to 'let' constant
+        var mag = (0..<n).map { i in
+        ~~~ ^
+        let
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/PDAlgorithms.swift:201:17: warning: immutable value 'b' was never used; consider replacing with '_' or removing it
+        let (_, b, spiralRMSE, residuals) = linearFit(x: theta, y: r)
+                ^
+                _
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/PDAlgorithms.swift:267:13: warning: variable 'accMag' was never mutated; consider changing to 'let' constant
+        var accMag = (0..<n).map { i in
+        ~~~ ^
+        let
+
+SwiftCompile normal arm64 Compiling\ Theme.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/Theme.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/Theme.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling PassiveSensorService.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ GeneratedAssetSymbols.swift /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling UserProfile.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for PDCollectiOS (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriver\ Compilation\ Requirements PDCollectiOS normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PDCollectiOS -Onone @/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios16.0 -g -module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -F /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -c -j6 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos26.5-23F73-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS_const_extract_protocols.json -Xcc -iquote -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-generated-files.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-own-target-headers.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS-0a3c4530aaeb751b9c5e11b315a2e8d2-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-project-headers.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/include -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources-normal/arm64 -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/arm64 -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-Swift.h -working-directory /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app -experimental-emit-module-separately -disable-cmo
+
+Copy /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/arm64-apple-ios.swiftmodule /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftmodule (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftmodule /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/arm64-apple-ios.swiftmodule
+
+Copy /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/arm64-apple-ios.swiftdoc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftdoc (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftdoc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/arm64-apple-ios.swiftdoc
+
+Copy /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/arm64-apple-ios.abi.json /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.abi.json (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.abi.json /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftsourceinfo (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftsourceinfo /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling GeneratedAssetSymbols.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ DataExportView.swift,\ Extensions.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/DataExportView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/Extensions.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/DataExportView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Utilities/Extensions.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 Compiling\ ConsentView.swift,\ DashboardView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/ConsentView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/DashboardView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/ConsentView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/DashboardView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 Compiling\ LegAgilityView.swift,\ ProfileSetupView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/LegAgilityView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/ProfileSetupView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/LegAgilityView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/LegAgilityView.swift:171:29: warning: initialization of immutable value 'leftRate' was never used; consider replacing with assignment to '_' or removing it
+                        let leftRate  = Double(leftCount)  / duration
+                        ~~~~^~~~~~~~
+                        _
+/Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/LegAgilityView.swift:172:29: warning: initialization of immutable value 'rightRate' was never used; consider replacing with assignment to '_' or removing it
+                        let rightRate = Double(rightCount) / duration
+                        ~~~~^~~~~~~~~
+                        _
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/ProfileSetupView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling Theme.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ ContentView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/App/ContentView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/App/ContentView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling ActiveTestsView.swift, HealthKitManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ PDCollectiOSApp.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/PDCollectiOSApp.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/PDCollectiOSApp.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling ContentView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ DataManager.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/DataManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/DataManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling MainTabView.swift, PDAlgorithms.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ QuestionnaireView.swift,\ SettingsView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/QuestionnaireView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/SettingsView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/QuestionnaireView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/SettingsView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling PDCollectiOSApp.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ FingerTappingView.swift,\ HandTurningView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/FingerTappingView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/HandTurningView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/FingerTappingView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/HandTurningView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling DataExportView.swift, Extensions.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ FaceDistanceManager.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/FaceDistanceManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Managers/FaceDistanceManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling LegAgilityView.swift, ProfileSetupView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 Compiling\ SpiralTracingView.swift,\ TrailMakingTestView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/SpiralTracingView.swift /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/TrailMakingTestView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/SpiralTracingView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftCompile normal arm64 /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Views/Tests/TrailMakingTestView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling DataManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ConsentView.swift, DashboardView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriverJobDiscovery normal arm64 Compiling FaceDistanceManager.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriverJobDiscovery normal arm64 Compiling QuestionnaireView.swift, SettingsView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriverJobDiscovery normal arm64 Compiling FingerTappingView.swift, HandTurningView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SpiralTracingView.swift, TrailMakingTestView.swift (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+SwiftDriver\ Compilation PDCollectiOS normal arm64 com.apple.xcode.tools.swift.compiler (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name PDCollectiOS -Onone @/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -target arm64-apple-ios16.0 -g -module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -F /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PackageFrameworks -F /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -c -j6 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphoneos26.5-23F73-32daed1954a7d5dd0789fcaf2a9bb78b.sdkstatcache -output-file-map /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/dopax/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS_const_extract_protocols.json -Xcc -iquote -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-generated-files.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-own-target-headers.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS-0a3c4530aaeb751b9c5e11b315a2e8d2-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-project-headers.hmap -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/include -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources-normal/arm64 -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources/arm64 -Xcc -I/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-Swift.h -working-directory /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app -experimental-emit-module-separately -disable-cmo
+
+Ld /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS.debug.dylib normal (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -O0 -L/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -F/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -filelist /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.LinkFileList -install_name @rpath/PDCollectiOS.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -dependency_info -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.swiftmodule @/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS-linker-args.resp -Wl,-no_warn_duplicate_libraries -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS.debug.dylib -Xlinker -add_ast_path -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/ZIPFoundation.build/Debug-iphoneos/ZIPFoundation.build/Objects-normal/arm64/ZIPFoundation.swiftmodule @/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/ZIPFoundation.build/Debug-iphoneos/ZIPFoundation.build/Objects-normal/arm64/ZIPFoundation-linker-args.resp
+
+ConstructStubExecutorLinkFileList /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-ExecutorLinkFileList-normal-arm64.txt (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    construct-stub-executor-link-file-list /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+Ld /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS normal (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -O0 -L/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -F/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PackageFrameworks -F/Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PackageFrameworks -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS-ExecutorLinkFileList-normal-arm64.txt /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS.debug.dylib -o /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS
+
+LinkAssetCatalog /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Assets.xcassets (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-linkAssetCatalog --thinned /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/thinned --thinned-dependencies /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_generated_info.plist_thinned --unthinned /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_output/unthinned --unthinned-dependencies /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_generated_info.plist_unthinned --output /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app --plist-output /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_generated_info.plist
+note: Emplaced /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Assets.car (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+ExtractAppIntentsMetadata (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name PDCollectiOS --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk --xcode-version 17F42 --platform-family iOS --deployment-target 16.0 --bundle-identifier com.pdcollect.ios --output /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app --target-triple arm64-apple-ios16.0 --binary-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS --dependency-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS_dependency_info.dat --stringsdata-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftFileList --metadata-file-list /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS.DependencyMetadataFileList --static-metadata-file-list /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS.DependencyStaticMetadataFileList --swift-const-vals-list /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/Objects-normal/arm64/PDCollectiOS.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-06-02 14:13:35.090 appintentsmetadataprocessor[9530:367613] Starting appintentsmetadataprocessor export
+2026-06-02 14:13:35.099 appintentsmetadataprocessor[9530:367613] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+CopySwiftLibs /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PDCollectiOS.debug.dylib --scan-folder /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Frameworks --scan-folder /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PlugIns --scan-folder /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/SystemExtensions --scan-folder /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Extensions --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ProcessInfoPlistFile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Info.plist /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Info.plist (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-infoPlistUtility /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app/PDCollectiOS/Info.plist -producttype com.apple.product-type.application -genpkginfo /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/assetcatalog_generated_info.plist -scanforprivacyfile /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/ZIPFoundation_ZIPFoundation.bundle -requiredArchitecture arm64 -o /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Info.plist
+
+AppIntentsSSUTraining (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Info.plist --temp-dir-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/ssu --bundle-id com.pdcollect.ios --product-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app --extracted-metadata-path /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Metadata.appintents --metadata-file-list /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Intermediates.noindex/PDCollectiOS.build/Debug-iphoneos/PDCollectiOS.build/PDCollectiOS.DependencyMetadataFileList --source-file /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app/Info.plist --archive-ssu-assets
+2026-06-02 14:13:35.154 appintentsnltrainingprocessor[9531:367621] Parsing options for appintentsnltrainingprocessor
+2026-06-02 14:13:35.155 appintentsnltrainingprocessor[9531:367621] Starting AppIntents SSU YAML Generation
+2026-06-02 14:13:35.157 appintentsnltrainingprocessor[9531:367621] No AppShortcuts found - Skipping.
+
+Validate /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app (in target 'PDCollectiOS' from project 'PDCollectiOS')
+    cd /Users/dopax/.gemini/antigravity/scratch/dopax-mobile/ios_app
+    builtin-validationUtility /Users/dopax/Library/Developer/Xcode/DerivedData/PDCollectiOS-ajrubludycdzfsctoezxxwupmdbx/Build/Products/Debug-iphoneos/PDCollectiOS.app -shallow-bundle -infoplist-subpath Info.plist
+warning: All interface orientations must be supported unless the app requires full screen. (in target 'PDCollectiOS' from project 'PDCollectiOS')
+warning: A launch configuration or launch storyboard or xib must be provided unless the app requires full screen. (in target 'PDCollectiOS' from project 'PDCollectiOS')
+
+** BUILD SUCCEEDED **
+

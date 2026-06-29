@@ -106,6 +106,67 @@ class DataManager: ObservableObject {
                header: Constants.CSV.faceDistanceHeader)
     }
 
+    // MARK: - Bluetooth Heart Rate Writes
+
+    func writeHeartRateData(_ reading: HeartRateReading) {
+        append(reading.csvRow, to: todayDir, filename: Constants.CSV.heartRateFile,
+               header: Constants.CSV.heartRateHeader)
+    }
+
+    // MARK: - Bluetooth Beanie Temperature Writes
+
+    func writeBeanieTemperatureData(_ reading: BeanieTemperatureReading) {
+        append(reading.csvRow, to: todayDir, filename: Constants.CSV.beanieTemperatureFile,
+               header: Constants.CSV.beanieTemperatureHeader)
+    }
+
+    // MARK: - Bluetooth Beanie IMU Writes
+
+    func writeBeanieImuData(_ readings: [BeanieIMUReading]) {
+        let rows = readings.map(\.csvRow).joined()
+        append(rows, to: todayDir, filename: Constants.CSV.beanieImuFile,
+                header: Constants.CSV.beanieImuHeader)
+    }
+
+    // MARK: - Keystroke Event Writes
+
+    func writeKeystrokeEvent(_ event: KeystrokeEvent) {
+        append(event.csvRow, to: todayDir, filename: Constants.CSV.keyEventsFile,
+               header: Constants.CSV.keyEventsHeader)
+    }
+
+    // MARK: - Medication Event Writes
+
+    func writeMedicationEvent(_ event: MedicationEvent) {
+        append(event.csvRow, to: todayDir, filename: Constants.CSV.medicationFile,
+               header: Constants.CSV.medicationHeader)
+    }
+
+    // MARK: - Physical Activity Writes
+
+    func writePhysicalActivityEvent(_ event: PhysicalActivityEvent) {
+        append(event.csvRow, to: todayDir, filename: Constants.CSV.physicalActivityFile,
+               header: Constants.CSV.physicalActivityHeader)
+    }
+
+    // MARK: - Profile Snapshot
+
+    /// Writes a daily profile snapshot to profile.csv.
+    /// Called once per app launch / collection start.
+    func writeProfileSnapshot(profile: UserProfile) {
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let medsJSON: String
+        if let data = try? JSONEncoder().encode(profile.medications),
+           let str = String(data: data, encoding: .utf8) {
+            medsJSON = str.replacingOccurrences(of: ",", with: ";") // avoid CSV comma conflict
+        } else {
+            medsJSON = "[]"
+        }
+        let row = "\(nowMs),\(profile.userId),\(profile.age),\(profile.gender),\(profile.dominantHand),\(profile.affectedSide),\(medsJSON)\n"
+        append(row, to: todayDir, filename: Constants.CSV.profileFile,
+               header: Constants.CSV.profileHeader)
+    }
+
     // MARK: - Internal append (thread-safe)
 
     private func append(_ content: String, to dir: URL, filename: String, header: String) {

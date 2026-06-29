@@ -38,14 +38,16 @@ class BackgroundCollectionManager {
             forTaskWithIdentifier: Self.refreshTaskId,
             using: nil
         ) { [weak self] task in
-            self?.handleRefresh(task: task as! BGAppRefreshTask)
+            guard let refreshTask = task as? BGAppRefreshTask else { return }
+            self?.handleRefresh(task: refreshTask)
         }
 
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: Self.processingTaskId,
             using: nil
         ) { [weak self] task in
-            self?.handleProcessing(task: task as! BGProcessingTask)
+            guard let procTask = task as? BGProcessingTask else { return }
+            self?.handleProcessing(task: procTask)
         }
     }
 
@@ -65,7 +67,7 @@ class BackgroundCollectionManager {
     private func scheduleProcessing() {
         let request = BGProcessingTaskRequest(identifier: Self.processingTaskId)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 60) // ~1 hour
-        request.requiresNetworkConnectivity = false
+        request.requiresNetworkConnectivity = UserDefaults.standard.bool(forKey: "autoUploadEnabled")
         request.requiresExternalPower = false
         try? BGTaskScheduler.shared.submit(request)
     }
@@ -105,12 +107,48 @@ class BackgroundCollectionManager {
                     dm.appendGaitMetrics(csvString: csv)
                 }
             }
+
+            // Auto-upload pending data if enabled
+            if UserDefaults.standard.bool(forKey: "autoUploadEnabled"),
+               let dm = dataManager {
+                await Self.uploadPendingDates(dataManager: dm)
+            }
+
             task.setTaskCompleted(success: true)
         }
 
         task.expirationHandler = {
             op.cancel()
             task.setTaskCompleted(success: false)
+        }
+    }
+
+    // MARK: - Auto Upload
+
+    /// Upload all un-uploaded past dates. Called from the processing handler
+    /// and from the "Upload Now" button in Settings.
+    static func uploadPendingDates(dataManager dm: DataManager) async {
+        let todayKey = Date().dateKey
+        let dates = dm.listDates()
+        let uploader = CloudUploader()
+
+        for dateStr in dates {
+            if dateStr == todayKey || dm.isUploaded(dateStr) { continue }
+
+            do {
+                let zipURL = try dm.zipDate(dateStr)
+                try await uploader.upload(
+                    zipURL: zipURL,
+                    userId: dm.userId,
+                    dateStr: dateStr,
+                    progressHandler: nil
+                )
+                try? FileManager.default.removeItem(at: zipURL)
+                dm.markUploaded(dateStr)
+                print("[AutoUpload] Uploaded \(dateStr) ✅")
+            } catch {
+                print("[AutoUpload] Failed \(dateStr): \(error.localizedDescription)")
+            }
         }
     }
 }

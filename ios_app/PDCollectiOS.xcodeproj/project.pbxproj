@@ -1,0 +1,774 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A20ADB4C86A2846C097B5CD /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F479B8C6B9A865318EC7678 /* MainTabView.swift */; };
+		0B2079CA1977261E10701E00 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C3A8E94F67E3A8F50607D /* Extensions.swift */; };
+		0E0D49DA346C1BAF53E32F5E /* BluetoothDevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED736E4394B92F29688FF60 /* BluetoothDevicesView.swift */; };
+		1137764A21FF2FAE6B0ADF31 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB6732CCB96F2806CC08ACD /* ContentView.swift */; };
+		116547EE8298A306D36D5320 /* Outfit.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4A969032422A83265ADED2A3 /* Outfit.ttf */; };
+		1216407201C90CF7705CFF53 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B558683D2B3A2F9C59388E3C /* KeyboardViewController.swift */; };
+		12FE7E7ABB39DDE434F53536 /* PDCollectKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1808BAD71FB9C756669CBF97 /* TestResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23D8D08576122BEA51393288 /* TestResult.swift */; };
+		2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */; };
+		28AD1CE01C8C6616C6EDD678 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */; };
+		35AA01C2FB7652E9B8CED696 /* GaitMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29757E221F20ECE18EED954 /* GaitMetric.swift */; };
+		3771022B1B1853F78DFCC05B /* BeanieRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6D71D118D7706233B8123C /* BeanieRegistry.swift */; };
+		3802AE5A866159350482457F /* QuestionnaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B751887CCB41F899D53CA430 /* QuestionnaireView.swift */; };
+		4CBB1245DEDAD1FAF3033049 /* TouchEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */; };
+		56BCECE3E51E6C4376A963E6 /* CloudUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7F96C7CA690AA371902185 /* CloudUploader.swift */; };
+		57FE276D18C46A7CA9AD2C31 /* MedicationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F1ED50F27D20344A3C400B /* MedicationEvent.swift */; };
+		5F62A13E03D4E6EBF8F472A1 /* GamificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7AC3AD42DAF623C4191CF3A /* GamificationManager.swift */; };
+		6349B8DD2AD0FDCEC5BACBDA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291E97313FB912D275C98D8 /* Theme.swift */; };
+		686F63F4F8B35AFB3CA3AA19 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE537F928BE88E3762FAB657 /* BluetoothManager.swift */; };
+		6CD47DFF56E46D29883DD19D /* PDCollectiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE8ED11086C03259EBB5042 /* PDCollectiOSApp.swift */; };
+		6D4CDDDC59875727F2985DA5 /* TrailMakingTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */; };
+		70E00A8B330B3318C8062DFB /* BeanieIMUReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A8B02E21783F5E4E98BF55B /* BeanieIMUReading.swift */; };
+		749F9252A67F105D34BD18BD /* BeaniePacketParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F42555E81C60211FCFFB2A /* BeaniePacketParser.swift */; };
+		79887FC9735E243684B1EC33 /* LegAgilityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6DC17477E60268A9078B93 /* LegAgilityView.swift */; };
+		7B095E70928AAE44474A5ED4 /* AppEventLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 269FF147A286D9ED721528EB /* AppEventLogger.swift */; };
+		7B1493DAB8251D9B80369CC7 /* SpiralTracingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863F45179A7EDC27F9EF7FC7 /* SpiralTracingView.swift */; };
+		7B34C866055E0D5B3D46191A /* Rajdhani-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E27B7721269E2B99709286E6 /* Rajdhani-Bold.ttf */; };
+		7BE3FEA97BF565AD2B81A19F /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */; };
+		866A13C77F5E5A2E78417ADB /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA79D7166D406F24993CF624 /* AppState.swift */; };
+		88BFC8BABE7F924FC2B3F512 /* AppEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC0CD58496F5F46414D1507 /* AppEvent.swift */; };
+		88E22909C0BF344842880BD2 /* DataExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77182DDAF6CD9E8FD28907BE /* DataExportView.swift */; };
+		8B3D45D9F5441DD3931FB127 /* ActiveTestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410B546D30D439C6B4DE48D1 /* ActiveTestsView.swift */; };
+		8C2788FF565DC54663694C89 /* HRBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */; };
+		8C9613DC58FDBE51C16CD586 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80A99C46B3B91911EA3D1EEC /* DataManager.swift */; };
+		914579E4A35D96D0D1750A8C /* TouchLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */; };
+		91A282AB1DFF442B0514A4D7 /* PhysicalActivityLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 262FA521A0E402933B29D470 /* PhysicalActivityLogView.swift */; };
+		93B40DE2C0FBB879893185D7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */; };
+		977858DF39D1C4A8BF6370FB /* SensorReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1116C47EADDC017996AE76 /* SensorReading.swift */; };
+		A361B4AA5513779D444BABB4 /* FaceDistanceSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */; };
+		A6C9ECBE23F8E01DAB81E4B6 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B695E6A88B41A4C62473A13 /* Constants.swift */; };
+		A7A7001026D9B57CE4E514AC /* KeystrokeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */; };
+		B2CA4943BB2A0FD47C824444 /* HandTurningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45430F02B73F6AD368333557 /* HandTurningView.swift */; };
+		B5F5E0B513337AF3A5B99804 /* Rajdhani-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F53D80EB594E436DA599ABC3 /* Rajdhani-Regular.ttf */; };
+		B7F94D393BA111925C30620E /* BeanieTemperatureReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCDAC414ADF66D0189ADC10 /* BeanieTemperatureReading.swift */; };
+		BC4F727055E452FDBA83175A /* ConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF15356AF268639E2BC13B82 /* ConsentView.swift */; };
+		C0AFD9FA75913E6044F1FF72 /* ProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933DFCA5B942B1896E1B9173 /* ProfileSetupView.swift */; };
+		C785910F8FA2F690D74355C9 /* MedicationLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E58F3171B3CADF5F9C7BB4BD /* MedicationLogView.swift */; };
+		C86A69F103ABA77243A1FC3C /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568A3FA9B3C6E347FFFF7BCC /* DashboardView.swift */; };
+		C8C0E1B4AE04E74074DD9011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 29122AECD96E65493B8A5E3D /* Assets.xcassets */; };
+		CABE3DFE9C55F943324B523C /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CB18E99E2EED8D5C92402E8B /* ZIPFoundation */; };
+		CAD961BFA4B7982590B10FF2 /* PDAlgorithms.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21A7978B22683611141966E /* PDAlgorithms.swift */; };
+		CB53A3EE995A01804FF74470 /* PhysicalActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */; };
+		CBB3ED519A7862EAC5AF9865 /* Rajdhani-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D8D557F15CDC697364C00987 /* Rajdhani-Medium.ttf */; };
+		D0F7DBA1666674CD6F484E9B /* DailyReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE1DE713251384FA69CF92E /* DailyReportView.swift */; };
+		D95BB2D0B9A8F755A9947A15 /* FingerTappingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1879D6C5CB7722462EF426A2 /* FingerTappingView.swift */; };
+		DD5320E6B151098F80D001D6 /* FaceDistanceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAEC12DE6C92EE0F4ACD428 /* FaceDistanceManager.swift */; };
+		E2055B4C5E8567B0661EDD19 /* QuestionnaireResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */; };
+		E48F30702EE977047022B202 /* PassiveSensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */; };
+		E49EA952DDC572D21A24DFC6 /* KeystrokeSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26219CFA974662F0772A8E8E /* KeystrokeSync.swift */; };
+		E4B3BF4A0BE0793E44E70560 /* CoreMotionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC60822020660C887787231 /* CoreMotionManager.swift */; };
+		EEBD77617A868B377DCEF3C5 /* BeanieBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */; };
+		EFEE8EAE03ACD5794FDC82EF /* BackgroundCollectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9D8E88266B96CA5FC25AD5 /* BackgroundCollectionManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0FC26B380956869C0D70FB37 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0C26A32CD0CC8349DD1E012 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 50B68E3CF80D5F52541AFAA5;
+			remoteInfo = PDCollectKeyboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		17DB10034666BA4285B6721B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				12FE7E7ABB39DDE434F53536 /* PDCollectKeyboard.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		05F42555E81C60211FCFFB2A /* BeaniePacketParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaniePacketParser.swift; sourceTree = "<group>"; };
+		07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
+		0A3C3A8E94F67E3A8F50607D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchEvent.swift; sourceTree = "<group>"; };
+		0F479B8C6B9A865318EC7678 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		1879D6C5CB7722462EF426A2 /* FingerTappingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTappingView.swift; sourceTree = "<group>"; };
+		1AAEC12DE6C92EE0F4ACD428 /* FaceDistanceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceDistanceManager.swift; sourceTree = "<group>"; };
+		1CB6732CCB96F2806CC08ACD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailMakingTestView.swift; sourceTree = "<group>"; };
+		2291E97313FB912D275C98D8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		23D8D08576122BEA51393288 /* TestResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestResult.swift; sourceTree = "<group>"; };
+		26219CFA974662F0772A8E8E /* KeystrokeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeystrokeSync.swift; sourceTree = "<group>"; };
+		262FA521A0E402933B29D470 /* PhysicalActivityLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityLogView.swift; sourceTree = "<group>"; };
+		269FF147A286D9ED721528EB /* AppEventLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEventLogger.swift; sourceTree = "<group>"; };
+		29122AECD96E65493B8A5E3D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2D6DC17477E60268A9078B93 /* LegAgilityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegAgilityView.swift; sourceTree = "<group>"; };
+		2F1116C47EADDC017996AE76 /* SensorReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorReading.swift; sourceTree = "<group>"; };
+		3117A8FBF982E76F973AEF0F /* KeyboardExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KeyboardExtension.entitlements; sourceTree = "<group>"; };
+		379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3CE1DE713251384FA69CF92E /* DailyReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportView.swift; sourceTree = "<group>"; };
+		410B546D30D439C6B4DE48D1 /* ActiveTestsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTestsView.swift; sourceTree = "<group>"; };
+		45430F02B73F6AD368333557 /* HandTurningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandTurningView.swift; sourceTree = "<group>"; };
+		48F1ED50F27D20344A3C400B /* MedicationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationEvent.swift; sourceTree = "<group>"; };
+		4A8B02E21783F5E4E98BF55B /* BeanieIMUReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieIMUReading.swift; sourceTree = "<group>"; };
+		4A969032422A83265ADED2A3 /* Outfit.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Outfit.ttf; sourceTree = "<group>"; };
+		4B695E6A88B41A4C62473A13 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateReading.swift; sourceTree = "<group>"; };
+		568A3FA9B3C6E347FFFF7BCC /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeystrokeEvent.swift; sourceTree = "<group>"; };
+		6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassiveSensorService.swift; sourceTree = "<group>"; };
+		6FCDAC414ADF66D0189ADC10 /* BeanieTemperatureReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieTemperatureReading.swift; sourceTree = "<group>"; };
+		77182DDAF6CD9E8FD28907BE /* DataExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportView.swift; sourceTree = "<group>"; };
+		7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchLogger.swift; sourceTree = "<group>"; };
+		80A99C46B3B91911EA3D1EEC /* DataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
+		863F45179A7EDC27F9EF7FC7 /* SpiralTracingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiralTracingView.swift; sourceTree = "<group>"; };
+		933DFCA5B942B1896E1B9173 /* ProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSetupView.swift; sourceTree = "<group>"; };
+		963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieBluetoothService.swift; sourceTree = "<group>"; };
+		ABE8ED11086C03259EBB5042 /* PDCollectiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDCollectiOSApp.swift; sourceTree = "<group>"; };
+		ACC60822020660C887787231 /* CoreMotionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMotionManager.swift; sourceTree = "<group>"; };
+		AE6D71D118D7706233B8123C /* BeanieRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieRegistry.swift; sourceTree = "<group>"; };
+		AED736E4394B92F29688FF60 /* BluetoothDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothDevicesView.swift; sourceTree = "<group>"; };
+		B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityEvent.swift; sourceTree = "<group>"; };
+		B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HRBluetoothService.swift; sourceTree = "<group>"; };
+		B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PDCollectKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B558683D2B3A2F9C59388E3C /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
+		B751887CCB41F899D53CA430 /* QuestionnaireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireView.swift; sourceTree = "<group>"; };
+		B7B4D82052D07EC9D4C4D202 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireResponse.swift; sourceTree = "<group>"; };
+		BE7F96C7CA690AA371902185 /* CloudUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploader.swift; sourceTree = "<group>"; };
+		BEC0CD58496F5F46414D1507 /* AppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEvent.swift; sourceTree = "<group>"; };
+		BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceDistanceSample.swift; sourceTree = "<group>"; };
+		C3081E4BFBCEB41B97984E56 /* PDCollectiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PDCollectiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		CE537F928BE88E3762FAB657 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
+		D29757E221F20ECE18EED954 /* GaitMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GaitMetric.swift; sourceTree = "<group>"; };
+		D7F066A9149E34A73FFB1790 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D8D557F15CDC697364C00987 /* Rajdhani-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rajdhani-Medium.ttf"; sourceTree = "<group>"; };
+		E21A7978B22683611141966E /* PDAlgorithms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDAlgorithms.swift; sourceTree = "<group>"; };
+		E27B7721269E2B99709286E6 /* Rajdhani-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rajdhani-Bold.ttf"; sourceTree = "<group>"; };
+		E58F3171B3CADF5F9C7BB4BD /* MedicationLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationLogView.swift; sourceTree = "<group>"; };
+		E7AC3AD42DAF623C4191CF3A /* GamificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamificationManager.swift; sourceTree = "<group>"; };
+		EB9D8E88266B96CA5FC25AD5 /* BackgroundCollectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundCollectionManager.swift; sourceTree = "<group>"; };
+		EE3A98217B290BECE22F6AEC /* PDCollectiOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PDCollectiOS.entitlements; sourceTree = "<group>"; };
+		EF15356AF268639E2BC13B82 /* ConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentView.swift; sourceTree = "<group>"; };
+		F53D80EB594E436DA599ABC3 /* Rajdhani-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rajdhani-Regular.ttf"; sourceTree = "<group>"; };
+		FA79D7166D406F24993CF624 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9973479BAF4666E36E61EBA2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CABE3DFE9C55F943324B523C /* ZIPFoundation in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		164105AFF66A4F14766003E6 /* KeyboardExtension */ = {
+			isa = PBXGroup;
+			children = (
+				D7F066A9149E34A73FFB1790 /* Info.plist */,
+				3117A8FBF982E76F973AEF0F /* KeyboardExtension.entitlements */,
+				B558683D2B3A2F9C59388E3C /* KeyboardViewController.swift */,
+			);
+			path = KeyboardExtension;
+			sourceTree = "<group>";
+		};
+		1CA7C3072EE82CE6A7495E7A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				BEC0CD58496F5F46414D1507 /* AppEvent.swift */,
+				4A8B02E21783F5E4E98BF55B /* BeanieIMUReading.swift */,
+				6FCDAC414ADF66D0189ADC10 /* BeanieTemperatureReading.swift */,
+				BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */,
+				D29757E221F20ECE18EED954 /* GaitMetric.swift */,
+				4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */,
+				5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */,
+				48F1ED50F27D20344A3C400B /* MedicationEvent.swift */,
+				B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */,
+				BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */,
+				2F1116C47EADDC017996AE76 /* SensorReading.swift */,
+				23D8D08576122BEA51393288 /* TestResult.swift */,
+				0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1D66B0AB0EC9BC91A271D134 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C3081E4BFBCEB41B97984E56 /* PDCollectiOS.app */,
+				B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		33FE9B74A748BAFC5914F6E3 = {
+			isa = PBXGroup;
+			children = (
+				FE57CDB52071A62DE6AA9CA2 /* PDCollectiOS */,
+				1D66B0AB0EC9BC91A271D134 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3C15E43B8A6D9858215A63C1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				410B546D30D439C6B4DE48D1 /* ActiveTestsView.swift */,
+				AED736E4394B92F29688FF60 /* BluetoothDevicesView.swift */,
+				EF15356AF268639E2BC13B82 /* ConsentView.swift */,
+				3CE1DE713251384FA69CF92E /* DailyReportView.swift */,
+				568A3FA9B3C6E347FFFF7BCC /* DashboardView.swift */,
+				77182DDAF6CD9E8FD28907BE /* DataExportView.swift */,
+				0F479B8C6B9A865318EC7678 /* MainTabView.swift */,
+				E58F3171B3CADF5F9C7BB4BD /* MedicationLogView.swift */,
+				262FA521A0E402933B29D470 /* PhysicalActivityLogView.swift */,
+				933DFCA5B942B1896E1B9173 /* ProfileSetupView.swift */,
+				B751887CCB41F899D53CA430 /* QuestionnaireView.swift */,
+				379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */,
+				A046451CE221CE650B291599 /* Tests */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		49C3D31356246A86F83814D4 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				269FF147A286D9ED721528EB /* AppEventLogger.swift */,
+				EB9D8E88266B96CA5FC25AD5 /* BackgroundCollectionManager.swift */,
+				963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */,
+				05F42555E81C60211FCFFB2A /* BeaniePacketParser.swift */,
+				AE6D71D118D7706233B8123C /* BeanieRegistry.swift */,
+				CE537F928BE88E3762FAB657 /* BluetoothManager.swift */,
+				BE7F96C7CA690AA371902185 /* CloudUploader.swift */,
+				ACC60822020660C887787231 /* CoreMotionManager.swift */,
+				80A99C46B3B91911EA3D1EEC /* DataManager.swift */,
+				1AAEC12DE6C92EE0F4ACD428 /* FaceDistanceManager.swift */,
+				E7AC3AD42DAF623C4191CF3A /* GamificationManager.swift */,
+				07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */,
+				B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */,
+				26219CFA974662F0772A8E8E /* KeystrokeSync.swift */,
+				6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */,
+				7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */,
+				CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		5C453FA499FD01077690D4E5 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				4B695E6A88B41A4C62473A13 /* Constants.swift */,
+				0A3C3A8E94F67E3A8F50607D /* Extensions.swift */,
+				E21A7978B22683611141966E /* PDAlgorithms.swift */,
+				2291E97313FB912D275C98D8 /* Theme.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		8C78BF329A3615516305171E /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				4A969032422A83265ADED2A3 /* Outfit.ttf */,
+				E27B7721269E2B99709286E6 /* Rajdhani-Bold.ttf */,
+				D8D557F15CDC697364C00987 /* Rajdhani-Medium.ttf */,
+				F53D80EB594E436DA599ABC3 /* Rajdhani-Regular.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		A046451CE221CE650B291599 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				1879D6C5CB7722462EF426A2 /* FingerTappingView.swift */,
+				45430F02B73F6AD368333557 /* HandTurningView.swift */,
+				2D6DC17477E60268A9078B93 /* LegAgilityView.swift */,
+				863F45179A7EDC27F9EF7FC7 /* SpiralTracingView.swift */,
+				1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		E5EC58C9F5762F4DB57BE896 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				FA79D7166D406F24993CF624 /* AppState.swift */,
+				1CB6732CCB96F2806CC08ACD /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		FE57CDB52071A62DE6AA9CA2 /* PDCollectiOS */ = {
+			isa = PBXGroup;
+			children = (
+				29122AECD96E65493B8A5E3D /* Assets.xcassets */,
+				B7B4D82052D07EC9D4C4D202 /* Info.plist */,
+				EE3A98217B290BECE22F6AEC /* PDCollectiOS.entitlements */,
+				ABE8ED11086C03259EBB5042 /* PDCollectiOSApp.swift */,
+				E5EC58C9F5762F4DB57BE896 /* App */,
+				8C78BF329A3615516305171E /* Fonts */,
+				164105AFF66A4F14766003E6 /* KeyboardExtension */,
+				49C3D31356246A86F83814D4 /* Managers */,
+				1CA7C3072EE82CE6A7495E7A /* Models */,
+				5C453FA499FD01077690D4E5 /* Utilities */,
+				3C15E43B8A6D9858215A63C1 /* Views */,
+			);
+			path = PDCollectiOS;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		50B68E3CF80D5F52541AFAA5 /* PDCollectKeyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 90EFA7B7F905EF56B6457C68 /* Build configuration list for PBXNativeTarget "PDCollectKeyboard" */;
+			buildPhases = (
+				02D6DAFAC0D6C28AE448773C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PDCollectKeyboard;
+			packageProductDependencies = (
+			);
+			productName = PDCollectKeyboard;
+			productReference = B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		7109BE01CB528211CCC7DF38 /* PDCollectiOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 501159BC55212EF7C72A70E9 /* Build configuration list for PBXNativeTarget "PDCollectiOS" */;
+			buildPhases = (
+				D03A383480D300F6C16E39DE /* Sources */,
+				59E2FB14C60C81AA3829D0B7 /* Resources */,
+				9973479BAF4666E36E61EBA2 /* Frameworks */,
+				17DB10034666BA4285B6721B /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				81375792F4F4D97754FA9D88 /* PBXTargetDependency */,
+			);
+			name = PDCollectiOS;
+			packageProductDependencies = (
+				CB18E99E2EED8D5C92402E8B /* ZIPFoundation */,
+			);
+			productName = PDCollectiOS;
+			productReference = C3081E4BFBCEB41B97984E56 /* PDCollectiOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D0C26A32CD0CC8349DD1E012 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					50B68E3CF80D5F52541AFAA5 = {
+						DevelopmentTeam = YD2UPLT5JG;
+						ProvisioningStyle = Automatic;
+					};
+					7109BE01CB528211CCC7DF38 = {
+						DevelopmentTeam = YD2UPLT5JG;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = BFA2EFA84C32C82B530A8BCF /* Build configuration list for PBXProject "PDCollectiOS" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 33FE9B74A748BAFC5914F6E3;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7AE74482320A1B5225F4CAB8 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 1D66B0AB0EC9BC91A271D134 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				50B68E3CF80D5F52541AFAA5 /* PDCollectKeyboard */,
+				7109BE01CB528211CCC7DF38 /* PDCollectiOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		59E2FB14C60C81AA3829D0B7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C8C0E1B4AE04E74074DD9011 /* Assets.xcassets in Resources */,
+				116547EE8298A306D36D5320 /* Outfit.ttf in Resources */,
+				7B34C866055E0D5B3D46191A /* Rajdhani-Bold.ttf in Resources */,
+				CBB3ED519A7862EAC5AF9865 /* Rajdhani-Medium.ttf in Resources */,
+				B5F5E0B513337AF3A5B99804 /* Rajdhani-Regular.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		02D6DAFAC0D6C28AE448773C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1216407201C90CF7705CFF53 /* KeyboardViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D03A383480D300F6C16E39DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8B3D45D9F5441DD3931FB127 /* ActiveTestsView.swift in Sources */,
+				88BFC8BABE7F924FC2B3F512 /* AppEvent.swift in Sources */,
+				7B095E70928AAE44474A5ED4 /* AppEventLogger.swift in Sources */,
+				866A13C77F5E5A2E78417ADB /* AppState.swift in Sources */,
+				EFEE8EAE03ACD5794FDC82EF /* BackgroundCollectionManager.swift in Sources */,
+				EEBD77617A868B377DCEF3C5 /* BeanieBluetoothService.swift in Sources */,
+				70E00A8B330B3318C8062DFB /* BeanieIMUReading.swift in Sources */,
+				749F9252A67F105D34BD18BD /* BeaniePacketParser.swift in Sources */,
+				3771022B1B1853F78DFCC05B /* BeanieRegistry.swift in Sources */,
+				B7F94D393BA111925C30620E /* BeanieTemperatureReading.swift in Sources */,
+				0E0D49DA346C1BAF53E32F5E /* BluetoothDevicesView.swift in Sources */,
+				686F63F4F8B35AFB3CA3AA19 /* BluetoothManager.swift in Sources */,
+				56BCECE3E51E6C4376A963E6 /* CloudUploader.swift in Sources */,
+				BC4F727055E452FDBA83175A /* ConsentView.swift in Sources */,
+				A6C9ECBE23F8E01DAB81E4B6 /* Constants.swift in Sources */,
+				1137764A21FF2FAE6B0ADF31 /* ContentView.swift in Sources */,
+				E4B3BF4A0BE0793E44E70560 /* CoreMotionManager.swift in Sources */,
+				D0F7DBA1666674CD6F484E9B /* DailyReportView.swift in Sources */,
+				C86A69F103ABA77243A1FC3C /* DashboardView.swift in Sources */,
+				88E22909C0BF344842880BD2 /* DataExportView.swift in Sources */,
+				8C9613DC58FDBE51C16CD586 /* DataManager.swift in Sources */,
+				0B2079CA1977261E10701E00 /* Extensions.swift in Sources */,
+				DD5320E6B151098F80D001D6 /* FaceDistanceManager.swift in Sources */,
+				A361B4AA5513779D444BABB4 /* FaceDistanceSample.swift in Sources */,
+				D95BB2D0B9A8F755A9947A15 /* FingerTappingView.swift in Sources */,
+				35AA01C2FB7652E9B8CED696 /* GaitMetric.swift in Sources */,
+				5F62A13E03D4E6EBF8F472A1 /* GamificationManager.swift in Sources */,
+				8C2788FF565DC54663694C89 /* HRBluetoothService.swift in Sources */,
+				B2CA4943BB2A0FD47C824444 /* HandTurningView.swift in Sources */,
+				28AD1CE01C8C6616C6EDD678 /* HealthKitManager.swift in Sources */,
+				2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */,
+				A7A7001026D9B57CE4E514AC /* KeystrokeEvent.swift in Sources */,
+				E49EA952DDC572D21A24DFC6 /* KeystrokeSync.swift in Sources */,
+				79887FC9735E243684B1EC33 /* LegAgilityView.swift in Sources */,
+				0A20ADB4C86A2846C097B5CD /* MainTabView.swift in Sources */,
+				57FE276D18C46A7CA9AD2C31 /* MedicationEvent.swift in Sources */,
+				C785910F8FA2F690D74355C9 /* MedicationLogView.swift in Sources */,
+				CAD961BFA4B7982590B10FF2 /* PDAlgorithms.swift in Sources */,
+				6CD47DFF56E46D29883DD19D /* PDCollectiOSApp.swift in Sources */,
+				E48F30702EE977047022B202 /* PassiveSensorService.swift in Sources */,
+				CB53A3EE995A01804FF74470 /* PhysicalActivityEvent.swift in Sources */,
+				91A282AB1DFF442B0514A4D7 /* PhysicalActivityLogView.swift in Sources */,
+				C0AFD9FA75913E6044F1FF72 /* ProfileSetupView.swift in Sources */,
+				E2055B4C5E8567B0661EDD19 /* QuestionnaireResponse.swift in Sources */,
+				3802AE5A866159350482457F /* QuestionnaireView.swift in Sources */,
+				977858DF39D1C4A8BF6370FB /* SensorReading.swift in Sources */,
+				93B40DE2C0FBB879893185D7 /* SettingsView.swift in Sources */,
+				7B1493DAB8251D9B80369CC7 /* SpiralTracingView.swift in Sources */,
+				1808BAD71FB9C756669CBF97 /* TestResult.swift in Sources */,
+				6349B8DD2AD0FDCEC5BACBDA /* Theme.swift in Sources */,
+				4CBB1245DEDAD1FAF3033049 /* TouchEvent.swift in Sources */,
+				914579E4A35D96D0D1750A8C /* TouchLogger.swift in Sources */,
+				6D4CDDDC59875727F2985DA5 /* TrailMakingTestView.swift in Sources */,
+				7BE3FEA97BF565AD2B81A19F /* UserProfile.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		81375792F4F4D97754FA9D88 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 50B68E3CF80D5F52541AFAA5 /* PDCollectKeyboard */;
+			targetProxy = 0FC26B380956869C0D70FB37 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		03B67C0E499225C929186877 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 96;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = YD2UPLT5JG;
+				INFOPLIST_FILE = PDCollectiOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 3.7.12;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		11926042D8ABF9B8D2078F5C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		2B93F6CC4D2DF3E5A8EF86B2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/KeyboardExtension/KeyboardExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = YD2UPLT5JG;
+				INFOPLIST_FILE = PDCollectiOS/KeyboardExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios.keyboard;
+				PRODUCT_NAME = PDCollectKeyboard;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		90A81F4197B7DCC1B6DFE57C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 96;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = YD2UPLT5JG;
+				INFOPLIST_FILE = PDCollectiOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 3.7.12;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9C09AFC28252661EB9F3C8C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/KeyboardExtension/KeyboardExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = YD2UPLT5JG;
+				INFOPLIST_FILE = PDCollectiOS/KeyboardExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios.keyboard;
+				PRODUCT_NAME = PDCollectKeyboard;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E16D95991148F45EBB596A4F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		501159BC55212EF7C72A70E9 /* Build configuration list for PBXNativeTarget "PDCollectiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				03B67C0E499225C929186877 /* Debug */,
+				90A81F4197B7DCC1B6DFE57C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		90EFA7B7F905EF56B6457C68 /* Build configuration list for PBXNativeTarget "PDCollectKeyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B93F6CC4D2DF3E5A8EF86B2 /* Debug */,
+				9C09AFC28252661EB9F3C8C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BFA2EFA84C32C82B530A8BCF /* Build configuration list for PBXProject "PDCollectiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11926042D8ABF9B8D2078F5C /* Debug */,
+				E16D95991148F45EBB596A4F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7AE74482320A1B5225F4CAB8 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.19;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CB18E99E2EED8D5C92402E8B /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7AE74482320A1B5225F4CAB8 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D0C26A32CD0CC8349DD1E012 /* Project object */;
+}

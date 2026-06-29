@@ -11,7 +11,7 @@ class HealthKitManager: ObservableObject {
     private var readTypes: Set<HKObjectType> {
         let identifiers: [HKQuantityTypeIdentifier] = [
             .walkingSpeed,
-            .stepLength,
+            .walkingStepLength,
             .walkingAsymmetryPercentage,
             .walkingDoubleSupportPercentage,
             .appleWalkingSteadiness,
@@ -41,7 +41,7 @@ class HealthKitManager: ObservableObject {
         let unit = { (id: HKQuantityTypeIdentifier) -> HKUnit in
             switch id {
             case .walkingSpeed:              return HKUnit.meter().unitDivided(by: .second())
-            case .stepLength:               return .meter()
+            case .walkingStepLength:         return .meter()
             case .walkingAsymmetryPercentage,
                  .walkingDoubleSupportPercentage: return .percent()
             case .appleWalkingSteadiness:   return .percent()
@@ -52,7 +52,7 @@ class HealthKitManager: ObservableObject {
         }
 
         async let speeds         = fetchDailyAverage(.walkingSpeed,              unit: unit(.walkingSpeed),              start: start, end: end)
-        async let lengths        = fetchDailyAverage(.stepLength,                unit: unit(.stepLength),               start: start, end: end)
+        async let lengths        = fetchDailyAverage(.walkingStepLength,          unit: unit(.walkingStepLength),          start: start, end: end)
         async let steadiness     = fetchDailyAverage(.appleWalkingSteadiness,    unit: unit(.appleWalkingSteadiness),   start: start, end: end)
         async let doubleSupport  = fetchDailyAverage(.walkingDoubleSupportPercentage, unit: unit(.walkingDoubleSupportPercentage), start: start, end: end)
         async let asymmetry      = fetchDailyAverage(.walkingAsymmetryPercentage, unit: unit(.walkingAsymmetryPercentage), start: start, end: end)

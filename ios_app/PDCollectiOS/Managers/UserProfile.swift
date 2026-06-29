@@ -16,6 +16,12 @@ class UserProfile: ObservableObject {
             }
         }
     }
+    // MARK: - Bluetooth Device Pairing
+
+    @Published var hrDeviceIdentifier: String  { didSet { save("hrDeviceIdentifier", hrDeviceIdentifier) } }
+    @Published var hrDeviceName: String        { didSet { save("hrDeviceName", hrDeviceName) } }
+    @Published var beanieDeviceIdentifier: String { didSet { save("beanieDeviceIdentifier", beanieDeviceIdentifier) } }
+    @Published var beanieDeviceName: String     { didSet { save("beanieDeviceName", beanieDeviceName) } }
 
     init() {
         let d = UserDefaults.standard
@@ -25,14 +31,10 @@ class UserProfile: ObservableObject {
         self.gender = d.string(forKey: "gender") ?? ""
         self.dominantHand = d.string(forKey: "dominantHand") ?? "Right"
         self.affectedSide = d.string(forKey: "affectedSide") ?? "Left"
-
-        if let uid = d.string(forKey: "userId"), !uid.isEmpty {
-            self.userId = uid
-        } else {
-            let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
-            self.userId = String(newId)
-            d.set(self.userId, forKey: "userId")
-        }
+        self.hrDeviceIdentifier = d.string(forKey: "hrDeviceIdentifier") ?? ""
+        self.hrDeviceName = d.string(forKey: "hrDeviceName") ?? ""
+        self.beanieDeviceIdentifier = d.string(forKey: "beanieDeviceIdentifier") ?? ""
+        self.beanieDeviceName = d.string(forKey: "beanieDeviceName") ?? ""
 
         if let data = d.data(forKey: "medications"),
            let meds = try? JSONDecoder().decode([String].self, from: data) {
@@ -40,16 +42,27 @@ class UserProfile: ObservableObject {
         } else {
             self.medications = []
         }
+
+        if let uid = d.string(forKey: "userId"), !uid.isEmpty {
+            self.userId = uid
+        } else {
+            let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
+            self.userId = newId
+            d.set(newId, forKey: "userId")
+        }
     }
 
     func clearAll() {
-        ["consentGiven","profileComplete","userId","age","gender","dominantHand","affectedSide","medications"]
+        ["consentGiven","profileComplete","userId","age","gender","dominantHand","affectedSide","medications",
+         "hrDeviceIdentifier","hrDeviceName","beanieDeviceIdentifier","beanieDeviceName"]
             .forEach { UserDefaults.standard.removeObject(forKey: $0) }
         consentGiven = false
         profileComplete = false
         let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
         userId = newId
         age = ""; gender = ""; dominantHand = "Right"; affectedSide = "Left"; medications = []
+        hrDeviceIdentifier = ""; hrDeviceName = ""
+        beanieDeviceIdentifier = ""; beanieDeviceName = ""
     }
 
     private func save(_ key: String, _ value: Any) {

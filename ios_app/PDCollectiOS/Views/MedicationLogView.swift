@@ -1,0 +1,235 @@
+import SwiftUI
+
+/// Medication intake logging view — lets the user log when they took each medication.
+/// Ported from the Android dialog-based flow into a native SwiftUI Form.
+struct MedicationLogView: View {
+    @EnvironmentObject var appState: AppState
+
+    // MARK: - State
+
+    /// Medication currently being logged (drives the time-picker sheet).
+    @State private var selectedMedication: String?
+    /// User-selected time of intake.
+    @State private var selectedTime = Date()
+    /// Today's logged events (local, in-memory for the current session).
+    @State private var recentLogs: [MedicationEvent] = []
+    /// Name of the medication that was just logged (drives checkmark animation).
+    @State private var justLoggedMed: String?
+
+    // MARK: - Body
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                medicationsSection
+                recentLogsSection
+            }
+            .navigationTitle("Medication Log")
+            .sheet(item: selectedMedicationBinding) { med in
+                timePickerSheet(for: med.name)
+            }
+        }
+    }
+
+    // MARK: - Medications List Section
+
+    @ViewBuilder
+    private var medicationsSection: some View {
+        let meds = appState.userProfile.medications
+
+        Section {
+            if meds.isEmpty {
+                Label {
+                    Text("No medications configured.\nAdd them in Settings → Profile.")
+                        .foregroundColor(.secondary)
+                        .font(.subheadline)
+                } icon: {
+                    Image(systemName: "pill.fill")
+                        .foregroundColor(.gray)
+                }
+                .padding(.vertical, 4)
+            } else {
+                ForEach(meds, id: \.self) { med in
+                    medicationRow(med)
+                }
+            }
+        } header: {
+            Text("Your Medications")
+        }
+    }
+
+    private func medicationRow(_ med: String) -> some View {
+        HStack {
+            Image(systemName: "pill.fill")
+                .foregroundColor(.blue)
+                .font(.title3)
+
+            Text(med)
+                .font(.body)
+
+            Spacer()
+
+            if justLoggedMed == med {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.title2)
+                    .transition(.scale.combined(with: .opacity))
+            } else {
+                Button {
+                    selectedTime = Date()
+                    selectedMedication = med
+                } label: {
+                    Label("Log Intake", systemImage: "plus.circle.fill")
+                        .font(.subheadline.weight(.medium))
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    // MARK: - Recent Logs Section
+
+    @ViewBuilder
+    private var recentLogsSection: some View {
+        Section {
+            if recentLogs.isEmpty {
+                Label {
+                    Text("No medications logged today.")
+                        .foregroundColor(.secondary)
+                        .font(.subheadline)
+                } icon: {
+                    Image(systemName: "clock")
+                        .foregroundColor(.gray)
+                }
+            } else {
+                ForEach(recentLogs.reversed(), id: \.timestampMs) { log in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(log.medName)
+                                .font(.body.weight(.medium))
+                            Text("Taken at \(formattedTime(ms: log.takenMs))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.green)
+                    }
+                }
+            }
+        } header: {
+            Text("Recent Logs")
+        } footer: {
+            if !recentLogs.isEmpty {
+                Text("\(recentLogs.count) intake\(recentLogs.count == 1 ? "" : "s") logged today")
+            }
+        }
+    }
+
+    // MARK: - Time Picker Sheet
+
+    private func timePickerSheet(for med: String) -> some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Image(systemName: "pill.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(.blue)
+
+                Text("Log \(med)")
+                    .font(.title2.weight(.semibold))
+
+                Text("When did you take this medication?")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+
+                DatePicker(
+                    "Time taken",
+                    selection: $selectedTime,
+                    displayedComponents: .hourAndMinute
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+
+                Spacer()
+            }
+            .padding(.top, 32)
+            .navigationTitle("Log Intake")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        selectedMedication = nil
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Confirm") {
+                        logMedication(med)
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    // MARK: - Actions
+
+    private func logMedication(_ med: String) {
+        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let takenMs = Int64(selectedTime.timeIntervalSince1970 * 1000)
+
+        let event = MedicationEvent(
+            timestampMs: nowMs,
+            takenMs: takenMs,
+            medName: med,
+            dosage: ""
+        )
+
+        appState.dataManager.writeMedicationEvent(event)
+        recentLogs.append(event)
+
+        // Haptic feedback
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        // Dismiss sheet
+        selectedMedication = nil
+
+        // Show success checkmark animation
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            justLoggedMed = med
+        }
+
+        // Clear checkmark after a delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            withAnimation {
+                justLoggedMed = nil
+            }
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func formattedTime(ms: Int64) -> String {
+        let date = Date(timeIntervalSince1970: Double(ms) / 1000.0)
+        let fmt = DateFormatter()
+        fmt.timeStyle = .short
+        return fmt.string(from: date)
+    }
+
+    /// Wrapper to bridge `String?` into an `Identifiable` for `.sheet(item:)`.
+    private var selectedMedicationBinding: Binding<IdentifiableMedName?> {
+        Binding(
+            get: { selectedMedication.map { IdentifiableMedName(name: $0) } },
+            set: { selectedMedication = $0?.name }
+        )
+    }
+}
+
+/// Identifiable wrapper for a medication name (used by `.sheet(item:)`).
+private struct IdentifiableMedName: Identifiable {
+    let id = UUID()
+    let name: String
+}

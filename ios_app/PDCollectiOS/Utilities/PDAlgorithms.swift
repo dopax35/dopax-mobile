@@ -93,7 +93,10 @@ enum PDAlgorithms {
 
         // Gyro magnitude
         var mag = (0..<n).map { i in
-            sqrt(gyroX[i]*gyroX[i] + gyroY[i]*gyroY[i] + gyroZ[i]*gyroZ[i])
+            let gx = gyroX[i]
+            let gy = gyroY[i]
+            let gz = gyroZ[i]
+            return sqrt(gx*gx + gy*gy + gz*gz)
         }
 
         let rms = sqrt(mag.map { $0 * $0 }.reduce(0, +) / Double(n))
@@ -262,7 +265,10 @@ enum PDAlgorithms {
 
         // Accelerometer magnitude
         var accMag = (0..<n).map { i in
-            sqrt(accX[i]*accX[i] + accY[i]*accY[i] + accZ[i]*accZ[i])
+            let ax = accX[i]
+            let ay = accY[i]
+            let az = accZ[i]
+            return sqrt(ax*ax + ay*ay + az*az)
         }
         // Remove gravity (subtract 9.81 and low-pass at 3 Hz via simple moving average)
         let gravityRemoved = accMag.map { $0 - 9.81 }

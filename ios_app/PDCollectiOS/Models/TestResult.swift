@@ -20,6 +20,6 @@ struct TestResult {
     var csvRow: String {
         let ts = ISO8601DateFormatter().string(from: timestamp)
         let safeDetails = details.replacingOccurrences(of: "\"", with: "\"\"")
-        return "\(ts),\(testType.rawValue),\(part),\(String(format: "%.3f", score)),\(durationMs),\(errors),\"\(safeDetails)\"\n"
+        return "\(ts),\(testType.rawValue),\(part),\(String(format: "%.3f", score)),\(durationMs),\(errors),\"\(safeDetails)\",iOS\n"
     }
 }

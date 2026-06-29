@@ -141,12 +141,14 @@ struct DataExportView: View {
             do {
                 let uploader = CloudUploader()
                 try await uploader.upload(
-                    fileURL: zipURL,
+                    zipURL: zipURL,
                     userId: appState.userProfile.userId,
+                    dateStr: date,
                     progressHandler: { p in
                         DispatchQueue.main.async { uploadProgress = p }
                     }
                 )
+                try? FileManager.default.removeItem(at: zipURL)
                 await MainActor.run {
                     appState.dataManager.markUploaded(date)
                     uploadingDate = nil

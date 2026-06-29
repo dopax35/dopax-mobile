@@ -4,13 +4,17 @@ struct HandTurningView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
 
-    private enum Phase { case instructions, running, done }
+    private enum Phase { case instructions, running(hand: Hand), between, done }
+    private enum Hand: String { case left = "Left", right = "Right" }
 
     @State private var phase: Phase = .instructions
     @State private var timeLeft: Double = Constants.TestDuration.handTurning
     @State private var timer: Timer?
-    @State private var readings: [SensorReading] = []
-    @State private var features: PDAlgorithms.HandTurningFeatures?
+    @State private var leftReadings: [SensorReading] = []
+    @State private var rightReadings: [SensorReading] = []
+    @State private var leftFeatures: PDAlgorithms.HandTurningFeatures?
+    @State private var rightFeatures: PDAlgorithms.HandTurningFeatures?
+    @State private var currentHand: Hand = .left
     @State private var isPersonalBest = false
     @State private var trendMsg = ""
 
@@ -21,15 +25,21 @@ struct HandTurningView: View {
             switch phase {
             case .instructions: instructionsView
             case .running:      runningView
+            case .between:      betweenView
             case .done:         resultView
             }
         }
         .navigationTitle("Hand Turning")
-        .navigationBarBackButtonHidden(phase == .running)
+        .navigationBarBackButtonHidden(isRunning)
         .onDisappear {
             timer?.invalidate()
             _ = appState.motionManager.stopRecording()
         }
+    }
+
+    private var isRunning: Bool {
+        if case .running = phase { return true }
+        return false
     }
 
     // MARK: - Instructions
@@ -44,7 +54,7 @@ struct HandTurningView: View {
                 .font(.title2).fontWeight(.bold)
 
             VStack(alignment: .leading, spacing: 12) {
-                instructionRow(icon: "iphone", text: "Hold phone in your affected hand, screen facing up")
+                instructionRow(icon: "iphone", text: "Hold phone in your LEFT hand, screen facing up")
                 instructionRow(icon: "arrow.clockwise.circle", text: "Rotate palm UP then DOWN repeatedly")
                 instructionRow(icon: "clock", text: "Keep going for 10 seconds — as fast as possible")
             }
@@ -52,7 +62,31 @@ struct HandTurningView: View {
 
             streakBanner
 
-            Button("Start Test") { startTest() }
+            Button("Start — Left Hand") { startHand(.left) }
+                .buttonStyle(.borderedProminent).controlSize(.large)
+                .tint(.green)
+        }
+        .padding()
+    }
+
+    // MARK: - Between hands
+
+    private var betweenView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "hands.clap.fill")
+                .font(.system(size: 64)).foregroundStyle(.green)
+                .modifier(PulseModifier())
+
+            Text("Left hand done! 🎉")
+                .font(.title2).fontWeight(.bold)
+            if let f = leftFeatures {
+                Text(String(format: "%.2f Hz  ·  CV %.1f%%", f.turningFreqHz, f.rhythmCV))
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            Text("Get ready with your RIGHT hand…")
+                .foregroundStyle(.secondary)
+
+            Button("Start — Right Hand") { startHand(.right) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
                 .tint(.green)
         }
@@ -64,6 +98,10 @@ struct HandTurningView: View {
     private var runningView: some View {
         VStack(spacing: 24) {
             Spacer()
+
+            // Hand indicator
+            Text(currentHand.rawValue + " Hand")
+                .font(.headline)
 
             // Countdown ring
             ZStack {
@@ -107,47 +145,42 @@ struct HandTurningView: View {
     private var resultView: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(isPersonalBest ? .yellow : .green)
-                    .modifier(PulseModifier())
+                // Trophy / completion header
+                VStack(spacing: 8) {
+                    Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(isPersonalBest ? .yellow : .green)
+                        .modifier(PulseModifier())
 
-                Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
-                    .font(.title).fontWeight(.bold)
-                if !trendMsg.isEmpty {
-                    Text(trendMsg).font(.subheadline).foregroundStyle(.secondary)
+                    Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
+                        .font(.title).fontWeight(.bold)
+
+                    if !trendMsg.isEmpty {
+                        Text(trendMsg)
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
 
-                // Core metrics card
-                VStack(spacing: 8) {
-                    resultRow("Duration", "\(Int(duration)) seconds")
-                    if let f = features {
-                        resultRow("Turning Speed (RMS)",
-                                  String(format: "%.2f rad/s", f.turningSpeedRMS))
-                        resultRow("Turning Speed (Max)",
-                                  String(format: "%.2f rad/s", f.turningSpeedMax))
-                        resultRow("Frequency",
-                                  String(format: "%.2f Hz", f.turningFreqHz))
-                        resultRow("Rhythm CoV",
-                                  String(format: "%.1f%%", f.rhythmCV),
-                                  note: f.rhythmCV > 25 ? "⚠️ irregular" : nil)
-                        resultRow("Amplitude Decay",
-                                  String(format: "%.4f", f.amplitudeDecay),
-                                  note: f.amplitudeDecay < -0.05 ? "⚠️ fatigue" : nil)
-                        resultRow("Tremor Ratio",
-                                  String(format: "%.3f", f.tremorPowerRatio),
-                                  note: f.tremorPowerRatio > 0.3 ? "⚠️ elevated" : nil)
-                        resultRow("Jerk RMS",
-                                  String(format: "%.3f", f.jerkRMS))
-                    }
+                // Score cards – Left & Right side by side
+                VStack(spacing: 0) {
+                    scoreSection("Left Hand", features: leftFeatures, color: .blue)
+                    Divider()
+                    scoreSection("Right Hand", features: rightFeatures, color: .green)
                 }
                 .cardStyle()
 
-                // Pronation/Supination Asymmetry
-                if let f = features {
-                    pronoSupraCard(f.pronoSupraAsymmetry)
+                // Asymmetry card comparing left vs right turning frequency
+                asymmetryCard
+
+                // Pronation/Supination cards per hand
+                if let f = leftFeatures {
+                    pronoSupraCard("Left Prono/Supra", f.pronoSupraAsymmetry)
+                }
+                if let f = rightFeatures {
+                    pronoSupraCard("Right Prono/Supra", f.pronoSupraAsymmetry)
                 }
 
+                // Motivational message
                 Text(appState.gamification.motivationalMessage)
                     .font(.callout).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -164,12 +197,73 @@ struct HandTurningView: View {
     }
 
     @ViewBuilder
-    private func pronoSupraCard(_ ratio: Double) -> some View {
+    private func scoreSection(_ title: String,
+                               features: PDAlgorithms.HandTurningFeatures?,
+                               color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.headline).foregroundStyle(color).padding(.bottom, 2)
+            resultRow("Duration", "\(Int(duration)) seconds")
+            if let f = features {
+                resultRow("Turning Speed (RMS)",
+                          String(format: "%.2f rad/s", f.turningSpeedRMS))
+                resultRow("Turning Speed (Max)",
+                          String(format: "%.2f rad/s", f.turningSpeedMax))
+                resultRow("Frequency",
+                          String(format: "%.2f Hz", f.turningFreqHz))
+                resultRow("Rhythm CoV",
+                          String(format: "%.1f%%", f.rhythmCV),
+                          note: f.rhythmCV > 25 ? "⚠️ irregular" : nil)
+                resultRow("Amplitude Decay",
+                          String(format: "%.4f", f.amplitudeDecay),
+                          note: f.amplitudeDecay < -0.05 ? "⚠️ fatigue" : nil)
+                resultRow("Tremor Ratio",
+                          String(format: "%.3f", f.tremorPowerRatio),
+                          note: f.tremorPowerRatio > 0.3 ? "⚠️ elevated" : nil)
+                resultRow("Jerk RMS",
+                          String(format: "%.3f", f.jerkRMS))
+            }
+        }
+        .padding()
+    }
+
+    private var asymmetryCard: some View {
+        let leftFreq  = leftFeatures?.turningFreqHz ?? 0
+        let rightFreq = rightFeatures?.turningFreqHz ?? 0
+        let ai = PDAlgorithms.asymmetryIndex(left: leftFreq, right: rightFreq)
+        let color: Color = ai < 10 ? .green : (ai < 20 ? .yellow : .orange)
+
+        return VStack(spacing: 8) {
+            HStack {
+                Text("Side Asymmetry").font(.headline)
+                Spacer()
+                Text(String(format: "%.1f%%", ai))
+                    .font(.title3.bold())
+                    .foregroundStyle(color)
+            }
+            // Visual bar
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color(.systemGray5)).frame(height: 10)
+                    Capsule().fill(color)
+                        .frame(width: g.size.width * min(ai / 50.0, 1.0), height: 10)
+                        .animation(.easeOut(duration: 0.6), value: ai)
+                }
+            }
+            .frame(height: 10)
+            Text("< 10% symmetric · 10–20% mild · > 20% clinically notable")
+                .font(.caption2).foregroundStyle(.secondary)
+        }
+        .padding()
+        .cardStyle()
+    }
+
+    @ViewBuilder
+    private func pronoSupraCard(_ title: String, _ ratio: Double) -> some View {
         let deviation = abs(ratio - 1.0)
         let color: Color = deviation < 0.15 ? .green : (deviation < 0.35 ? .yellow : .orange)
         VStack(spacing: 8) {
             HStack {
-                Text("Prono/Supra Asymmetry").font(.headline)
+                Text(title).font(.headline)
                 Spacer()
                 Text(String(format: "%.2f", ratio))
                     .font(.title3.bold()).foregroundStyle(color)
@@ -213,39 +307,57 @@ struct HandTurningView: View {
 
     // MARK: - Logic
 
-    private func startTest() {
-        appState.motionManager.startRecording()
-        phase = .running
+    private func startHand(_ hand: Hand) {
+        currentHand = hand
         timeLeft = duration
+        appState.motionManager.startRecording()
+        phase = .running(hand: hand)
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             timeLeft -= 0.1
-            if timeLeft <= 0 {
-                timer?.invalidate(); timer = nil
-                let data = appState.motionManager.stopRecording()
-                readings = data
-                computeFeatures(data)
-                saveResult()
-                phase = .done
-            }
+            if timeLeft <= 0 { finishHand(hand) }
         }
     }
 
-    private func computeFeatures(_ data: [SensorReading]) {
+    private func finishHand(_ hand: Hand) {
+        timer?.invalidate(); timer = nil
+        let data = appState.motionManager.stopRecording()
+
+        if hand == .left {
+            leftReadings = data
+            leftFeatures = computeFeatures(data)
+            saveResult(hand: .left)
+            phase = .between
+        } else {
+            rightReadings = data
+            rightFeatures = computeFeatures(data)
+            saveResult(hand: .right)
+            computeTrend()
+            phase = .done
+        }
+    }
+
+    private func computeFeatures(_ data: [SensorReading]) -> PDAlgorithms.HandTurningFeatures {
         let gx = data.map(\.gyroX); let gy = data.map(\.gyroY); let gz = data.map(\.gyroZ)
-        features = PDAlgorithms.handTurningFeatures(
+        return PDAlgorithms.handTurningFeatures(
             gyroX: gx, gyroY: gy, gyroZ: gz, hz: 100)
-        if let f = features {
-            isPersonalBest = appState.gamification.isPersonalBest(
-                testType: "hand_turning", score: f.turningFreqHz, higherIsBetter: true)
-            trendMsg = appState.gamification.trendMessage(
-                testType: "hand_turning", score: f.turningFreqHz, higherIsBetter: true)
-            appState.gamification.recordCompletion(
-                testType: "hand_turning", score: f.turningFreqHz, higherIsBetter: true)
-        }
     }
 
-    private func saveResult() {
+    private func computeTrend() {
+        let leftFreq = leftFeatures?.turningFreqHz ?? 0
+        let rightFreq = rightFeatures?.turningFreqHz ?? 0
+        let score = (leftFreq + rightFreq) / 2.0
+        isPersonalBest = appState.gamification.isPersonalBest(
+            testType: "hand_turning", score: score, higherIsBetter: true)
+        trendMsg = appState.gamification.trendMessage(
+            testType: "hand_turning", score: score, higherIsBetter: true)
+        appState.gamification.recordCompletion(
+            testType: "hand_turning", score: score, higherIsBetter: true)
+    }
+
+    private func saveResult(hand: Hand) {
+        let readings = hand == .left ? leftReadings : rightReadings
+        let features = hand == .left ? leftFeatures : rightFeatures
         appState.dataManager.writeSensorReadings(readings)
         var details = "samples:\(readings.count)"
         if let f = features {
@@ -256,7 +368,7 @@ struct HandTurningView: View {
         let result = TestResult(
             timestamp: Date(),
             testType: .handTurning,
-            part: "affected",
+            part: hand.rawValue,
             score: features?.turningFreqHz ?? 0,
             durationMs: Int(duration * 1000),
             errors: 0,

@@ -1,5 +1,6 @@
 import CoreMotion
 import Foundation
+import UIKit
 
 /// Passive, continuous sensor collection service analogous to Android's
 /// SensorCollectionService. Runs while the app is in the foreground, collecting

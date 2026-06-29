@@ -67,6 +67,7 @@ struct DashboardView: View {
                     )
                     ServiceStatusCard(
                         title: "Face Cam",
+                     
                         icon: "camera.fill",
                         color: appState.faceDistance.isRunning ? .green : .gray,
                         detail: appState.faceDistance.isRunning

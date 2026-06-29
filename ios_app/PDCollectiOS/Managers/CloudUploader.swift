@@ -18,18 +18,48 @@ struct CloudUploader {
     private let scriptURL = URL(string: Constants.googleAppsScriptURL)!
     private let folderId  = Constants.driveFolderId
 
-    func upload(fileURL: URL, userId: String, progressHandler: ((Double) -> Void)? = nil) async throws {
-        let filename = fileURL.lastPathComponent
-        let resumableURL = try await getUploadURL(filename: filename)
-        try await uploadFile(fileURL: fileURL, to: resumableURL, progressHandler: progressHandler)
-        try await notifyCompletion(userId: userId, filename: filename)
+    /// Upload a ZIP file to Google Drive via the dopa-X Apps Script.
+    /// Filename format: `PDData_{userId}_{date}_iOS.zip` to distinguish from Android.
+    func upload(zipURL: URL, userId: String, dateStr: String,
+                progressHandler: ((Double) -> Void)? = nil) async throws {
+        let filename = Self.cloudFilename(userId: userId, dateStr: dateStr)
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: zipURL.path)[.size] as? Int) ?? 0
+        let sessionId = Self.uploadSessionId(userId: userId, dateStr: dateStr, bytes: fileSize)
+
+        let resumableURL = try await getUploadURL(
+            filename: filename, fileSize: fileSize, sessionId: sessionId)
+        try await uploadFile(fileURL: zipURL, to: resumableURL, progressHandler: progressHandler)
+        try await notifyCompletion(
+            userId: userId, filename: filename, fileSize: fileSize, sessionId: sessionId)
     }
 
-    private func getUploadURL(filename: String) async throws -> URL {
+    // MARK: - Naming (matches Android + _iOS suffix)
+
+    static func cloudFilename(userId: String, dateStr: String) -> String {
+        "PDData_\(userId)_\(dateStr)_iOS.zip"
+    }
+
+    static func uploadSessionId(userId: String, dateStr: String, bytes: Int) -> String {
+        let safeUser = userId.isEmpty ? "unknown" : userId.replacingOccurrences(
+            of: "[^A-Za-z0-9_-]", with: "_", options: .regularExpression)
+        return "\(safeUser)-\(dateStr)-\(bytes)"
+    }
+
+    // MARK: - Steps
+
+    private func getUploadURL(filename: String, fileSize: Int, sessionId: String) async throws -> URL {
         var req = URLRequest(url: scriptURL)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = ["action": "getUploadUrl", "filename": filename, "folderId": folderId]
+        let body: [String: Any] = [
+            "action": "getUploadUrl",
+            "filename": filename,
+            "folderId": folderId,
+            "mimeType": "application/zip",
+            "contentLength": fileSize,
+            "uploadSessionId": sessionId,
+            "replaceExisting": true
+        ]
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         let (data, response) = try await URLSession.shared.data(for: req)
@@ -44,10 +74,12 @@ struct CloudUploader {
         return url
     }
 
-    private func uploadFile(fileURL: URL, to destination: URL, progressHandler: ((Double) -> Void)?) async throws {
+    private func uploadFile(fileURL: URL, to destination: URL,
+                            progressHandler: ((Double) -> Void)?) async throws {
         var req = URLRequest(url: destination)
         req.httpMethod = "PUT"
         req.setValue("application/zip", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = 600
 
         let delegate = UploadDelegate(progressHandler: progressHandler)
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
@@ -57,11 +89,19 @@ struct CloudUploader {
         }
     }
 
-    private func notifyCompletion(userId: String, filename: String) async throws {
+    private func notifyCompletion(userId: String, filename: String,
+                                  fileSize: Int, sessionId: String) async throws {
         var req = URLRequest(url: scriptURL)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: Any] = ["action": "notify", "userId": userId, "filename": filename, "folderId": folderId]
+        let body: [String: Any] = [
+            "action": "notify",
+            "userId": userId,
+            "filename": filename,
+            "folderId": folderId,
+            "contentLength": fileSize,
+            "uploadSessionId": sessionId
+        ]
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
         _ = try await URLSession.shared.data(for: req)
     }
