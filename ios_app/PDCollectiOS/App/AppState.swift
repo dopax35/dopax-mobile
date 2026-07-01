@@ -43,6 +43,10 @@ class AppState: ObservableObject {
         self.dataManager = DataManager(userId: profile.userId)
         self.isCollecting = UserDefaults.standard.bool(forKey: "isCollecting")
 
+        profile.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
+
         profile.$userId
             .dropFirst()
             .sink { [weak self] newId in self?.dataManager.userId = newId }
