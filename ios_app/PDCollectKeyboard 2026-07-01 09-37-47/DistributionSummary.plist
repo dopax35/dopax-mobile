@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PDCollectiOS.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>1</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>2496953880A338C3DD04522DAEDED86206B42464</string>
+				<key>dateExpires</key>
+				<string>01/07/2027</string>
+				<key>type</key>
+				<string>Cloud Managed Apple Distribution</string>
+			</dict>
+			<key>embeddedBinaries</key>
+			<array>
+				<dict>
+					<key>architectures</key>
+					<array>
+						<string>arm64</string>
+					</array>
+					<key>buildNumber</key>
+					<string>1</string>
+					<key>certificate</key>
+					<dict>
+						<key>SHA1</key>
+						<string>2496953880A338C3DD04522DAEDED86206B42464</string>
+						<key>dateExpires</key>
+						<string>01/07/2027</string>
+						<key>type</key>
+						<string>Cloud Managed Apple Distribution</string>
+					</dict>
+					<key>entitlements</key>
+					<dict>
+						<key>application-identifier</key>
+						<string>YD2UPLT5JG.com.oriw.pdcollect.ios1.keyboard</string>
+						<key>com.apple.developer.team-identifier</key>
+						<string>YD2UPLT5JG</string>
+						<key>get-task-allow</key>
+						<false/>
+					</dict>
+					<key>name</key>
+					<string>PDCollectKeyboard.appex</string>
+					<key>profile</key>
+					<dict>
+						<key>UUID</key>
+						<string>1e482ae5-5154-421a-81dc-0369c6f98173</string>
+						<key>dateExpires</key>
+						<string>01/07/2027</string>
+						<key>name</key>
+						<string>iOS Team Ad Hoc Provisioning Profile: com.oriw.pdcollect.ios1.keyboard</string>
+					</dict>
+					<key>team</key>
+					<dict>
+						<key>id</key>
+						<string>YD2UPLT5JG</string>
+						<key>name</key>
+						<string>Ori Weissberg</string>
+					</dict>
+					<key>versionNumber</key>
+					<string>1.0</string>
+				</dict>
+			</array>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>YD2UPLT5JG.com.oriw.pdcollect.ios1</string>
+				<key>com.apple.developer.healthkit</key>
+				<true/>
+				<key>com.apple.developer.healthkit.access</key>
+				<array/>
+				<key>com.apple.developer.team-identifier</key>
+				<string>YD2UPLT5JG</string>
+				<key>com.apple.security.application-groups</key>
+				<array>
+					<string>group.com.oriw.pdcollect.ios1.shared</string>
+				</array>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>PDCollectiOS.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>4b0cba11-6e59-4a2f-a643-1b253798cba5</string>
+				<key>dateExpires</key>
+				<string>01/07/2027</string>
+				<key>name</key>
+				<string>iOS Team Ad Hoc Provisioning Profile: com.oriw.pdcollect.ios1</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>YD2UPLT5JG</string>
+				<key>name</key>
+				<string>Ori Weissberg</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

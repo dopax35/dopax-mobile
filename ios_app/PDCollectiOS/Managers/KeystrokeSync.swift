@@ -14,7 +14,7 @@ final class KeystrokeSync {
 
     // MARK: - Constants
 
-    private let appGroupID = "group.com.oriweissberg.pdcollect.shared"
+    private let appGroupID = "group.com.oriw.pdcollect.ios1.shared"
     private let bufferFileName = "keystroke_buffer.csv"
 
     // MARK: - Import

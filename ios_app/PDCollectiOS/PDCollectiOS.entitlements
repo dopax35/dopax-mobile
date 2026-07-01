@@ -8,7 +8,7 @@
 	<array/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.oriweissberg.pdcollect.shared</string>
+		<string>group.com.oriw.pdcollect.ios1.shared</string>
 	</array>
 </dict>
 </plist>

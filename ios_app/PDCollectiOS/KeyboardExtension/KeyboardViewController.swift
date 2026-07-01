@@ -17,7 +17,7 @@ class KeyboardViewController: UIInputViewController {
 
     /// Shared `UserDefaults` backed by the App Group container so the
     /// main app can read the daily keystroke count.
-    private let sharedDefaults = UserDefaults(suiteName: "group.com.oriweissberg.pdcollect.shared")
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.oriw.pdcollect.ios1.shared")
 
     /// Label that shows how many keystrokes have been logged today.
     private let counterLabel = UILabel()
@@ -138,7 +138,7 @@ class KeyboardViewController: UIInputViewController {
         let row = "\(timestampMs),\(keyClass),\(isBackspace),external\n"
 
         guard let containerURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.com.oriweissberg.pdcollect.shared"
+            forSecurityApplicationGroupIdentifier: "group.com.oriw.pdcollect.ios1.shared"
         ) else { return }
 
         let fileURL = containerURL.appendingPathComponent("keystroke_buffer.csv")

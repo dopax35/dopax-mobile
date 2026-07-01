@@ -47,7 +47,7 @@ targets:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
         com.apple.security.application-groups:
-          - group.com.oriweissberg.pdcollect.shared
+          - group.com.oriw.pdcollect.ios1.shared
     capabilities:
       healthKit:
         enabled: true
@@ -61,7 +61,7 @@ targets:
       - target: PDCollectKeyboard
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.oriweissberg.pdcollectios
+        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
         MARKETING_VERSION: 3.7.12
@@ -101,7 +101,7 @@ targets:
       path: PDCollectiOS/KeyboardExtension/KeyboardExtension.entitlements
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.oriweissberg.pdcollectios.keyboard
+        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.keyboard
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
         DEVELOPMENT_TEAM: YD2UPLT5JG

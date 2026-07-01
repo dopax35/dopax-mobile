@@ -525,7 +525,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.7.12;
-				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.9;
@@ -609,7 +609,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios.keyboard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1.keyboard;
 				PRODUCT_NAME = PDCollectKeyboard;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
@@ -634,7 +634,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 3.7.12;
-				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -655,7 +655,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.oriweissberg.pdcollectios.keyboard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1.keyboard;
 				PRODUCT_NAME = PDCollectKeyboard;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
