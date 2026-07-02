@@ -23,11 +23,23 @@ struct FingerTappingView: View {
     // Whack-a-mole state
     @State private var targetPosition: CGPoint = .zero
     @State private var canvasSize: CGSize = .zero
-    @State private var hitPulse = false          // shrink animation on hit
-    @State private var missPulse = false         // shake animation on miss
+    @State private var hitPulse = false
+    @State private var missPulse = false
     @State private var targetRadius: CGFloat = 52
 
+    // Timing (Android-style: wall-clock start + monotonic elapsed)
+    @State private var wallStartMs: Int64 = 0
+    @State private var monoStartNs: UInt64 = 0
+
     private let duration = Constants.TestDuration.fingerTapping
+
+    /// Wall-clock ms since epoch
+    private static func nowMs() -> Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+    /// Monotonic nanoseconds (immune to clock changes)
+    private static func monoNs() -> UInt64 { clock_gettime_nsec_np(CLOCK_UPTIME_RAW) }
+    /// Elapsed ms since session start
+    private func elapsedMs() -> Int64 { Int64((Self.monoNs() - monoStartMs) / 1_000_000) }
+    @State private var monoStartMs: UInt64 = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -340,8 +352,19 @@ struct FingerTappingView: View {
         timeLeft = duration
         hitPulse = false
         missPulse = false
-        targetPosition = .zero   // reset so onAppear places it fresh
+        targetPosition = .zero
         phase = .running(hand: hand)
+
+        // Record session start timestamps — matches Android MotorTestSession
+        wallStartMs = Self.nowMs()
+        monoStartMs = Self.monoNs()
+
+        // Write START row
+        let side = hand.rawValue
+        appState.dataManager.writeFingerTappingRow(
+            wallMs: wallStartMs, elapsedMs: 0,
+            event: "START", buttonId: "",
+            side: side, profile: appState.userProfile)
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             timeLeft -= 0.1
@@ -351,16 +374,27 @@ struct FingerTappingView: View {
 
     private func handleHit() {
         let now = Date()
+        let side: String
         switch currentHand {
         case .left:
             leftCount += 1
             leftTimestamps.append(now)
+            side = "Left"
         case .right:
             rightCount += 1
             rightTimestamps.append(now)
+            side = "Right"
         }
 
-        // Hit animation then jump to new position
+        // Write SAMPLE row — matches Android finger_tapping.csv
+        let wms = Self.nowMs()
+        let ems = elapsedMs()
+        appState.dataManager.writeFingerTappingRow(
+            wallMs: wms, elapsedMs: ems,
+            event: "SAMPLE", buttonId: side,
+            side: side, profile: appState.userProfile)
+
+        // Hit animation then jump
         withAnimation(.easeOut(duration: 0.12)) { hitPulse = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             hitPulse = false
@@ -382,16 +416,21 @@ struct FingerTappingView: View {
     }
 
     private func finishHand(_ hand: Hand) {
-        guard timer != nil else { return }   // guard against double-fire
+        guard timer != nil else { return }
         timer?.invalidate(); timer = nil
+
+        // Write END row
+        let side = hand.rawValue
+        appState.dataManager.writeFingerTappingRow(
+            wallMs: Self.nowMs(), elapsedMs: elapsedMs(),
+            event: "END", buttonId: "",
+            side: side, profile: appState.userProfile)
 
         if hand == .left {
             leftFeatures = PDAlgorithms.fingerTappingFeatures(timestamps: leftTimestamps)
-            saveResult(hand: .left, count: leftCount, features: leftFeatures)
             phase = .between
         } else {
             rightFeatures = PDAlgorithms.fingerTappingFeatures(timestamps: rightTimestamps)
-            saveResult(hand: .right, count: rightCount, features: rightFeatures)
             computeTrend()
             phase = .done
         }
@@ -405,24 +444,5 @@ struct FingerTappingView: View {
             testType: "finger_tapping", score: score, higherIsBetter: true)
         appState.gamification.recordCompletion(
             testType: "finger_tapping", score: score, higherIsBetter: true)
-    }
-
-    private func saveResult(hand: Hand, count: Int,
-                            features: PDAlgorithms.FingerTappingFeatures?) {
-        var details = "taps:\(count)"
-        if let f = features {
-            details += String(format: ",freq:%.3f,cv:%.4f,slope:%.5f,hesitations:\(f.hesitationCount)",
-                              f.tapFrequencyHz, f.cvITI, f.itiSlope)
-        }
-        let result = TestResult(
-            timestamp: Date(),
-            testType: .fingerTapping,
-            part: hand.rawValue,
-            score: features?.tapFrequencyHz ?? Double(count) / duration,
-            durationMs: Int(duration * 1000),
-            errors: features?.hesitationCount ?? 0,
-            details: details
-        )
-        appState.dataManager.writeTestResult(result)
     }
 }

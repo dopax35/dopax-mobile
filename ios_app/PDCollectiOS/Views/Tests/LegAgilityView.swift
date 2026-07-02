@@ -4,35 +4,50 @@ struct LegAgilityView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
 
-    private enum Phase { case instructions, running, done }
-    private enum Side { case left, right }
+    private enum Phase { case instructions, running(side: Side), between, done }
+    private enum Side: String { case left = "Left", right = "Right" }
 
     @State private var phase: Phase = .instructions
-    @State private var activeZone: Side = .left
-    @State private var leftCount  = 0
-    @State private var rightCount = 0
-    @State private var leftTimestamps:  [Date] = []
-    @State private var rightTimestamps: [Date] = []
     @State private var timeLeft: Double = Constants.TestDuration.legAgility
     @State private var timer: Timer?
-    @State private var comboCount = 0          // consecutive correct taps
-    @State private var showCombo = false
+    @State private var leftReadings: [SensorReading] = []
+    @State private var rightReadings: [SensorReading] = []
+    @State private var leftFeatures: PDAlgorithms.LegAgilityFeatures?
+    @State private var rightFeatures: PDAlgorithms.LegAgilityFeatures?
+    @State private var currentSide: Side = .right // Android starts with Right Leg by default, or Left
     @State private var isPersonalBest = false
     @State private var trendMsg = ""
 
+    // Timing (Android-style: wall-clock start + monotonic elapsed)
+    @State private var wallStartMs: Int64 = 0
+    @State private var monoStartMs: UInt64 = 0
+
     private let duration = Constants.TestDuration.legAgility
+
+    private static func nowMs() -> Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+    private static func monoNs() -> UInt64 { clock_gettime_nsec_np(CLOCK_UPTIME_RAW) }
+    private func elapsedMs() -> Int64 { Int64((Self.monoNs() - monoStartMs) / 1_000_000) }
 
     var body: some View {
         VStack(spacing: 0) {
             switch phase {
             case .instructions: instructionsView
             case .running:      runningView
+            case .between:      betweenView
             case .done:         resultView
             }
         }
         .navigationTitle("Leg Agility")
-        .navigationBarBackButtonHidden(phase == .running)
-        .onDisappear { timer?.invalidate() }
+        .navigationBarBackButtonHidden(isRunning)
+        .onDisappear {
+            timer?.invalidate()
+            _ = appState.motionManager.stopRecording()
+        }
+    }
+
+    private var isRunning: Bool {
+        if case .running = phase { return true }
+        return false
     }
 
     // MARK: - Instructions
@@ -47,16 +62,40 @@ struct LegAgilityView: View {
                 .font(.title2).fontWeight(.bold)
 
             VStack(alignment: .leading, spacing: 12) {
-                instructionRow(icon: "iphone.and.arrow.forward", text: "Place phone flat on table or hold it")
-                instructionRow(icon: "arrow.left.arrow.right", text: "Tap the HIGHLIGHTED side with that heel")
-                instructionRow(icon: "figure.step.training", text: "Lift heel fully between each tap")
-                instructionRow(icon: "clock", text: "Alternate heels for 10 seconds")
+                instructionRow(icon: "iphone.and.arrow.forward", text: "Hold phone firmly against your RIGHT thigh")
+                instructionRow(icon: "figure.step.training", text: "Lift and stomp your foot as fast and as high as possible")
+                instructionRow(icon: "clock", text: "Keep going for 10 seconds")
+                instructionRow(icon: "arrow.left.and.right", text: "You will repeat for both legs")
             }
             .padding().background(.red.opacity(0.08)).cornerRadius(14)
 
             streakBanner
 
-            Button("Start Test") { startTest() }
+            Button("Start — Right Leg") { startLeg(.right) }
+                .buttonStyle(.borderedProminent).controlSize(.large)
+                .tint(.red)
+        }
+        .padding()
+    }
+
+    // MARK: - Between Legs
+
+    private var betweenView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "hands.clap.fill")
+                .font(.system(size: 64)).foregroundStyle(.red)
+                .modifier(PulseModifier())
+
+            Text("Right leg done! 🎉")
+                .font(.title2).fontWeight(.bold)
+            if let f = rightFeatures {
+                Text(String(format: "%d steps  ·  Freq %.2f Hz", f.nSteps, f.stepFreqHz))
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            Text("Now prepare for the LEFT leg…")
+                .foregroundStyle(.secondary)
+
+            Button("Start — Left Leg") { startLeg(.left) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
                 .tint(.red)
         }
@@ -66,81 +105,28 @@ struct LegAgilityView: View {
     // MARK: - Running
 
     private var runningView: some View {
-        VStack(spacing: 0) {
-            // Header bar
-            HStack {
-                Text("Leg Agility")
-                    .font(.headline)
-                Spacer()
-                // Combo indicator
-                if showCombo {
-                    Text("Combo x\(comboCount)!")
-                        .font(.caption.bold())
-                        .foregroundStyle(.yellow)
-                        .transition(.scale.combined(with: .opacity))
-                }
-                Text(String(format: "%.1f s", timeLeft))
-                    .font(.headline.monospacedDigit())
-                    .foregroundStyle(timeLeft < 3 ? .red : .primary)
-            }
-            .padding()
-            .animation(.easeInOut(duration: 0.2), value: showCombo)
+        VStack(spacing: 24) {
+            Spacer()
+
+            Text(currentSide.rawValue + " Leg")
+                .font(.title).fontWeight(.bold)
+                .foregroundStyle(.red)
+
+            Text(String(format: "%.1f s", timeLeft))
+                .font(.system(size: 64, weight: .bold, design: .monospaced))
+                .foregroundStyle(timeLeft < 3 ? .red : .primary)
 
             ProgressView(value: duration - timeLeft, total: duration)
-                .tint(timeLeft < 3 ? .red : .red.opacity(0.7))
+                .tint(.red)
+                .padding(.horizontal, 32)
 
-            GeometryReader { geo in
-                HStack(spacing: 0) {
-                    tapZone(side: .left, size: geo.size)
-                    Divider()
-                    tapZone(side: .right, size: geo.size)
-                }
-            }
+            Spacer()
+
+            // Live sensor activity indicator
+            LiveTremorBar(magnitude: appState.motionManager.latestAccMagnitude)
+
+            Spacer()
         }
-    }
-
-    @ViewBuilder
-    private func tapZone(side: Side, size: CGSize) -> some View {
-        let isActive = activeZone == side
-        let count = side == .left ? leftCount : rightCount
-        Button(action: { handleTap(side: side) }) {
-            ZStack {
-                (isActive ? Color.red.opacity(0.25) : Color(.systemGray6))
-                    .animation(.easeInOut(duration: 0.1), value: isActive)
-
-                VStack(spacing: 12) {
-                    // Foot icon with pulse
-                    ZStack {
-                        if isActive {
-                            Circle()
-                                .fill(Color.red.opacity(0.2))
-                                .frame(width: 100, height: 100)
-                                .scaleEffect(isActive ? 1.05 : 1.0)
-                                .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true),
-                                           value: isActive)
-                        }
-                        Text(side == .left ? "L" : "R")
-                            .font(.system(size: 72, weight: .heavy))
-                            .foregroundStyle(isActive ? .red : .gray)
-                    }
-
-                    if isActive {
-                        Text("TAP!")
-                            .font(.headline.bold())
-                            .foregroundStyle(.red)
-                            .transition(.scale)
-                    }
-
-                    // Counter with animation
-                    Text("\(count)")
-                        .font(.title).fontWeight(.bold)
-                        .contentTransition(.numericText())
-                        .foregroundStyle(isActive ? .red : .secondary)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-        .frame(width: size.width / 2, height: size.height)
     }
 
     // MARK: - Result
@@ -148,43 +134,27 @@ struct LegAgilityView: View {
     private var resultView: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(isPersonalBest ? .yellow : .red)
-                    .modifier(PulseModifier())
+                VStack(spacing: 8) {
+                    Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(isPersonalBest ? .yellow : .red)
+                        .modifier(PulseModifier())
 
-                Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
-                    .font(.title).fontWeight(.bold)
-                if !trendMsg.isEmpty {
-                    Text(trendMsg).font(.subheadline).foregroundStyle(.secondary)
+                    Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
+                        .font(.title).fontWeight(.bold)
+
+                    if !trendMsg.isEmpty {
+                        Text(trendMsg).font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
 
-                // Score card
-                VStack(spacing: 8) {
-                    resultRow("Left Taps",  "\(leftCount)")
-                    resultRow("Right Taps", "\(rightCount)")
-                    resultRow("Total",      "\(leftCount + rightCount)")
-                    resultRow("Rate", String(format: "%.1f taps/s",
-                                            Double(leftCount + rightCount) / duration))
-
-                    if !leftTimestamps.isEmpty, !rightTimestamps.isEmpty {
-                        let leftRate  = Double(leftCount)  / duration
-                        let rightRate = Double(rightCount) / duration
-
-                        // ITI stats per side
-                        if let lf = PDAlgorithms.fingerTappingFeatures(timestamps: leftTimestamps),
-                           let rf = PDAlgorithms.fingerTappingFeatures(timestamps: rightTimestamps) {
-                            Divider()
-                            resultRow("Left Rhythm CoV",  String(format: "%.3f", lf.cvITI),
-                                      note: lf.cvITI > 0.25 ? "⚠️" : nil)
-                            resultRow("Right Rhythm CoV", String(format: "%.3f", rf.cvITI),
-                                      note: rf.cvITI > 0.25 ? "⚠️" : nil)
-                        }
-                    }
+                VStack(spacing: 0) {
+                    scoreSection("Right Leg", features: rightFeatures, color: .red)
+                    Divider()
+                    scoreSection("Left Leg", features: leftFeatures, color: .orange)
                 }
                 .cardStyle()
 
-                // Asymmetry card
                 asymmetryCard
 
                 Text(appState.gamification.motivationalMessage)
@@ -202,10 +172,32 @@ struct LegAgilityView: View {
         }
     }
 
+    @ViewBuilder
+    private func scoreSection(_ title: String,
+                               features: PDAlgorithms.LegAgilityFeatures?,
+                               color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.headline).foregroundStyle(color).padding(.bottom, 2)
+            if let f = features {
+                resultRow("Steps counted", "\(f.nSteps)")
+                resultRow("Step Frequency", String(format: "%.2f Hz", f.stepFreqHz))
+                resultRow("Rhythm CoV", String(format: "%.1f%%", f.rhythmCV),
+                          note: f.rhythmCV > 25 ? "⚠️ irregular" : nil)
+                resultRow("Lift Height (Mean)", String(format: "%.2f m/s²", f.liftMean))
+                resultRow("Tremor Ratio", String(format: "%.3f", f.tremorPowerRatio),
+                          note: f.tremorPowerRatio > 0.3 ? "⚠️ elevated" : nil)
+                resultRow("Jerk RMS", String(format: "%.3f", f.jerkRMS))
+            } else {
+                resultRow("Steps counted", "0")
+            }
+        }
+        .padding()
+    }
+
     private var asymmetryCard: some View {
-        let leftRate  = Double(leftCount)  / duration
-        let rightRate = Double(rightCount) / duration
-        let ai = PDAlgorithms.asymmetryIndex(left: leftRate, right: rightRate)
+        let leftFreq = leftFeatures?.stepFreqHz ?? 0
+        let rightFreq = rightFeatures?.stepFreqHz ?? 0
+        let ai = PDAlgorithms.asymmetryIndex(left: leftFreq, right: rightFreq)
         let color: Color = ai < 10 ? .green : (ai < 20 ? .yellow : .orange)
 
         return VStack(spacing: 8) {
@@ -213,7 +205,8 @@ struct LegAgilityView: View {
                 Text("Side Asymmetry").font(.headline)
                 Spacer()
                 Text(String(format: "%.1f%%", ai))
-                    .font(.title3.bold()).foregroundStyle(color)
+                    .font(.title3.bold())
+                    .foregroundStyle(color)
             }
             GeometryReader { g in
                 ZStack(alignment: .leading) {
@@ -224,16 +217,11 @@ struct LegAgilityView: View {
                 }
             }
             .frame(height: 10)
-            HStack {
-                Text("Left: \(String(format: "%.1f", leftRate)) t/s")
-                Spacer()
-                Text("Right: \(String(format: "%.1f", rightRate)) t/s")
-            }
-            .font(.caption).foregroundStyle(.secondary)
             Text("< 10% symmetric · 10–20% mild · > 20% clinically notable")
                 .font(.caption2).foregroundStyle(.secondary)
         }
-        .padding().cardStyle()
+        .padding()
+        .cardStyle()
     }
 
     @ViewBuilder
@@ -269,71 +257,79 @@ struct LegAgilityView: View {
 
     // MARK: - Logic
 
-    private func startTest() {
-        leftCount = 0; rightCount = 0
-        leftTimestamps = []; rightTimestamps = []
-        activeZone = .left; comboCount = 0
-        timeLeft = duration; phase = .running
+    private func startLeg(_ side: Side) {
+        currentSide = side
+        timeLeft = duration
+        wallStartMs = Self.nowMs()
+        monoStartMs = Self.monoNs()
 
+        // START row
+        let sideStr = side == .left ? "Left" : "Right"
+        appState.dataManager.writeLegAgilityRow(
+            wallMs: wallStartMs, elapsedMs: 0, event: "START",
+            gx: "", gy: "", gz: "", ax: "", ay: "", az: "",
+            side: sideStr, profile: appState.userProfile)
+
+        // Start motion at max rate and stream each sample to CSV immediately
+        appState.motionManager.startStreaming { [self] r in
+            let ems = Int64((Self.monoNs() - monoStartMs) / 1_000_000)
+            let wms = wallStartMs + ems
+            appState.dataManager.writeLegAgilityRow(
+                wallMs: wms, elapsedMs: ems, event: "SAMPLE",
+                gx: fmt6(r.gyroX), gy: fmt6(r.gyroY), gz: fmt6(r.gyroZ),
+                ax: fmt6(r.accX),  ay: fmt6(r.accY),  az: fmt6(r.accZ),
+                side: sideStr, profile: appState.userProfile)
+        }
+
+        phase = .running(side: side)
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             timeLeft -= 0.1
-            if timeLeft <= 0 { finishTest() }
+            if timeLeft <= 0 { finishLeg(side) }
         }
     }
 
-    private func handleTap(side: Side) {
-        guard activeZone == side else {
-            // Wrong side — reset combo
-            comboCount = 0; showCombo = false
-            return
-        }
-        let now = Date()
-        switch side {
-        case .left:
-            leftCount += 1
-            leftTimestamps.append(now)
-            activeZone = .right
-        case .right:
-            rightCount += 1
-            rightTimestamps.append(now)
-            activeZone = .left
-        }
-        // Combo tracking
-        comboCount += 1
-        if comboCount >= 5 {
-            withAnimation { showCombo = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                withAnimation { showCombo = false }
-            }
-        }
-    }
-
-    private func finishTest() {
+    private func finishLeg(_ side: Side) {
         timer?.invalidate(); timer = nil
-        let score = Double(leftCount + rightCount) / duration
+        let data = appState.motionManager.stopRecording()
+
+        // END row
+        let sideStr = side == .left ? "Left" : "Right"
+        appState.dataManager.writeLegAgilityRow(
+            wallMs: Self.nowMs(), elapsedMs: elapsedMs(), event: "END",
+            gx: "", gy: "", gz: "", ax: "", ay: "", az: "",
+            side: sideStr, profile: appState.userProfile)
+
+        if side == .right {
+            rightReadings = data
+            rightFeatures = computeFeatures(data)
+            phase = .between
+        } else {
+            leftReadings = data
+            leftFeatures = computeFeatures(data)
+            computeTrend()
+            phase = .done
+        }
+    }
+
+    private func computeFeatures(_ data: [SensorReading]) -> PDAlgorithms.LegAgilityFeatures? {
+        let ax = data.map(\.accX); let ay = data.map(\.accY); let az = data.map(\.accZ)
+        let gx = data.map(\.gyroX); let gy = data.map(\.gyroY); let gz = data.map(\.gyroZ)
+        return PDAlgorithms.legAgilityFeatures(
+            accX: ax, accY: ay, accZ: az,
+            gyroX: gx, gyroY: gy, gyroZ: gz, hz: 100)
+    }
+
+    private func computeTrend() {
+        let leftFreq = leftFeatures?.stepFreqHz ?? 0
+        let rightFreq = rightFeatures?.stepFreqHz ?? 0
+        let score = (leftFreq + rightFreq) / 2.0
         isPersonalBest = appState.gamification.isPersonalBest(
             testType: "leg_agility", score: score, higherIsBetter: true)
         trendMsg = appState.gamification.trendMessage(
             testType: "leg_agility", score: score, higherIsBetter: true)
         appState.gamification.recordCompletion(
             testType: "leg_agility", score: score, higherIsBetter: true)
-        phase = .done
-        saveResult()
     }
 
-    private func saveResult() {
-        let ai = PDAlgorithms.asymmetryIndex(
-            left:  Double(leftCount)  / duration,
-            right: Double(rightCount) / duration)
-        let result = TestResult(
-            timestamp: Date(),
-            testType: .legAgility,
-            part: "both",
-            score: Double(leftCount + rightCount) / duration,
-            durationMs: Int(duration * 1000),
-            errors: 0,
-            details: String(format: "left:\(leftCount),right:\(rightCount),asymmetry:%.2f", ai)
-        )
-        appState.dataManager.writeTestResult(result)
-    }
+    private func fmt6(_ v: Double) -> String { String(format: "%.6f", v) }
 }

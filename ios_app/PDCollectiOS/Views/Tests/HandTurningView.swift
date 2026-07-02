@@ -18,6 +18,14 @@ struct HandTurningView: View {
     @State private var isPersonalBest = false
     @State private var trendMsg = ""
 
+    // Android-compatible timing
+    @State private var wallStartMs: Int64 = 0
+    @State private var monoStartMs: UInt64 = 0
+
+    private static func nowMs() -> Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+    private static func monoNs() -> UInt64 { clock_gettime_nsec_np(CLOCK_UPTIME_RAW) }
+    private func elapsedMs() -> Int64 { Int64((Self.monoNs() - monoStartMs) / 1_000_000) }
+
     private let duration = Constants.TestDuration.handTurning
 
     var body: some View {
@@ -310,9 +318,28 @@ struct HandTurningView: View {
     private func startHand(_ hand: Hand) {
         currentHand = hand
         timeLeft = duration
-        appState.motionManager.startRecording()
-        phase = .running(hand: hand)
+        wallStartMs = Self.nowMs()
+        monoStartMs = Self.monoNs()
 
+        // START row
+        let side = hand.rawValue
+        appState.dataManager.writeHandTurningRow(
+            wallMs: wallStartMs, elapsedMs: 0, event: "START",
+            gx: "", gy: "", gz: "", ax: "", ay: "", az: "",
+            side: side, profile: appState.userProfile)
+
+        // Start motion at max rate and stream each sample to CSV immediately
+        appState.motionManager.startStreaming { [self] r in
+            let ems = Int64((Self.monoNs() - monoStartMs) / 1_000_000)
+            let wms = wallStartMs + ems
+            appState.dataManager.writeHandTurningRow(
+                wallMs: wms, elapsedMs: ems, event: "SAMPLE",
+                gx: fmt6(r.gyroX), gy: fmt6(r.gyroY), gz: fmt6(r.gyroZ),
+                ax: fmt6(r.accX),  ay: fmt6(r.accY),  az: fmt6(r.accZ),
+                side: side, profile: appState.userProfile)
+        }
+
+        phase = .running(hand: hand)
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             timeLeft -= 0.1
             if timeLeft <= 0 { finishHand(hand) }
@@ -323,15 +350,20 @@ struct HandTurningView: View {
         timer?.invalidate(); timer = nil
         let data = appState.motionManager.stopRecording()
 
+        // END row
+        let side = hand.rawValue
+        appState.dataManager.writeHandTurningRow(
+            wallMs: Self.nowMs(), elapsedMs: elapsedMs(), event: "END",
+            gx: "", gy: "", gz: "", ax: "", ay: "", az: "",
+            side: side, profile: appState.userProfile)
+
         if hand == .left {
             leftReadings = data
             leftFeatures = computeFeatures(data)
-            saveResult(hand: .left)
             phase = .between
         } else {
             rightReadings = data
             rightFeatures = computeFeatures(data)
-            saveResult(hand: .right)
             computeTrend()
             phase = .done
         }
@@ -355,27 +387,7 @@ struct HandTurningView: View {
             testType: "hand_turning", score: score, higherIsBetter: true)
     }
 
-    private func saveResult(hand: Hand) {
-        let readings = hand == .left ? leftReadings : rightReadings
-        let features = hand == .left ? leftFeatures : rightFeatures
-        appState.dataManager.writeSensorReadings(readings)
-        var details = "samples:\(readings.count)"
-        if let f = features {
-            details += String(format: ",rms:%.3f,freq:%.3f,rhythm_cv:%.2f,tremor:%.4f,prono_asym:%.4f",
-                              f.turningSpeedRMS, f.turningFreqHz,
-                              f.rhythmCV, f.tremorPowerRatio, f.pronoSupraAsymmetry)
-        }
-        let result = TestResult(
-            timestamp: Date(),
-            testType: .handTurning,
-            part: hand.rawValue,
-            score: features?.turningFreqHz ?? 0,
-            durationMs: Int(duration * 1000),
-            errors: 0,
-            details: details
-        )
-        appState.dataManager.writeTestResult(result)
-    }
+    private func fmt6(_ v: Double) -> String { String(format: "%.6f", v) }
 }
 
 // MARK: - Live Gyro Arc

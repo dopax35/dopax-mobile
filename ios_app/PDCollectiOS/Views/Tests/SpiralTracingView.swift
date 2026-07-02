@@ -22,6 +22,15 @@ struct SpiralTracingView: View {
     @State private var isPersonalBest = false
     @State private var trendMsg = ""
 
+    // Timing (Android-style: wall-clock start + monotonic elapsed)
+    @State private var wallStartMs: Int64 = 0
+    @State private var monoStartMs: UInt64 = 0
+
+    private static func nowMs() -> Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+    private static func monoNs() -> UInt64 { clock_gettime_nsec_np(CLOCK_UPTIME_RAW) }
+    private func elapsedMs() -> Int64 { Int64((Self.monoNs() - monoStartMs) / 1_000_000) }
+
+
     private var isTracing: Bool {
         if case .tracing = phase { return true }
         return false
@@ -136,17 +145,38 @@ struct SpiralTracingView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
+                            let isFirstTouch = currentPath.isEmpty
+                            let action = isFirstTouch ? "DOWN" : "MOVE"
+                            let sideStr = currentHand == .left ? "Left" : "Right"
+                            let loc = value.location
+
                             switch currentHand {
                             case .left:
-                                leftPath.append(value.location)
+                                leftPath.append(loc)
                                 leftTimestamps.append(Date())
                             case .right:
-                                rightPath.append(value.location)
+                                rightPath.append(loc)
                                 rightTimestamps.append(Date())
                             }
                             updateDeviationColor(geo: geo)
+
+                            let wms = Self.nowMs()
+                            let ems = elapsedMs()
+                            appState.dataManager.writeSpiralTracingRow(
+                                wallMs: wms, elapsedMs: ems, event: "SAMPLE",
+                                x: "\(Int(loc.x))", y: "\(Int(loc.y))", action: action,
+                                side: sideStr, profile: appState.userProfile)
                         }
                         .onEnded { _ in
+                            let sideStr = currentHand == .left ? "Left" : "Right"
+                            if let last = currentPath.last {
+                                let wms = Self.nowMs()
+                                let ems = elapsedMs()
+                                appState.dataManager.writeSpiralTracingRow(
+                                    wallMs: wms, elapsedMs: ems, event: "SAMPLE",
+                                    x: "\(Int(last.x))", y: "\(Int(last.y))", action: "UP",
+                                    side: sideStr, profile: appState.userProfile)
+                            }
                             finishHand(currentHand, geo: geo)
                         }
                 )
@@ -380,25 +410,40 @@ struct SpiralTracingView: View {
             rightTimestamps = []
         }
 
+        wallStartMs = Self.nowMs()
+        monoStartMs = Self.monoNs()
+
+        // Write START row to CSV
+        let sideStr = hand == .left ? "Left" : "Right"
+        appState.dataManager.writeSpiralTracingRow(
+            wallMs: wallStartMs, elapsedMs: 0, event: "START",
+            x: "", y: "", action: "",
+            side: sideStr, profile: appState.userProfile)
+
         phase = .tracing(hand: hand)
     }
 
     private func finishHand(_ hand: Hand, geo: GeometryProxy) {
         let elapsed = Date().timeIntervalSince(startTime ?? Date())
 
+        // Write END row to CSV
+        let sideStr = hand == .left ? "Left" : "Right"
+        appState.dataManager.writeSpiralTracingRow(
+            wallMs: Self.nowMs(), elapsedMs: elapsedMs(), event: "END",
+            x: "", y: "", action: "",
+            side: sideStr, profile: appState.userProfile)
+
         switch hand {
         case .left:
             leftDurationMs = Int(elapsed * 1000)
             leftFeatures = PDAlgorithms.spiralFeatures(
                 path: leftPath, timestamps: leftTimestamps, canvasSize: geo.size)
-            saveResult(hand: .left, size: geo.size)
             phase = .between
 
         case .right:
             rightDurationMs = Int(elapsed * 1000)
             rightFeatures = PDAlgorithms.spiralFeatures(
                 path: rightPath, timestamps: rightTimestamps, canvasSize: geo.size)
-            saveResult(hand: .right, size: geo.size)
             computeTrend()
             phase = .done
         }
@@ -440,28 +485,7 @@ struct SpiralTracingView: View {
         return minDist
     }
 
-    private func saveResult(hand: Hand, size: CGSize) {
-        let path = hand == .left ? leftPath : rightPath
-        let features = hand == .left ? leftFeatures : rightFeatures
-        let durationMs = hand == .left ? leftDurationMs : rightDurationMs
 
-        let coords = path.map { "\(Int($0.x)),\(Int($0.y))" }.joined(separator: "|")
-        var details = "points:\(path.count),path:\(coords)"
-        if let f = features {
-            details += String(format: ",rmse:%.2f,tremor:%.4f,speed_cv:%.4f,area:%.0f",
-                              f.spiralFitRMSE, f.tremorRatio, f.speedCV, f.boundingArea)
-        }
-        let result = TestResult(
-            timestamp: Date(),
-            testType: .spiralTracing,
-            part: hand.rawValue,
-            score: features?.spiralFitRMSE ?? Double(durationMs) / 1000.0,
-            durationMs: durationMs,
-            errors: 0,
-            details: details
-        )
-        appState.dataManager.writeTestResult(result)
-    }
 }
 
 // MARK: - Archimedean Spiral Shape

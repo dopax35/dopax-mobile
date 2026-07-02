@@ -41,6 +41,36 @@ class CoreMotionManager: ObservableObject {
         DispatchQueue.main.async { self.isRecording = true }
     }
 
+    /// Like startRecording but also fires `onSample` on each sensor update
+    /// so callers can write CSV rows in real time (matches Android SENSOR_DELAY_FASTEST streaming).
+    func startStreaming(onSample: @escaping (SensorReading) -> Void) {
+        guard isAvailable, !motion.isDeviceMotionActive else { return }
+        readings = []
+        motion.deviceMotionUpdateInterval = 1.0 / hz
+        motion.startDeviceMotionUpdates(to: queue) { [weak self] data, _ in
+            guard let self, let data else { return }
+            let ts = Int64(data.timestamp * 1_000_000_000)
+            let r = SensorReading(
+                timestampNs: ts,
+                accX: data.userAcceleration.x,
+                accY: data.userAcceleration.y,
+                accZ: data.userAcceleration.z,
+                gyroX: data.rotationRate.x,
+                gyroY: data.rotationRate.y,
+                gyroZ: data.rotationRate.z
+            )
+            self.readings.append(r)
+            onSample(r)
+            DispatchQueue.main.async {
+                self.latestGyroZ = data.rotationRate.z
+                let a = data.userAcceleration
+                self.latestAccMagnitude = sqrt(a.x*a.x + a.y*a.y + a.z*a.z)
+            }
+        }
+        DispatchQueue.main.async { self.isRecording = true }
+    }
+
+
     func stopRecording() -> [SensorReading] {
         motion.stopDeviceMotionUpdates()
         DispatchQueue.main.async { self.isRecording = false }

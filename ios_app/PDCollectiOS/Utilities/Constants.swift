@@ -11,64 +11,62 @@ enum Constants {
         static let processing = "com.pdcollect.ios.bg-processing"
     }
 
-    // MARK: - CSV
+    // MARK: - CSV — ALL filenames and headers match Android exactly
     enum CSV {
-        // Active-test outputs (existing)
-        static let testResultsFile     = "test_results.csv"
-        static let questionnaireFile   = "questionnaire.csv"
-        static let sensorsFile         = "sensors.csv"
-        static let gaitMetricsFile     = "gait_metrics.csv"
 
-        // Passive collection outputs (new — matches Android)
-        static let passiveSensorsFile  = "passive_sensors.csv"  // continuous accel/gyro
-        static let touchFile           = "touch.csv"
-        static let appsFile            = "apps.csv"
-        static let faceDistanceFile    = "face_distance.csv"
+        // ── Active test files (match Android filenames) ──────────────────
+        static let fingerTappingFile    = "finger_tapping.csv"
+        static let handTurningFile      = "hand_turning.csv"
+        static let legAgilityFile       = "leg_agility.csv"
+        static let spiralTracingFile    = "spiral_tracing.csv"
+        static let tmtResultsFile       = "tmt_results.csv"
 
-        // Headers
-        static let testResultsHeader   = "timestamp,test_type,part,score,duration_ms,errors,details,platform\n"
+        // ── Active test headers (match Android exactly) ───────────────────
+        /// timestamp_ms, elapsed_ms, event, button_id, side, dominant_hand, affected_side
+        static let fingerTappingHeader  = "timestamp_ms,elapsed_ms,event,button_id,side,dominant_hand,affected_side\n"
+
+        /// timestamp_ms, elapsed_ms, event, gx, gy, gz, ax, ay, az, side, dominant_hand, affected_side
+        static let handTurningHeader    = "timestamp_ms,elapsed_ms,event,gx,gy,gz,ax,ay,az,side,dominant_hand,affected_side\n"
+
+        /// identical schema to hand_turning
+        static let legAgilityHeader     = "timestamp_ms,elapsed_ms,event,gx,gy,gz,ax,ay,az,side,dominant_hand,affected_side\n"
+
+        /// timestamp_ms, elapsed_ms, event, x, y, action, side, dominant_hand, affected_side
+        static let spiralTracingHeader  = "timestamp_ms,elapsed_ms,event,x,y,action,side,dominant_hand,affected_side\n"
+
+        /// start_time_ms, timestamp_ms, test_type, total_time_ms, errors, segment_timings_json, finger_path_json, path_data_json
+        static let tmtResultsHeader     = "start_time_ms,timestamp_ms,test_type,total_time_ms,errors,segment_timings_json,finger_path_json,path_data_json\n"
+
+        // ── Passive / sensor files ─────────────────────────────────────────
+        static let questionnaireFile    = "questionnaire.csv"
+        static let sensorsFile          = "sensors.csv"
+        static let gaitMetricsFile      = "gait_metrics.csv"
+        static let passiveSensorsFile   = "passive_sensors.csv"
+        static let touchFile            = "touch.csv"
+        static let appsFile             = "apps.csv"
+        static let faceDistanceFile     = "face_distance.csv"
+        static let heartRateFile        = "heart_rate.csv"
+        static let beanieTemperatureFile = "beanie_temperature.csv"
+        static let beanieImuFile        = "beanie_imu.csv"
+        static let keyEventsFile        = "key_events.csv"
+        static let medicationFile       = "medication.csv"
+        static let physicalActivityFile = "physical_activity.csv"
+        static let profileFile          = "profile.csv"
+
+        // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp,symptoms,motor,sleep,mood,overall,notes\n"
         static let sensorsHeader        = "timestamp_ns,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n"
         static let gaitMetricsHeader    = "date,walking_speed_ms,step_length_m,walking_steadiness,double_support_pct,asymmetry_pct,heart_rate_bpm,hrv_sdnn_ms\n"
-
-        // Passive sensor header (same columns as active — reuses SensorReading.csvRow)
         static let passiveSensorsHeader = "timestamp_ns,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n"
-
-        // Touch — matches Android touch.csv: timestamp_ms,action,x,y,pressure,tap_interval_ms
         static let touchHeader          = "timestamp_ms,action,x,y,pressure,tap_interval_ms\n"
-
-        // Apps — matches Android apps.csv: timestamp_ms,event,bundle_id,duration_ms
         static let appsHeader           = "timestamp_ms,event,bundle_id,duration_ms\n"
-
-        // Face distance — matches Android face_distance.csv
         static let faceDistanceHeader   = "timestamp_ms,distance_ratio,face_x,face_y,confidence,roll_deg,yaw_deg\n"
-
-        // Heart rate — matches Android heart_rate.csv
-        static let heartRateFile        = "heart_rate.csv"
         static let heartRateHeader      = "timestamp_ms,bpm,rr_interval_ms,device_address,device_name\n"
-
-        // Beanie temperature — matches Android beanie_temperature.csv
-        static let beanieTemperatureFile = "beanie_temperature.csv"
         static let beanieTemperatureHeader = "timestamp_ms,device_name,device_address,profile_name,inner_c,outer_c,tskin_c,heat_flux_cal_per_sec,battery_pct\n"
-
-        // Beanie IMU — matches Android beanie_imu.csv
-        static let beanieImuFile        = "beanie_imu.csv"
         static let beanieImuHeader      = "timestamp_ms,device_name,device_address,ax_raw,ay_raw,az_raw,gx_raw,gy_raw,gz_raw,ax_g,ay_g,az_g,accel_mag_g,gx_dps,gy_dps,gz_dps,gyro_mag_dps\n"
-
-        // Keystroke events — matches Android key_events.csv (privacy-first: only key class, never actual characters)
-        static let keyEventsFile        = "key_events.csv"
         static let keyEventsHeader      = "timestamp_ms,key_class,is_backspace,source_app\n"
-
-        // Medication intake events — matches Android medication.csv
-        static let medicationFile       = "medication.csv"
         static let medicationHeader     = "timestamp_ms,taken_ms,med_name,dosage\n"
-
-        // Physical activity (user-reported) — matches Android physical_activity.csv
-        static let physicalActivityFile = "physical_activity.csv"
         static let physicalActivityHeader = "timestamp_ms,activity_type,time_of_day_ms\n"
-
-        // Profile snapshot — matches Android profile.csv
-        static let profileFile          = "profile.csv"
         static let profileHeader        = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json\n"
     }
 

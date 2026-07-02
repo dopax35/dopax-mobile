@@ -20,6 +20,24 @@ struct TrailMakingTestView: View {
     @State private var trendMsg = ""
     @State private var baRatio: Double? = nil
 
+    // Android-compatible JSON telemetry
+    struct TMTTouchPoint: Codable {
+        let t: Int64
+        let t_abs: Int64
+        let x: Int
+        let y: Int
+        let a: Int
+    }
+    struct TMTSegmentTiming: Codable {
+        let from: String
+        let to: String
+        let duration_ms: Int64
+        let elapsed_ms: Int64
+    }
+    @State private var fingerPathPoints: [TMTTouchPoint] = []
+    @State private var segmentTimings: [TMTSegmentTiming] = []
+    @State private var isDragging = false
+
     // Drag state
     @State private var dragPoint: CGPoint? = nil          // live finger position
     @State private var errorFlash = false                 // brief red flash on lift-off miss
@@ -154,10 +172,20 @@ struct TrailMakingTestView: View {
                         DragGesture(minimumDistance: 0, coordinateSpace: .local)
                             .onChanged { value in
                                 let loc = value.location
+                                if !isDragging {
+                                    isDragging = true
+                                    recordTouchPoint(at: loc, action: 0) // DOWN
+                                } else {
+                                    recordTouchPoint(at: loc, action: 2) // MOVE
+                                }
                                 dragPoint = loc
                                 checkProgress(at: loc)
                             }
                             .onEnded { _ in
+                                isDragging = false
+                                if let last = dragPoint {
+                                    recordTouchPoint(at: last, action: 1) // UP
+                                }
                                 // Finger lifted — cancel rubber band
                                 dragPoint = nil
                                 // Flash to signal lift-off
@@ -387,11 +415,25 @@ struct TrailMakingTestView: View {
         if dist <= Constants.TMT.targetRadius {
             // Finger reached the next target!
             let now = Date()
+            let elapsedTotal = Int64(now.timeIntervalSince(startTime ?? now) * 1000)
+            let segmentDuration: Int64
             if let segStart = segmentStart {
-                let elapsed = now.timeIntervalSince(segStart) * 1000
-                segmentTimes.append(elapsed)
+                segmentDuration = Int64(now.timeIntervalSince(segStart) * 1000)
+                segmentTimes.append(Double(segmentDuration))
+            } else {
+                segmentDuration = elapsedTotal
+                segmentTimes.append(Double(elapsedTotal))
             }
             segmentStart = now
+
+            let fromLabel = nextIndex > 0 ? targets[nextIndex - 1].label : "Start"
+            let toLabel = target.label
+            segmentTimings.append(TMTSegmentTiming(
+                from: fromLabel,
+                to: toLabel,
+                duration_ms: segmentDuration,
+                elapsed_ms: elapsedTotal
+            ))
 
             if nextIndex > 0 {
                 let timeMs = segmentTimes.last ?? 0
@@ -410,6 +452,14 @@ struct TrailMakingTestView: View {
                 saveResult()
             }
         }
+    }
+
+    private func recordTouchPoint(at loc: CGPoint, action: Int) {
+        let now = Date()
+        let elapsed = Int64(now.timeIntervalSince(startTime ?? now) * 1000)
+        let absTime = Int64(now.timeIntervalSince1970 * 1000)
+        let pt = TMTTouchPoint(t: elapsed, t_abs: absTime, x: Int(loc.x), y: Int(loc.y), a: action)
+        fingerPathPoints.append(pt)
     }
 
     private func triggerErrorFlash() {
@@ -438,19 +488,33 @@ struct TrailMakingTestView: View {
     }
 
     private func saveResult() {
-        let segStr = segmentTimes.map { String(format: "%.0f", $0) }.joined(separator: "|")
-        var details = "segments:\(segStr)"
-        if let ba = baRatio { details += String(format: ",ba_ratio:%.3f", ba) }
-        let result = TestResult(
-            timestamp: Date(),
-            testType: .trailMaking,
-            part: part == .A ? "A" : "B",
-            score: Double(totalMs) / 1000.0,
-            durationMs: totalMs,
+        let encoder = JSONEncoder()
+        let fingerPathJSON: String
+        if let data = try? encoder.encode(fingerPathPoints), let str = String(data: data, encoding: .utf8) {
+            fingerPathJSON = str
+        } else {
+            fingerPathJSON = "[]"
+        }
+
+        let segmentTimingsJSON: String
+        if let data = try? encoder.encode(segmentTimings), let str = String(data: data, encoding: .utf8) {
+            segmentTimingsJSON = str
+        } else {
+            segmentTimingsJSON = "[]"
+        }
+
+        let startMs = Int64((startTime ?? Date()).timeIntervalSince1970 * 1000)
+        let endMs = Int64(Date().timeIntervalSince1970 * 1000)
+
+        appState.dataManager.writeTMTResult(
+            startMs: startMs,
+            endMs: endMs,
+            testType: part == .A ? "A" : "B",
+            totalMs: totalMs,
             errors: errors,
-            details: details
+            segmentTimingsJSON: segmentTimingsJSON,
+            fingerPathJSON: fingerPathJSON
         )
-        appState.dataManager.writeTestResult(result)
     }
 }
 

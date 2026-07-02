@@ -290,7 +290,14 @@ struct DashboardView: View {
         }
     }
 
-    /// Parse test_results.csv and extract bilateral asymmetry data points.
+    /// Parse assessment files and extract bilateral asymmetry data points.
+    private func loadAsymmetryData() {
+        let fm = FileManager.default
+        let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let rootDir = docsDir
+            .appendingPathComponent("PDCollect")
+            .appendingPathComponent(appState.userProfile.userId)
+
     private func loadAsymmetryData() {
         let fm = FileManager.default
         let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -302,64 +309,60 @@ struct DashboardView: View {
             at: rootDir, includingPropertiesForKeys: [.isDirectoryKey]) else { return }
 
         var points: [AsymmetryPoint] = []
-
-        // Try both ISO8601 formats
-        let isoFmtFull = ISO8601DateFormatter()
-        isoFmtFull.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let isoFmtBasic = ISO8601DateFormatter()
-
-        func parseDate(_ s: String) -> Date? {
-            isoFmtFull.date(from: s) ?? isoFmtBasic.date(from: s)
-        }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
 
         for dateDir in dateDirs {
-            let csvURL = dateDir.appendingPathComponent(Constants.CSV.testResultsFile)
-            guard let content = try? String(contentsOf: csvURL, encoding: .utf8) else { continue }
+            guard let date = f.date(from: dateDir.lastPathComponent) else { continue }
 
-            var ftLeft:  (date: Date, rate: Double)? = nil
-            var ftRight: (date: Date, rate: Double)? = nil
-            var laLeft:  (date: Date, rate: Double)? = nil
-            var laRight: (date: Date, rate: Double)? = nil
-
-            for rawLine in content.components(separatedBy: "\n").dropFirst() {
-                let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !line.isEmpty else { continue }
-
-                // Quote-aware CSV split (max 7 columns; quoted details may contain commas)
-                let cols = csvSplit(line, maxCols: 7)
-                guard cols.count >= 4,
-                      let date  = parseDate(cols[0]),
-                      let score = Double(cols[3]) else { continue }
-
-                let type    = cols[1]
-                let part    = cols[2]
-                let details = cols.count >= 7
-                    ? cols[6].trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-                    : ""
-
-                switch type {
-                case "finger_tapping":
-                    if part == "Left"  { ftLeft  = (date, score) }
-                    if part == "Right" { ftRight = (date, score) }
-
-                case "leg_agility":
-                    if let l = csvKeyDouble(details, "left"),
-                       let r = csvKeyDouble(details, "right"), (l + r) > 0 {
-                        laLeft  = (date, l / 10.0)
-                        laRight = (date, r / 10.0)
+            // Finger Tapping Asymmetry
+            let ftURL = dateDir.appendingPathComponent(Constants.CSV.fingerTappingFile)
+            if let content = try? String(contentsOf: ftURL, encoding: .utf8) {
+                var leftCount = 0
+                var rightCount = 0
+                for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                    let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !line.isEmpty else { continue }
+                    let cols = line.components(separatedBy: ",")
+                    guard cols.count >= 5 else { continue }
+                    let event = cols[2]
+                    let side = cols[4]
+                    if event == "SAMPLE" {
+                        if side == "Left" { leftCount += 1 }
+                        else if side == "Right" { rightCount += 1 }
                     }
-
-                default: break
+                }
+                if leftCount > 0 || rightCount > 0 {
+                    let leftRate = Double(leftCount) / 10.0
+                    let rightRate = Double(rightCount) / 10.0
+                    let ai = PDAlgorithms.asymmetryIndex(left: leftRate, right: rightRate)
+                    points.append(AsymmetryPoint(date: date, value: ai, series: "Finger Tapping"))
                 }
             }
 
-            if let l = ftLeft, let r = ftRight {
-                let ai = PDAlgorithms.asymmetryIndex(left: l.rate, right: r.rate)
-                points.append(AsymmetryPoint(date: l.date, value: ai, series: "Finger Tapping"))
-            }
-            if let l = laLeft, let r = laRight {
-                let ai = PDAlgorithms.asymmetryIndex(left: l.rate, right: r.rate)
-                points.append(AsymmetryPoint(date: l.date, value: ai, series: "Leg Agility"))
+            // Leg Agility Asymmetry
+            let laURL = dateDir.appendingPathComponent(Constants.CSV.legAgilityFile)
+            if let content = try? String(contentsOf: laURL, encoding: .utf8) {
+                var leftCount = 0
+                var rightCount = 0
+                for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                    let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !line.isEmpty else { continue }
+                    let cols = line.components(separatedBy: ",")
+                    guard cols.count >= 10 else { continue }
+                    let event = cols[2]
+                    let side = cols[9]
+                    if event == "SAMPLE" {
+                        if side == "Left" { leftCount += 1 }
+                        else if side == "Right" { rightCount += 1 }
+                    }
+                }
+                if leftCount > 0 || rightCount > 0 {
+                    let leftRate = Double(leftCount) / 10.0
+                    let rightRate = Double(rightCount) / 10.0
+                    let ai = PDAlgorithms.asymmetryIndex(left: leftRate, right: rightRate)
+                    points.append(AsymmetryPoint(date: date, value: ai, series: "Leg Agility"))
+                }
             }
         }
 
@@ -533,37 +536,140 @@ struct DashboardView: View {
             at: rootDir, includingPropertiesForKeys: [.isDirectoryKey]) else { return }
 
         var points: [TestScorePoint] = []
-        let isoFull = ISO8601DateFormatter()
-        isoFull.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let isoBasic = ISO8601DateFormatter()
-        func parseDate(_ s: String) -> Date? { isoFull.date(from: s) ?? isoBasic.date(from: s) }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
 
         for dateDir in dateDirs {
-            let csvURL = dateDir.appendingPathComponent(Constants.CSV.testResultsFile)
-            guard let content = try? String(contentsOf: csvURL, encoding: .utf8) else { continue }
+            guard let date = f.date(from: dateDir.lastPathComponent) else { continue }
 
-            for rawLine in content.components(separatedBy: "\n").dropFirst() {
-                let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !line.isEmpty else { continue }
-                let cols = csvSplit(line, maxCols: 7)
-                guard cols.count >= 4,
-                      let date  = parseDate(cols[0]),
-                      let score = Double(cols[3]) else { continue }
-
-                let rawType = cols[1]
-                let rawPart = cols.count >= 3 ? cols[2] : ""
-
-                // Map CSV test_type + part → our testTypeKey
-                let key: String
-                switch rawType {
-                case "finger_tapping":  key = "finger_tapping"
-                case "hand_turning":    key = "hand_turning"
-                case "leg_agility":     key = "leg_agility"
-                case "spiral_tracing":  key = "spiral_tracing"
-                case "trail_making":    key = rawPart == "B" ? "trail_making_B" : "trail_making_A"
-                default: continue
+            // 1. Finger Tapping
+            let ftURL = dateDir.appendingPathComponent(Constants.CSV.fingerTappingFile)
+            if let content = try? String(contentsOf: ftURL, encoding: .utf8) {
+                var totalTaps = 0
+                for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                    let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !line.isEmpty else { continue }
+                    let cols = line.components(separatedBy: ",")
+                    if cols.count >= 3 && cols[2] == "SAMPLE" {
+                        totalTaps += 1
+                    }
                 }
-                points.append(TestScorePoint(date: date, value: score, testKey: key))
+                if totalTaps > 0 {
+                    let rate = Double(totalTaps) / 20.0
+                    points.append(TestScorePoint(date: date, value: rate, testKey: "finger_tapping"))
+                }
+            }
+
+            // 2. Hand Turning
+            let htURL = dateDir.appendingPathComponent(Constants.CSV.handTurningFile)
+            if let content = try? String(contentsOf: htURL, encoding: .utf8) {
+                var leftGX: [Double] = []; var leftGY: [Double] = []; var leftGZ: [Double] = []
+                var rightGX: [Double] = []; var rightGY: [Double] = []; var rightGZ: [Double] = []
+                for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                    let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !line.isEmpty else { continue }
+                    let cols = line.components(separatedBy: ",")
+                    guard cols.count >= 10 && cols[2] == "SAMPLE" else { continue }
+                    let side = cols[9].lowercased()
+                    let gx = Double(cols[3]) ?? 0
+                    let gy = Double(cols[4]) ?? 0
+                    let gz = Double(cols[5]) ?? 0
+                    if side == "left" {
+                        leftGX.append(gx); leftGY.append(gy); leftGZ.append(gz)
+                    } else {
+                        rightGX.append(gx); rightGY.append(gy); rightGZ.append(gz)
+                    }
+                }
+                let leftF = PDAlgorithms.handTurningFeatures(gyroX: leftGX, gyroY: leftGY, gyroZ: leftGZ, hz: 100)
+                let rightF = PDAlgorithms.handTurningFeatures(gyroX: rightGX, gyroY: rightGY, gyroZ: rightGZ, hz: 100)
+                let avgFreq = (leftF.turningFreqHz + rightF.turningFreqHz) / 2.0
+                if avgFreq > 0 {
+                    points.append(TestScorePoint(date: date, value: avgFreq, testKey: "hand_turning"))
+                }
+            }
+
+            // 3. Leg Agility
+            let laURL = dateDir.appendingPathComponent(Constants.CSV.legAgilityFile)
+            if let content = try? String(contentsOf: laURL, encoding: .utf8) {
+                var leftAX: [Double] = []; var leftAY: [Double] = []; var leftAZ: [Double] = []
+                var leftGX: [Double] = []; var leftGY: [Double] = []; var leftGZ: [Double] = []
+                var rightAX: [Double] = []; var rightAY: [Double] = []; var rightAZ: [Double] = []
+                var rightGX: [Double] = []; var rightGY: [Double] = []; var rightGZ: [Double] = []
+                for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                    let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !line.isEmpty else { continue }
+                    let cols = line.components(separatedBy: ",")
+                    guard cols.count >= 10 && cols[2] == "SAMPLE" else { continue }
+                    let side = cols[9].lowercased()
+                    let gx = Double(cols[3]) ?? 0
+                    let gy = Double(cols[4]) ?? 0
+                    let gz = Double(cols[5]) ?? 0
+                    let ax = Double(cols[6]) ?? 0
+                    let ay = Double(cols[7]) ?? 0
+                    let az = Double(cols[8]) ?? 0
+                    if side == "left" {
+                        leftAX.append(ax); leftAY.append(ay); leftAZ.append(az)
+                        leftGX.append(gx); leftGY.append(gy); leftGZ.append(gz)
+                    } else {
+                        rightAX.append(ax); rightAY.append(ay); rightAZ.append(az)
+                        rightGX.append(gx); rightGY.append(gy); rightGZ.append(gz)
+                    }
+                }
+                let leftF = PDAlgorithms.legAgilityFeatures(accX: leftAX, accY: leftAY, accZ: leftAZ, gyroX: leftGX, gyroY: leftGY, gyroZ: leftGZ, hz: 100)
+                let rightF = PDAlgorithms.legAgilityFeatures(accX: rightAX, accY: rightAY, accZ: rightAZ, gyroX: rightGX, gyroY: rightGY, gyroZ: rightGZ, hz: 100)
+                let avgFreq = ((leftF?.stepFreqHz ?? 0) + (rightF?.stepFreqHz ?? 0)) / 2.0
+                if avgFreq > 0 {
+                    points.append(TestScorePoint(date: date, value: avgFreq, testKey: "leg_agility"))
+                }
+            }
+
+            // 4. Spiral Tracing
+            let spURL = dateDir.appendingPathComponent(Constants.CSV.spiralTracingFile)
+            if let content = try? String(contentsOf: spURL, encoding: .utf8) {
+                var leftPath: [CGPoint] = []; var leftTimes: [Date] = []
+                var rightPath: [CGPoint] = []; var rightTimes: [Date] = []
+                for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                    let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !line.isEmpty else { continue }
+                    let cols = line.components(separatedBy: ",")
+                    guard cols.count >= 7 && cols[2] == "SAMPLE" else { continue }
+                    let x = Double(cols[3]) ?? 0
+                    let y = Double(cols[4]) ?? 0
+                    let action = cols[5]
+                    guard action == "MOVE" else { continue }
+                    let side = cols[6].lowercased()
+                    let tsMs = Double(cols[0]) ?? 0
+                    let ptDate = Date(timeIntervalSince1970: tsMs / 1000.0)
+                    if side == "left" {
+                        leftPath.append(CGPoint(x: x, y: y)); leftTimes.append(ptDate)
+                    } else {
+                        rightPath.append(CGPoint(x: x, y: y)); rightTimes.append(ptDate)
+                    }
+                }
+                let leftF = PDAlgorithms.spiralFeatures(path: leftPath, timestamps: leftTimes, canvasSize: CGSize(width: 400, height: 400))
+                let rightF = PDAlgorithms.spiralFeatures(path: rightPath, timestamps: rightTimes, canvasSize: CGSize(width: 400, height: 400))
+                let avgRMSE = ((leftF?.spiralFitRMSE ?? 0) + (rightF?.spiralFitRMSE ?? 0)) / 2.0
+                if avgRMSE > 0 {
+                    points.append(TestScorePoint(date: date, value: avgRMSE, testKey: "spiral_tracing"))
+                }
+            }
+
+            // 5. TMT
+            let tmtURL = dateDir.appendingPathComponent(Constants.CSV.tmtResultsFile)
+            if let content = try? String(contentsOf: tmtURL, encoding: .utf8) {
+                for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                    let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !line.isEmpty else { continue }
+                    let cols = csvSplit(line, maxCols: 8)
+                    guard cols.count >= 4 else { continue }
+                    let testType = cols[2].trimmingCharacters(in: .whitespacesAndNewlines)
+                    let totalTimeMs = Double(cols[3]) ?? 0
+                    let score = totalTimeMs / 1000.0
+                    if score > 0 {
+                        let key = testType == "B" ? "trail_making_B" : "trail_making_A"
+                        points.append(TestScorePoint(date: date, value: score, testKey: key))
+                    }
+                }
             }
         }
 

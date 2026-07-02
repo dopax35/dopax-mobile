@@ -35,11 +35,63 @@ class DataManager: ObservableObject {
         try? fm.createDirectory(at: url, withIntermediateDirectories: true)
     }
 
-    // MARK: - Active-test Writes (existing)
+    // MARK: - Active-test Writes (Android-compatible per-event format)
 
-    func writeTestResult(_ result: TestResult) {
-        append(result.csvRow, to: todayDir, filename: Constants.CSV.testResultsFile,
-               header: Constants.CSV.testResultsHeader)
+    // MARK: Finger Tapping
+    /// Writes one row to finger_tapping.csv. event = "START", "SAMPLE", or "END".
+    /// button_id is the side that was tapped (empty for START/END).
+    func writeFingerTappingRow(wallMs: Int64, elapsedMs: Int64,
+                               event: String, buttonId: String,
+                               side: String, profile: UserProfile) {
+        let row = "\(wallMs),\(elapsedMs),\(event),\(buttonId),\(side),\(profile.dominantHand),\(profile.affectedSide)\n"
+        append(row, to: todayDir, filename: Constants.CSV.fingerTappingFile,
+               header: Constants.CSV.fingerTappingHeader)
+    }
+
+    // MARK: Hand Turning
+    /// Writes one row to hand_turning.csv. sensor cols are empty string for START/END.
+    func writeHandTurningRow(wallMs: Int64, elapsedMs: Int64,
+                             event: String,
+                             gx: String, gy: String, gz: String,
+                             ax: String, ay: String, az: String,
+                             side: String, profile: UserProfile) {
+        let row = "\(wallMs),\(elapsedMs),\(event),\(gx),\(gy),\(gz),\(ax),\(ay),\(az),\(side),\(profile.dominantHand),\(profile.affectedSide)\n"
+        append(row, to: todayDir, filename: Constants.CSV.handTurningFile,
+               header: Constants.CSV.handTurningHeader)
+    }
+
+    // MARK: Leg Agility (same schema as hand_turning)
+    func writeLegAgilityRow(wallMs: Int64, elapsedMs: Int64,
+                            event: String,
+                            gx: String, gy: String, gz: String,
+                            ax: String, ay: String, az: String,
+                            side: String, profile: UserProfile) {
+        let row = "\(wallMs),\(elapsedMs),\(event),\(gx),\(gy),\(gz),\(ax),\(ay),\(az),\(side),\(profile.dominantHand),\(profile.affectedSide)\n"
+        append(row, to: todayDir, filename: Constants.CSV.legAgilityFile,
+               header: Constants.CSV.legAgilityHeader)
+    }
+
+    // MARK: Spiral Tracing
+    /// action = "DOWN", "MOVE", or "UP". x/y empty for START/END.
+    func writeSpiralTracingRow(wallMs: Int64, elapsedMs: Int64,
+                               event: String, x: String, y: String, action: String,
+                               side: String, profile: UserProfile) {
+        let row = "\(wallMs),\(elapsedMs),\(event),\(x),\(y),\(action),\(side),\(profile.dominantHand),\(profile.affectedSide)\n"
+        append(row, to: todayDir, filename: Constants.CSV.spiralTracingFile,
+               header: Constants.CSV.spiralTracingHeader)
+    }
+
+    // MARK: TMT
+    /// One summary row per completed TMT part, matching Android tmt_results.csv.
+    func writeTMTResult(startMs: Int64, endMs: Int64, testType: String,
+                        totalMs: Int, errors: Int,
+                        segmentTimingsJSON: String,
+                        fingerPathJSON: String) {
+        let escapedSegments = segmentTimingsJSON.replacingOccurrences(of: "\"", with: "\"\"")
+        let escapedFingerPath = fingerPathJSON.replacingOccurrences(of: "\"", with: "\"\"")
+        let row = "\(startMs),\(endMs),\(testType),\(totalMs),\(errors),\"\(escapedSegments)\",\"\(escapedFingerPath)\",\"\(escapedFingerPath)\"\n"
+        append(row, to: todayDir, filename: Constants.CSV.tmtResultsFile,
+               header: Constants.CSV.tmtResultsHeader)
     }
 
     func writeQuestionnaire(_ response: QuestionnaireResponse) {
