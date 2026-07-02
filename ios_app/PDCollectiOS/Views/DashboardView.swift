@@ -298,13 +298,6 @@ struct DashboardView: View {
             .appendingPathComponent("PDCollect")
             .appendingPathComponent(appState.userProfile.userId)
 
-    private func loadAsymmetryData() {
-        let fm = FileManager.default
-        let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let rootDir = docsDir
-            .appendingPathComponent("PDCollect")
-            .appendingPathComponent(appState.userProfile.userId)
-
         guard let dateDirs = try? fm.contentsOfDirectory(
             at: rootDir, includingPropertiesForKeys: [.isDirectoryKey]) else { return }
 
