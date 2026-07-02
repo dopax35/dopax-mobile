@@ -47,6 +47,16 @@ class AppState: ObservableObject {
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
 
+        // Re-schedule BG tasks when autoUpload toggle changes so the processing
+        // task is (re-)submitted with network connectivity requirements correct.
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.bgCollection.scheduleAll()
+            }
+            .store(in: &cancellables)
+
         profile.$userId
             .dropFirst()
             .sink { [weak self] newId in self?.dataManager.userId = newId }

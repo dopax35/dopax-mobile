@@ -12,6 +12,8 @@ struct SettingsView: View {
     @State private var showDeleteAlert   = false
     @State private var cameraStatus      = ""
     @State private var isUploading       = false
+    @State private var newMedication     = ""
+
 
     private var profile: UserProfile { appState.userProfile }
 
@@ -151,13 +153,39 @@ struct SettingsView: View {
                     LabeledContent("Gender", value: profile.gender.isEmpty ? "–" : profile.gender)
                     LabeledContent("Dominant Hand", value: profile.dominantHand)
                     LabeledContent("PD Affected Side", value: profile.affectedSide)
-                    if !profile.medications.isEmpty {
-                        LabeledContent("Medications",
-                                       value: profile.medications.joined(separator: ", "))
-                    }
                 } header: {
                     Label("Participant Profile", systemImage: "person.fill")
                 }
+
+                // MARK: - Medications (editable)
+                Section {
+                    ForEach(profile.medications, id: \.self) { med in
+                        Text(med)
+                    }
+                    .onDelete { idx in
+                        var meds = profile.medications
+                        meds.remove(atOffsets: idx)
+                        profile.medications = meds
+                    }
+
+                    HStack {
+                        TextField("Add medication…", text: $newMedication)
+                        Button("Add") {
+                            let trimmed = newMedication.trimmingCharacters(in: .whitespaces)
+                            guard !trimmed.isEmpty else { return }
+                            profile.medications.append(trimmed)
+                            newMedication = ""
+                        }
+                        .disabled(newMedication.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                } header: {
+                    Label("Medications", systemImage: "pill.fill")
+                } footer: {
+                    Text("Swipe left on a medication to delete it.")
+                        .font(.caption)
+                }
+
+
 
                 // MARK: - Danger Zone (matches Android's SettingsActivity reset / stop)
                 Section {

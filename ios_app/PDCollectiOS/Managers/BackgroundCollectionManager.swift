@@ -67,7 +67,8 @@ class BackgroundCollectionManager {
     private func scheduleProcessing() {
         let request = BGProcessingTaskRequest(identifier: Self.processingTaskId)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 60) // ~1 hour
-        request.requiresNetworkConnectivity = UserDefaults.standard.bool(forKey: "autoUploadEnabled")
+        // Always allow network access — the handler checks autoUploadEnabled at execution time
+        request.requiresNetworkConnectivity = true
         request.requiresExternalPower = false
         try? BGTaskScheduler.shared.submit(request)
     }

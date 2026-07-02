@@ -15,11 +15,17 @@ struct FingerTappingView: View {
     @State private var currentHand: Hand = .left
     @State private var timeLeft: Double = Constants.TestDuration.fingerTapping
     @State private var timer: Timer?
-    @State private var tapPulse = false
-    @State private var leftFeatures:  PDAlgorithms.FingerTappingFeatures?
-    @State private var rightFeatures: PDAlgorithms.FingerTappingFeatures?
     @State private var isPersonalBest = false
     @State private var trendMsg = ""
+    @State private var leftFeatures:  PDAlgorithms.FingerTappingFeatures?
+    @State private var rightFeatures: PDAlgorithms.FingerTappingFeatures?
+
+    // Whack-a-mole state
+    @State private var targetPosition: CGPoint = .zero
+    @State private var canvasSize: CGSize = .zero
+    @State private var hitPulse = false          // shrink animation on hit
+    @State private var missPulse = false         // shake animation on miss
+    @State private var targetRadius: CGFloat = 52
 
     private let duration = Constants.TestDuration.fingerTapping
 
@@ -55,8 +61,9 @@ struct FingerTappingView: View {
                 .font(.title2).fontWeight(.bold)
 
             VStack(alignment: .leading, spacing: 12) {
-                instructionRow(icon: "1.circle.fill", text: "Tap the big button as fast as you can")
-                instructionRow(icon: "2.circle.fill", text: "Alternate index finger & thumb on the SAME hand")
+                instructionRow(icon: "target", text: "A circle will appear on screen — tap it as fast as you can!")
+                instructionRow(icon: "arrow.left.and.right.righttriangle.left.righttriangle.right",
+                               text: "Each tap makes it jump to a new random position")
                 instructionRow(icon: "3.circle.fill", text: "Each hand gets 10 seconds")
             }
             .padding().background(.blue.opacity(0.08)).cornerRadius(14)
@@ -94,11 +101,11 @@ struct FingerTappingView: View {
         .padding()
     }
 
-    // MARK: - Running
+    // MARK: - Running (Whack-a-mole)
 
     private var runningView: some View {
         VStack(spacing: 0) {
-            // Header
+            // Header bar
             HStack {
                 Text(currentHand.rawValue + " Hand")
                     .font(.headline)
@@ -110,52 +117,86 @@ struct FingerTappingView: View {
             .padding()
 
             ProgressView(value: (duration - timeLeft), total: duration)
-                .tint(timeLeft < 3 ? .red : .blue)
+                .tint(timeLeft < 3 ? .red : targetColor)
 
-            // Tap zone
+            // Count badge
+            HStack {
+                Spacer()
+                Text("\(currentHand == .left ? leftCount : rightCount)")
+                    .font(.system(size: 36, weight: .heavy, design: .rounded))
+                    .foregroundStyle(targetColor)
+                    .contentTransition(.numericText())
+                Text("taps").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+            }
+            .padding(.vertical, 8)
+
+            // Whack-a-mole canvas
             GeometryReader { geo in
-                Button(action: handleTap) {
-                    ZStack {
-                        // Animated background pulse
-                        Circle()
-                            .fill(currentHand == .left ? Color.blue.opacity(0.15) : Color.green.opacity(0.15))
-                            .scaleEffect(tapPulse ? 0.92 : 1.0)
-                            .animation(.easeOut(duration: 0.08), value: tapPulse)
-                            .frame(width: min(geo.size.width, geo.size.height) * 0.82)
+                ZStack {
+                    Color(.systemBackground)
 
-                        VStack(spacing: 16) {
-                            // Animated counter ring
-                            ZStack {
-                                Circle()
-                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 12)
-                                    .frame(width: 140, height: 140)
-
-                                let count = currentHand == .left ? leftCount : rightCount
-                                Circle()
-                                    .trim(from: 0, to: min(1, Double(count) / 40.0))
-                                    .stroke(currentHand == .left ? Color.blue : Color.green,
-                                            style: StrokeStyle(lineWidth: 12, lineCap: .round))
-                                    .frame(width: 140, height: 140)
-                                    .rotationEffect(.degrees(-90))
-                                    .animation(.easeOut(duration: 0.1), value: count)
-
-                                VStack(spacing: 2) {
-                                    Text("\(count)")
-                                        .font(.system(size: 48, weight: .heavy, design: .rounded))
-                                        .contentTransition(.numericText())
-                                    Text("taps")
-                                        .font(.caption).foregroundStyle(.secondary)
+                    // Miss zone — tap anywhere outside the circle to detect misses (optional UX)
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { location in
+                            let dist = hypot(location.x - targetPosition.x,
+                                            location.y - targetPosition.y)
+                            if dist > targetRadius {
+                                // Miss — shake
+                                withAnimation(.default) { missPulse = true }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                                    missPulse = false
                                 }
                             }
-
-                            Text("TAP HERE")
-                                .font(.title2).fontWeight(.heavy)
-                                .foregroundStyle(currentHand == .left ? .blue : .green)
                         }
+
+                    // The moving target circle
+                    ZStack {
+                        // Outer glow ring
+                        Circle()
+                            .stroke(targetColor.opacity(0.3), lineWidth: 8)
+                            .frame(width: targetRadius * 2 + 16, height: targetRadius * 2 + 16)
+                            .scaleEffect(hitPulse ? 1.4 : 1.0)
+                            .opacity(hitPulse ? 0 : 1)
+                            .animation(.easeOut(duration: 0.25), value: hitPulse)
+
+                        // Main filled circle
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [targetColor.opacity(0.9), targetColor],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: targetRadius * 2, height: targetRadius * 2)
+                            .shadow(color: targetColor.opacity(0.4), radius: 10)
+                            .scaleEffect(hitPulse ? 0.7 : (missPulse ? 1.08 : 1.0))
+                            .animation(hitPulse
+                                ? .easeOut(duration: 0.15)
+                                : .spring(response: 0.2, dampingFraction: 0.4),
+                                       value: hitPulse || missPulse)
+
+                        Image(systemName: "hand.point.up.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.white.opacity(0.9))
+                            .scaleEffect(hitPulse ? 0.7 : 1.0)
+                            .animation(.easeOut(duration: 0.15), value: hitPulse)
                     }
-                    .frame(width: geo.size.width, height: geo.size.height)
+                    .position(targetPosition)
+                    .onTapGesture {
+                        handleHit()
+                    }
                 }
-                .buttonStyle(.plain)
+                .onAppear {
+                    canvasSize = geo.size
+                    placeTargetRandom(in: geo.size)
+                }
+                .onChange(of: geo.size) { newSize in
+                    canvasSize = newSize
+                    placeTargetRandom(in: newSize)
+                }
             }
         }
     }
@@ -165,7 +206,6 @@ struct FingerTappingView: View {
     private var resultView: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Trophy / completion header
                 VStack(spacing: 8) {
                     Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
                         .font(.system(size: 64))
@@ -181,7 +221,6 @@ struct FingerTappingView: View {
                     }
                 }
 
-                // Score cards
                 VStack(spacing: 0) {
                     scoreSection("Left Hand", features: leftFeatures,
                                  count: leftCount, color: .blue)
@@ -191,10 +230,8 @@ struct FingerTappingView: View {
                 }
                 .cardStyle()
 
-                // Asymmetry card
                 asymmetryCard
 
-                // Motivational message
                 Text(appState.gamification.motivationalMessage)
                     .font(.callout).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -244,7 +281,6 @@ struct FingerTappingView: View {
                     .font(.title3.bold())
                     .foregroundStyle(color)
             }
-            // Visual bar
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color(.systemGray5)).frame(height: 10)
@@ -292,12 +328,19 @@ struct FingerTappingView: View {
         }
     }
 
+    private var targetColor: Color { currentHand == .left ? .blue : .green }
+
     // MARK: - Logic
 
     private func startHand(_ hand: Hand) {
         currentHand = hand
         timeLeft = duration
+        hitPulse = false
+        missPulse = false
         phase = .running(hand: hand)
+
+        // Place initial target
+        placeTargetRandom(in: canvasSize)
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             timeLeft -= 0.1
@@ -305,7 +348,7 @@ struct FingerTappingView: View {
         }
     }
 
-    private func handleTap() {
+    private func handleHit() {
         let now = Date()
         switch currentHand {
         case .left:
@@ -315,9 +358,26 @@ struct FingerTappingView: View {
             rightCount += 1
             rightTimestamps.append(now)
         }
-        // Animate pulse
-        tapPulse = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { tapPulse = false }
+
+        // Hit animation then jump to new position
+        withAnimation(.easeOut(duration: 0.12)) { hitPulse = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            hitPulse = false
+            placeTargetRandom(in: canvasSize)
+        }
+
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+    }
+
+    private func placeTargetRandom(in size: CGSize) {
+        guard size.width > 0, size.height > 0 else { return }
+        let pad = targetRadius + 12
+        let newX = CGFloat.random(in: pad...(size.width - pad))
+        let newY = CGFloat.random(in: pad...(size.height - pad))
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+            targetPosition = CGPoint(x: newX, y: newY)
+        }
     }
 
     private func finishHand(_ hand: Hand) {

@@ -14,12 +14,16 @@ struct TrailMakingTestView: View {
     @State private var errors = 0
     @State private var startTime: Date?
     @State private var segmentStart: Date?
-    @State private var segmentTimes: [Double] = []    // ms per segment
+    @State private var segmentTimes: [Double] = []
     @State private var totalMs = 0
-    @State private var lastErrorPulse = false          // red flash on wrong tap
     @State private var isPersonalBest = false
     @State private var trendMsg = ""
-    @State private var baRatio: Double? = nil          // B:A ratio (if Part B)
+    @State private var baRatio: Double? = nil
+
+    // Drag state
+    @State private var dragPoint: CGPoint? = nil          // live finger position
+    @State private var fingerOnTarget = false             // true while finger is pressed on start circle
+    @State private var errorFlash = false                 // brief red flash on lift-off miss
 
     private enum Phase { case instructions, running, done }
 
@@ -60,13 +64,13 @@ struct TrailMakingTestView: View {
                 if part == .A {
                     instructionRow(icon: "1.circle.fill",
                                    text: "Connect circles 1 → 2 → 3 … → 10 in order")
-                    instructionRow(icon: "hand.tap", text: "Tap each circle as fast as you can")
-                    instructionRow(icon: "xmark.circle", text: "Wrong taps count as errors — keep going")
+                    instructionRow(icon: "hand.draw", text: "Keep your finger on the screen the whole time")
+                    instructionRow(icon: "arrow.uturn.backward", text: "If you lift your finger, you go back to the last point")
                 } else {
                     instructionRow(icon: "arrow.left.arrow.right",
                                    text: "Alternate: 1 → A → 2 → B → 3 → C … → 5 → E")
-                    instructionRow(icon: "brain.head.profile",
-                                   text: "This tests both speed AND cognitive flexibility")
+                    instructionRow(icon: "hand.draw",
+                                   text: "Keep your finger on the screen the whole time")
                     instructionRow(icon: "chart.bar.fill",
                                    text: "Your B:A ratio will be compared to Part A time")
                 }
@@ -93,8 +97,8 @@ struct TrailMakingTestView: View {
                 Color(.systemBackground).ignoresSafeArea()
 
                 // Error flash overlay
-                if lastErrorPulse {
-                    Color.red.opacity(0.15)
+                if errorFlash {
+                    Color.red.opacity(0.18)
                         .ignoresSafeArea()
                         .transition(.opacity)
                 }
@@ -105,45 +109,68 @@ struct TrailMakingTestView: View {
                         var path = Path()
                         path.move(to: line.from)
                         path.addLine(to: line.to)
-                        // Faster = blue, slower = orange
-                        let avgMs = segmentTimes.isEmpty ? line.time : segmentTimes.reduce(0,+) / Double(segmentTimes.count)
+                        let avgMs = segmentTimes.isEmpty ? line.time
+                            : segmentTimes.reduce(0,+) / Double(segmentTimes.count)
                         let fastness = min(max(avgMs / line.time, 0.3), 3.0)
                         let col: Color = fastness > 1.5 ? .green : (fastness > 0.8 ? .blue : .orange)
                         ctx.stroke(path, with: .color(col.opacity(0.8)), lineWidth: 3)
                     }
+
+                    // Live rubber-band line from last completed point to finger
+                    if let fp = dragPoint, nextIndex > 0 {
+                        let from = targets[nextIndex - 1].position
+                        var path = Path()
+                        path.move(to: from)
+                        path.addLine(to: fp)
+                        ctx.stroke(path, with: .color(accentColor.opacity(0.5)),
+                                   style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                    }
                 }
                 .animation(nil, value: lines.count)
+                .animation(nil, value: dragPoint == nil)
 
-                // Targets
+                // Targets — plain circles, no highlighting
                 ForEach(targets.indices, id: \.self) { i in
                     let t = targets[i]
-                    let isNext = i == nextIndex
                     let isDone = i < nextIndex
 
                     ZStack {
                         Circle()
-                            .fill(isDone ? accentColor : (isNext ? Color.green : Color(.systemGray5)))
-                        if isNext {
-                            Circle()
-                                .stroke(Color.green, lineWidth: 3)
-                                .scaleEffect(1.3)
-                                .opacity(0.5)
-                        }
+                            .fill(isDone ? accentColor.opacity(0.6) : Color(.systemGray5))
+                        Circle()
+                            .stroke(isDone ? accentColor : Color.secondary.opacity(0.4), lineWidth: 2)
                         Text(t.label)
                             .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(isDone || isNext ? .white : .primary)
+                            .foregroundStyle(isDone ? .white : .primary)
                     }
                     .frame(width: Constants.TMT.targetRadius * 2,
                            height: Constants.TMT.targetRadius * 2)
                     .position(t.position)
-                    .onTapGesture { handleTap(index: i) }
-                    .animation(.easeInOut(duration: 0.15), value: isDone)
                 }
+
+                // Invisible full-canvas drag recogniser
+                Color.clear
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                            .onChanged { value in
+                                let loc = value.location
+                                dragPoint = loc
+                                checkProgress(at: loc)
+                            }
+                            .onEnded { _ in
+                                // Finger lifted — cancel rubber band
+                                dragPoint = nil
+                                // Flash to signal lift-off
+                                if nextIndex > 0 && nextIndex < targets.count {
+                                    triggerErrorFlash()
+                                }
+                            }
+                    )
 
                 // HUD
                 VStack {
                     HStack {
-                        // Progress pill
                         Label("\(nextIndex)/\(targets.count)", systemImage: "checkmark")
                             .font(.headline)
                             .padding(.horizontal, 10).padding(.vertical, 6)
@@ -151,14 +178,12 @@ struct TrailMakingTestView: View {
 
                         Spacer()
 
-                        // Elapsed timer
                         ElapsedTimerView(start: startTime)
                             .padding(.horizontal, 10).padding(.vertical, 6)
                             .background(.ultraThinMaterial).cornerRadius(10)
 
                         Spacer()
 
-                        // Errors pill
                         Label("\(errors)", systemImage: "xmark")
                             .font(.headline)
                             .foregroundStyle(errors > 0 ? .orange : .primary)
@@ -179,7 +204,6 @@ struct TrailMakingTestView: View {
     private var resultView: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Header
                 VStack(spacing: 8) {
                     Image(systemName: isPersonalBest ? "trophy.fill" : (errors == 0 ? "checkmark.circle.fill" : "exclamationmark.circle.fill"))
                         .font(.system(size: 64))
@@ -192,18 +216,16 @@ struct TrailMakingTestView: View {
                     }
                 }
 
-                // Metrics
                 VStack(spacing: 8) {
                     resultRow("Part", "TMT-\(part == .A ? "A" : "B")")
                     resultRow("Total Time", String(format: "%.2f s", Double(totalMs) / 1000))
-                    resultRow("Errors", "\(errors)", note: errors > 2 ? "⚠️" : nil)
+                    resultRow("Lift-offs", "\(errors)", note: errors > 2 ? "⚠️" : nil)
                     if !segmentTimes.isEmpty {
                         let avg = segmentTimes.reduce(0,+) / Double(segmentTimes.count)
                         resultRow("Avg Segment", String(format: "%.1f ms", avg))
                         let cv = PDAlgorithms.stddev(segmentTimes.map { $0 }) / (avg + 1e-12)
                         resultRow("Segment CoV", String(format: "%.3f", cv),
                                   note: cv > 0.4 ? "⚠️ variable" : nil)
-                        // Slowest 3 segments (possible freezing)
                         let sorted = segmentTimes.sorted(by: >)
                         if let slowest = sorted.first, slowest > avg * 2.0 {
                             resultRow("Slowest Segment",
@@ -214,12 +236,10 @@ struct TrailMakingTestView: View {
                 }
                 .cardStyle()
 
-                // B:A ratio (only for Part B, shown if we can read stored Part A time)
                 if part == .B, let ba = baRatio {
                     baRatioCard(ba)
                 }
 
-                // Segment speed timeline
                 if segmentTimes.count > 2 {
                     segmentSparkline
                 }
@@ -244,7 +264,6 @@ struct TrailMakingTestView: View {
 
     @ViewBuilder
     private func baRatioCard(_ ratio: Double) -> some View {
-        // > 3.0 suggests executive impairment (from repo: compute_TMT_metrics)
         let color: Color = ratio < 2.0 ? .green : (ratio < 3.0 ? .yellow : .orange)
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -263,7 +282,6 @@ struct TrailMakingTestView: View {
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color(.systemGray5)).frame(height: 8)
-                    // Scale: 1× = left end, 5× = right end
                     Capsule().fill(color)
                         .frame(width: g.size.width * min((ratio - 1.0) / 4.0, 1.0), height: 8)
                         .animation(.easeOut(duration: 0.8), value: ratio)
@@ -361,9 +379,14 @@ struct TrailMakingTestView: View {
         segmentStart = Date()
     }
 
-    private func handleTap(index: Int) {
-        guard phase == .running else { return }
-        if index == nextIndex {
+    /// Called on every drag update — checks if the finger is over the next target.
+    private func checkProgress(at loc: CGPoint) {
+        guard phase == .running, nextIndex < targets.count else { return }
+        let target = targets[nextIndex]
+        let dist = hypot(loc.x - target.position.x, loc.y - target.position.y)
+
+        if dist <= Constants.TMT.targetRadius {
+            // Finger reached the next target!
             let now = Date()
             if let segStart = segmentStart {
                 let elapsed = now.timeIntervalSince(segStart) * 1000
@@ -374,7 +397,7 @@ struct TrailMakingTestView: View {
             if nextIndex > 0 {
                 let timeMs = segmentTimes.last ?? 0
                 lines.append((from: targets[nextIndex - 1].position,
-                               to: targets[index].position,
+                               to: target.position,
                                time: timeMs))
             }
             nextIndex += 1
@@ -382,23 +405,24 @@ struct TrailMakingTestView: View {
             if nextIndex == targets.count {
                 let total = Date().timeIntervalSince(startTime ?? Date()) * 1000
                 totalMs = Int(total)
+                dragPoint = nil
                 phase = .done
                 computeResults()
                 saveResult()
             }
-        } else if index > nextIndex {
-            errors += 1
-            withAnimation(.easeOut(duration: 0.1)) { lastErrorPulse = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                withAnimation { lastErrorPulse = false }
-            }
+        }
+    }
+
+    private func triggerErrorFlash() {
+        errors += 1
+        withAnimation(.easeOut(duration: 0.1)) { errorFlash = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation { errorFlash = false }
         }
     }
 
     private func computeResults() {
         let scoreS = Double(totalMs) / 1000.0
-
-        // Personal best (lower time = better)
         isPersonalBest = appState.gamification.isPersonalBest(
             testType: testTypeKey, score: scoreS, higherIsBetter: false)
         trendMsg = appState.gamification.trendMessage(
@@ -406,7 +430,6 @@ struct TrailMakingTestView: View {
         appState.gamification.recordCompletion(
             testType: testTypeKey, score: scoreS, higherIsBetter: false)
 
-        // B:A ratio: read stored Part A personal best (last score used as proxy)
         if part == .B {
             if let aTime = appState.gamification.personalBest(testType: "trail_making_A"),
                aTime > 0 {

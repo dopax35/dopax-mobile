@@ -5,11 +5,16 @@ struct DashboardView: View {
     @EnvironmentObject var appState: AppState
     @State private var metrics: [GaitMetric] = []
     @State private var asymmetryPoints: [AsymmetryPoint] = []
+    @State private var testScores: [TestScorePoint] = []
+    @State private var selectedTestTab = 0
     @State private var isLoading = false
     @State private var selectedTab = 0
     @State private var showHealthKitError = false
 
     private var summary: GaitSummary { GaitSummary(metrics: metrics) }
+
+    private let testTabLabels = ["Finger Tap", "Hand Turn", "Leg Agility", "Spiral", "TMT-A", "TMT-B"]
+    private let testTypeKeys  = ["finger_tapping", "hand_turning", "leg_agility", "spiral_tracing", "trail_making_A", "trail_making_B"]
 
     var body: some View {
         NavigationStack {
@@ -26,6 +31,7 @@ struct DashboardView: View {
                     } else {
                         if !metrics.isEmpty { statsRow }
                         chartSection
+                        testScoreSection
                     }
                 }
                 .padding(.vertical)
@@ -413,6 +419,7 @@ struct DashboardView: View {
     private func requestAndLoad() async {
         isLoading = true
         loadAsymmetryData()
+        loadTestScores()
         if !appState.healthKitManager.isAuthorized {
             await appState.healthKitManager.requestAuthorization()
         }
@@ -427,6 +434,137 @@ struct DashboardView: View {
 
     private func loadData() {
         Task { await requestAndLoad() }
+    }
+
+    // MARK: - Test Score Chart
+
+    private struct TestScorePoint: Identifiable {
+        let id = UUID()
+        let date: Date
+        let value: Double
+        let testKey: String
+    }
+
+    private var testScoreSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Active Test Scores")
+                .font(.headline)
+                .padding(.horizontal)
+
+            // Tab picker
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(testTabLabels.indices, id: \.self) { i in
+                        Button(action: { withAnimation { selectedTestTab = i } }) {
+                            Text(testTabLabels[i])
+                                .font(.caption.weight(selectedTestTab == i ? .bold : .regular))
+                                .padding(.vertical, 6).padding(.horizontal, 12)
+                                .background(selectedTestTab == i ? Color.accentColor : Color.clear)
+                                .foregroundStyle(selectedTestTab == i ? .white : .primary)
+                                .cornerRadius(8)
+                        }
+                    }
+                }
+                .padding(4)
+                .background(Color(.systemGray6))
+                .cornerRadius(10)
+            }
+            .padding(.horizontal)
+
+            let points = testScores.filter { $0.testKey == testTypeKeys[selectedTestTab] }
+
+            if points.isEmpty {
+                EmptyStateView(
+                    title: "No \(testTabLabels[selectedTestTab]) data yet",
+                    systemImage: "chart.xyaxis.line",
+                    descriptionText: "Complete the test to see your score trend here."
+                )
+                .frame(height: 180)
+            } else {
+                Chart(points) { p in
+                    LineMark(
+                        x: .value("Date", p.date, unit: .day),
+                        y: .value("Score", p.value)
+                    )
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(Color.purple)
+                    PointMark(
+                        x: .value("Date", p.date, unit: .day),
+                        y: .value("Score", p.value)
+                    )
+                    .foregroundStyle(Color.purple)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 7)) { _ in
+                        AxisGridLine(); AxisTick()
+                        AxisValueLabel(format: .dateTime.month().day())
+                    }
+                }
+                .frame(height: 180)
+                .padding(.horizontal)
+
+                Text(testScoreDescription)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    private var testScoreDescription: String {
+        let isTime = ["trail_making_A", "trail_making_B", "spiral_tracing", "hand_turning"].contains(testTypeKeys[selectedTestTab])
+        return isTime
+            ? "Lower score = faster / better. Each point is one completed test."
+            : "Higher score = more taps per second. Each point is one completed test."
+    }
+
+    private func loadTestScores() {
+        let fm = FileManager.default
+        let docsDir = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let rootDir = docsDir
+            .appendingPathComponent("PDCollect")
+            .appendingPathComponent(appState.userProfile.userId)
+
+        guard let dateDirs = try? fm.contentsOfDirectory(
+            at: rootDir, includingPropertiesForKeys: [.isDirectoryKey]) else { return }
+
+        var points: [TestScorePoint] = []
+        let isoFull = ISO8601DateFormatter()
+        isoFull.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let isoBasic = ISO8601DateFormatter()
+        func parseDate(_ s: String) -> Date? { isoFull.date(from: s) ?? isoBasic.date(from: s) }
+
+        for dateDir in dateDirs {
+            let csvURL = dateDir.appendingPathComponent(Constants.CSV.testResultsFile)
+            guard let content = try? String(contentsOf: csvURL, encoding: .utf8) else { continue }
+
+            for rawLine in content.components(separatedBy: "\n").dropFirst() {
+                let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !line.isEmpty else { continue }
+                let cols = csvSplit(line, maxCols: 7)
+                guard cols.count >= 4,
+                      let date  = parseDate(cols[0]),
+                      let score = Double(cols[3]) else { continue }
+
+                let rawType = cols[1]
+                let rawPart = cols.count >= 3 ? cols[2] : ""
+
+                // Map CSV test_type + part → our testTypeKey
+                let key: String
+                switch rawType {
+                case "finger_tapping":  key = "finger_tapping"
+                case "hand_turning":    key = "hand_turning"
+                case "leg_agility":     key = "leg_agility"
+                case "spiral_tracing":  key = "spiral_tracing"
+                case "trail_making":    key = rawPart == "B" ? "trail_making_B" : "trail_making_A"
+                default: continue
+                }
+                points.append(TestScorePoint(date: date, value: score, testKey: key))
+            }
+        }
+
+        testScores = points.sorted { $0.date < $1.date }
     }
 }
 
