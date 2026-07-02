@@ -426,7 +426,7 @@ private struct LiveGyroArc: View {
 
 // MARK: - Live Tremor Bar
 
-private struct LiveTremorBar: View {
+struct LiveTremorBar: View {
     let magnitude: Double
 
     var body: some View {
