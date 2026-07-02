@@ -22,7 +22,6 @@ struct TrailMakingTestView: View {
 
     // Drag state
     @State private var dragPoint: CGPoint? = nil          // live finger position
-    @State private var fingerOnTarget = false             // true while finger is pressed on start circle
     @State private var errorFlash = false                 // brief red flash on lift-off miss
 
     private enum Phase { case instructions, running, done }

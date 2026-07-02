@@ -191,11 +191,13 @@ struct FingerTappingView: View {
                 }
                 .onAppear {
                     canvasSize = geo.size
-                    placeTargetRandom(in: geo.size)
+                    // Only place if position is still zero (first time for this hand)
+                    if targetPosition == .zero {
+                        placeTargetRandom(in: geo.size)
+                    }
                 }
-                .onChange(of: geo.size) { newSize in
+                .onChange(of: geo.size) { _, newSize in
                     canvasSize = newSize
-                    placeTargetRandom(in: newSize)
                 }
             }
         }
@@ -333,14 +335,13 @@ struct FingerTappingView: View {
     // MARK: - Logic
 
     private func startHand(_ hand: Hand) {
+        timer?.invalidate(); timer = nil
         currentHand = hand
         timeLeft = duration
         hitPulse = false
         missPulse = false
+        targetPosition = .zero   // reset so onAppear places it fresh
         phase = .running(hand: hand)
-
-        // Place initial target
-        placeTargetRandom(in: canvasSize)
 
         timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             timeLeft -= 0.1
@@ -381,6 +382,7 @@ struct FingerTappingView: View {
     }
 
     private func finishHand(_ hand: Hand) {
+        guard timer != nil else { return }   // guard against double-fire
         timer?.invalidate(); timer = nil
 
         if hand == .left {

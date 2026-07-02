@@ -26,11 +26,14 @@ struct DashboardView: View {
                     if isLoading {
                         ProgressView("Loading HealthKit data…")
                             .padding(.top, 40)
-                    } else if metrics.isEmpty && asymmetryPoints.isEmpty {
-                        healthKitEmptyState
                     } else {
-                        if !metrics.isEmpty { statsRow }
-                        chartSection
+                        if metrics.isEmpty && asymmetryPoints.isEmpty {
+                            healthKitEmptyState
+                        } else {
+                            if !metrics.isEmpty { statsRow }
+                            chartSection
+                        }
+                        // Test scores always shown — they come from local CSV, not HealthKit
                         testScoreSection
                     }
                 }
