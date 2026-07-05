@@ -70,8 +70,6 @@ targets:
     dependencies:
       - package: ZIPFoundation
       - package: Firebase
-        product: FirebaseCore
-      - package: Firebase
         product: FirebaseAuth
       - package: Firebase
         product: FirebaseFirestore
