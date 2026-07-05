@@ -10,6 +10,12 @@ packages:
   ZIPFoundation:
     url: https://github.com/weichsel/ZIPFoundation.git
     from: "0.9.19"
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    from: "10.20.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS.git
+    from: "7.0.0"
 
 targets:
   PDCollectiOS:
@@ -24,6 +30,9 @@ targets:
     info:
       path: PDCollectiOS/Info.plist
       properties:
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - com.googleusercontent.apps.225458522869-ipigbhk8f1a3abgp3b4favs94g4f4hm5
         NSCameraUsageDescription: "This app uses the camera to scan documents"
         NSHealthShareUsageDescription: "This app uses Health data to monitor Parkinson's symptoms"
         NSHealthUpdateUsageDescription: "This app writes Health data to track Parkinson's symptoms"
@@ -51,6 +60,8 @@ targets:
     capabilities:
       healthKit:
         enabled: true
+      signInWithApple:
+        enabled: true
       backgroundModes:
         modes:
           - fetch
@@ -58,6 +69,16 @@ targets:
           - bluetooth-central
     dependencies:
       - package: ZIPFoundation
+      - package: Firebase
+        product: FirebaseAuth
+      - package: Firebase
+        product: FirebaseFirestore
+      - package: Firebase
+        product: FirebaseFirestoreSwift
+      - package: GoogleSignIn
+        product: GoogleSignIn
+      - package: GoogleSignIn
+        product: GoogleSignInSwift
       - target: PDCollectKeyboard
     settings:
       base:

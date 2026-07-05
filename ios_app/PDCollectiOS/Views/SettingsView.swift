@@ -12,7 +12,7 @@ struct SettingsView: View {
     @State private var showDeleteAlert   = false
     @State private var cameraStatus      = ""
     @State private var isUploading       = false
-    @State private var newMedication     = ""
+    @State private var editingMedication: Medication?
 
 
     private var profile: UserProfile { appState.userProfile }
@@ -159,8 +159,21 @@ struct SettingsView: View {
 
                 // MARK: - Medications (editable)
                 Section {
-                    ForEach(profile.medications, id: \.self) { med in
-                        Text(med)
+                    ForEach(profile.medications) { med in
+                        Button {
+                            editingMedication = med
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(med.name).foregroundColor(.primary)
+                                    if !med.dosage.isEmpty {
+                                        Text(med.dosage).font(.caption).foregroundColor(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                Image(systemName: "pencil").foregroundColor(.blue)
+                            }
+                        }
                     }
                     .onDelete { idx in
                         var meds = profile.medications
@@ -168,27 +181,46 @@ struct SettingsView: View {
                         profile.medications = meds
                     }
 
-                    HStack {
-                        TextField("Add medication…", text: $newMedication)
-                        Button("Add") {
-                            let trimmed = newMedication.trimmingCharacters(in: .whitespaces)
-                            guard !trimmed.isEmpty else { return }
-                            profile.medications.append(trimmed)
-                            newMedication = ""
-                        }
-                        .disabled(newMedication.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Button("Add Medication") {
+                        let newMed = Medication(name: "", dosage: "")
+                        editingMedication = newMed
                     }
                 } header: {
                     Label("Medications", systemImage: "pill.fill")
                 } footer: {
-                    Text("Swipe left on a medication to delete it.")
+                    Text("Tap to edit · Swipe left to delete")
                         .font(.caption)
+                }
+                
+                // MARK: - Keystroke Logging
+                Section {
+                    let todayKey = "keystroke_count_\(Date().dateKeyString)"
+                    let count = UserDefaults(suiteName: "group.com.oriw.pdcollect.ios1.shared")?.integer(forKey: todayKey) ?? 0
+                    
+                    LabeledContent("Keys logged today", value: "\(count)")
+                    
+                    Button("Keyboard Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                } header: {
+                    Label("Keystroke Keyboard", systemImage: "keyboard")
+                } footer: {
+                    Text("Ensure PDCollectKeyboard is enabled in Settings and selected when typing.")
                 }
 
 
 
                 // MARK: - Danger Zone (matches Android's SettingsActivity reset / stop)
                 Section {
+                    Button(role: .destructive) {
+                        appState.authManager.signOut()
+                        resetConsent()
+                    } label: {
+                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                    }
+                    
                     Button(role: .destructive) {
                         showDeleteAlert = true
                     } label: {
@@ -228,6 +260,9 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This will stop collection, delete all data, and return you to the consent screen.")
+            }
+            .sheet(item: $editingMedication) { med in
+                MedicationEditSheet(medication: med, profile: profile)
             }
         }
     }

@@ -5,7 +5,9 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if !appState.userProfile.consentGiven {
+            if appState.authManager.currentUser == nil {
+                LoginView()
+            } else if !appState.userProfile.consentGiven {
                 ConsentView()
             } else if !appState.userProfile.profileComplete {
                 ProfileSetupView()

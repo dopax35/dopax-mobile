@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ProfileSetupView: View {
     @EnvironmentObject var appState: AppState
-    @State private var newMed = ""
+    @State private var newMedName = ""
+    @State private var newMedDosage = ""
+    @State private var editingMedication: Medication?
 
     private var profile: UserProfile { appState.userProfile }
 
@@ -61,8 +63,21 @@ struct ProfileSetupView: View {
                 }
 
                 Section("Current Medications") {
-                    ForEach(profile.medications, id: \.self) { med in
-                        Text(med)
+                    ForEach(profile.medications) { med in
+                        Button {
+                            editingMedication = med
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(med.name).foregroundColor(.primary)
+                                    if !med.dosage.isEmpty {
+                                        Text(med.dosage).font(.caption).foregroundColor(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                Image(systemName: "pencil").foregroundColor(.blue)
+                            }
+                        }
                     }
                     .onDelete { idx in
                         var meds = profile.medications
@@ -70,16 +85,31 @@ struct ProfileSetupView: View {
                         profile.medications = meds
                     }
 
-                    HStack {
-                        TextField("Add medication…", text: $newMed)
-                        Button("Add") {
-                            let trimmed = newMed.trimmingCharacters(in: .whitespaces)
-                            guard !trimmed.isEmpty else { return }
-                            profile.medications.append(trimmed)
-                            newMed = ""
-                        }
-                        .disabled(newMed.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Button("Add Medication") {
+                        let newMed = Medication(name: "", dosage: "")
+                        editingMedication = newMed
                     }
+                }
+                
+                Section("Keystroke Logging") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("To collect typing patterns (not what you type, just how you type), please enable the PDCollect keyboard.")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                        
+                        Button("Go to Settings") {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .padding(.top, 4)
+                        
+                        Text("Settings → General → Keyboard → Keyboards → Add New Keyboard → PDCollectKeyboard")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
                 }
             }
             .navigationTitle("Your Profile")
@@ -93,8 +123,50 @@ struct ProfileSetupView: View {
                     Button("Done") {
                         if profile.gender.isEmpty { profile.gender = "Prefer not to say" }
                         profile.profileComplete = true
+                        FirebaseSyncManager.shared.saveProfileToCloud(profile: profile)
                     }
                     .disabled(!isComplete)
+                }
+            }
+            .sheet(item: $editingMedication) { med in
+                MedicationEditSheet(medication: med, profile: profile)
+            }
+        }
+    }
+}
+
+struct MedicationEditSheet: View {
+    @Environment(\.dismiss) var dismiss
+    @State var medication: Medication
+    @ObservedObject var profile: UserProfile
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Medication Name", text: $medication.name)
+                    TextField("Dosage (e.g. 100mg)", text: $medication.dosage)
+                }
+            }
+            .navigationTitle(medication.name.isEmpty ? "Add Medication" : "Edit Medication")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if !medication.name.trimmingCharacters(in: .whitespaces).isEmpty {
+                            var meds = profile.medications
+                            if let idx = meds.firstIndex(where: { $0.id == medication.id }) {
+                                meds[idx] = medication
+                            } else {
+                                meds.append(medication)
+                            }
+                            profile.medications = meds
+                        }
+                        dismiss()
+                    }
                 }
             }
         }

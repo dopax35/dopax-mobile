@@ -8,7 +8,7 @@ struct MedicationLogView: View {
     // MARK: - State
 
     /// Medication currently being logged (drives the time-picker sheet).
-    @State private var selectedMedication: String?
+    @State private var selectedMedication: Medication?
     /// User-selected time of intake.
     @State private var selectedTime = Date()
     /// Today's logged events (local, in-memory for the current session).
@@ -25,8 +25,8 @@ struct MedicationLogView: View {
                 recentLogsSection
             }
             .navigationTitle("Medication Log")
-            .sheet(item: selectedMedicationBinding) { med in
-                timePickerSheet(for: med.name)
+            .sheet(item: $selectedMedication) { med in
+                timePickerSheet(for: med)
             }
         }
     }
@@ -49,7 +49,7 @@ struct MedicationLogView: View {
                 }
                 .padding(.vertical, 4)
             } else {
-                ForEach(meds, id: \.self) { med in
+                ForEach(meds) { med in
                     medicationRow(med)
                 }
             }
@@ -58,18 +58,22 @@ struct MedicationLogView: View {
         }
     }
 
-    private func medicationRow(_ med: String) -> some View {
+    private func medicationRow(_ med: Medication) -> some View {
         HStack {
             Image(systemName: "pill.fill")
                 .foregroundColor(.blue)
                 .font(.title3)
 
-            Text(med)
-                .font(.body)
+            VStack(alignment: .leading) {
+                Text(med.name).font(.body)
+                if !med.dosage.isEmpty {
+                    Text(med.dosage).font(.caption).foregroundColor(.secondary)
+                }
+            }
 
             Spacer()
 
-            if justLoggedMed == med {
+            if justLoggedMed == med.name {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
                     .font(.title2)
@@ -109,6 +113,9 @@ struct MedicationLogView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(log.medName)
                                 .font(.body.weight(.medium))
+                            if !log.dosage.isEmpty {
+                                Text(log.dosage).font(.caption).foregroundColor(.secondary)
+                            }
                             Text("Taken at \(formattedTime(ms: log.takenMs))")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -130,14 +137,14 @@ struct MedicationLogView: View {
 
     // MARK: - Time Picker Sheet
 
-    private func timePickerSheet(for med: String) -> some View {
+    private func timePickerSheet(for med: Medication) -> some View {
         NavigationStack {
             VStack(spacing: 24) {
                 Image(systemName: "pill.fill")
                     .font(.system(size: 48))
                     .foregroundColor(.blue)
 
-                Text("Log \(med)")
+                Text("Log \(med.name)")
                     .font(.title2.weight(.semibold))
 
                 Text("When did you take this medication?")
@@ -176,15 +183,15 @@ struct MedicationLogView: View {
 
     // MARK: - Actions
 
-    private func logMedication(_ med: String) {
+    private func logMedication(_ med: Medication) {
         let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
         let takenMs = Int64(selectedTime.timeIntervalSince1970 * 1000)
 
         let event = MedicationEvent(
             timestampMs: nowMs,
             takenMs: takenMs,
-            medName: med,
-            dosage: ""
+            medName: med.name,
+            dosage: med.dosage
         )
 
         appState.dataManager.writeMedicationEvent(event)
@@ -199,7 +206,7 @@ struct MedicationLogView: View {
 
         // Show success checkmark animation
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            justLoggedMed = med
+            justLoggedMed = med.name
         }
 
         // Clear checkmark after a delay
@@ -218,18 +225,4 @@ struct MedicationLogView: View {
         fmt.timeStyle = .short
         return fmt.string(from: date)
     }
-
-    /// Wrapper to bridge `String?` into an `Identifiable` for `.sheet(item:)`.
-    private var selectedMedicationBinding: Binding<IdentifiableMedName?> {
-        Binding(
-            get: { selectedMedication.map { IdentifiableMedName(name: $0) } },
-            set: { selectedMedication = $0?.name }
-        )
-    }
-}
-
-/// Identifiable wrapper for a medication name (used by `.sheet(item:)`).
-private struct IdentifiableMedName: Identifiable {
-    let id = UUID()
-    let name: String
 }

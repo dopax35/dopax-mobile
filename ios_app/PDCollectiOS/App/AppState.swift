@@ -23,6 +23,9 @@ class AppState: ObservableObject {
     // MARK: - Bluetooth
     let bluetoothManager = BluetoothManager()
 
+    // MARK: - Auth
+    let authManager = AuthManager()
+
     /// Whether the user has enabled passive background collection from Settings.
     @Published var isCollecting: Bool {
         didSet {

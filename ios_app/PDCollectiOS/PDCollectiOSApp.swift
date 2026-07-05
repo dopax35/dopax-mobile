@@ -1,14 +1,19 @@
 import SwiftUI
 import AVFoundation
+import FirebaseCore
+import GoogleSignIn
 
 // MARK: - App Delegate (needed for UIApplication subclassing via LoggingApplication)
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // Wire the LoggingApplication's data manager reference
-        // AppState is resolved via environment; here we use a shared accessor
+        FirebaseApp.configure()
         return true
+    }
+
+    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        return GIDSignIn.sharedInstance.handle(url)
     }
 }
 
