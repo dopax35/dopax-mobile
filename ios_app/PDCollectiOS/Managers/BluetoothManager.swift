@@ -59,12 +59,17 @@ class BluetoothManager: NSObject, ObservableObject {
     private var userInitiatedBeanieDisconnect = false
     private var userInitiatedHRDisconnect = false
     
-    override init() {
+    static let shared = BluetoothManager()
+    
+    override private init() {
         super.init()
+    }
+    
+    func setupCentralManager() {
+        if centralManager != nil { return }
         // CBCentralManagerOptionRestoreIdentifierKey: CoreBluetooth recreates our
         // central manager (with the same identifier) when the app is relaunched after
         // a background kill, re-attaching any existing peripheral connections automatically.
-        // This is the iOS equivalent of Android's autoConnect=true background reconnect.
         centralManager = CBCentralManager(
             delegate: self,
             queue: nil,

@@ -21,7 +21,7 @@ class AppState: ObservableObject {
     let bgCollection   = BackgroundCollectionManager()
 
     // MARK: - Bluetooth
-    let bluetoothManager = BluetoothManager()
+    let bluetoothManager = BluetoothManager.shared
 
     // MARK: - Auth
     let authManager = AuthManager()
