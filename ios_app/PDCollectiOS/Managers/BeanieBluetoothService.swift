@@ -36,11 +36,13 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
     private var useReadPolling = false
     private var readPollTimer: Timer?
     private var streamWarmupTimer: Timer?
+    private var dataWatchdogTimer: Timer?      // fires if no data within 15s of notify-enabled
     private var receivedFrame = false
     private var liveStartRetryCount = 0
-    private static let maxLiveStartRetries = 2
+    private static let maxLiveStartRetries = 3
     private static let readPollInterval: TimeInterval = 1.5
-    private static let streamWarmupTimeout: TimeInterval = 10.0
+    private static let streamWarmupTimeout: TimeInterval = 8.0
+    private static let dataWatchdogTimeout: TimeInterval = 15.0
 
     // Command write queue
     private var commandQueue: [Data] = []
@@ -66,6 +68,8 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         readPollTimer = nil
         streamWarmupTimer?.invalidate()
         streamWarmupTimer = nil
+        dataWatchdogTimer?.invalidate()
+        dataWatchdogTimer = nil
         parser.resetBuffer()
     }
 
@@ -109,27 +113,46 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         guard let dataChar = dataCharacteristic else { return }
 
         if useReadPolling && dataChar.properties.contains(.read) {
-            // Go straight to read polling
+            // Read-polling path — mark ready immediately
             isConnected = true
             status = .ready
             startReadPolling(peripheral: peripheral)
             return
         }
 
-        // Try notifications first
-        if dataChar.properties.contains(.notify) {
+        // Notification path: request notify first; isConnected/status.ready is set
+        // in didUpdateNotificationStateFor AFTER the CCCD write is confirmed
+        // (Android parity: afterNotifyEnabled() is called from onDescriptorWrite).
+        if dataChar.properties.contains(.notify) || dataChar.properties.contains(.indicate) {
             peripheral.setNotifyValue(true, for: dataChar)
-            scheduleStreamWarmupTimeout(peripheral: peripheral)
-        } else if dataChar.properties.contains(.indicate) {
-            peripheral.setNotifyValue(true, for: dataChar)
+            // Warmup guard: if CCCD write doesn't confirm within 8s, try read polling
             scheduleStreamWarmupTimeout(peripheral: peripheral)
         } else if dataChar.properties.contains(.read) {
+            // No notify capability — fall straight to read polling
             useReadPolling = true
             isConnected = true
             status = .ready
             startReadPolling(peripheral: peripheral)
         }
+    }
 
+    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
+        streamWarmupTimer?.invalidate()
+        streamWarmupTimer = nil
+
+        if let error = error {
+            // Notification setup failed — fall back to read polling
+            print("[Beanie] Notify failed: \(error.localizedDescription) — falling back to read poll")
+            if let dataChar = dataCharacteristic, dataChar.properties.contains(.read) {
+                useReadPolling = true
+                isConnected = true
+                status = .ready
+                startReadPolling(peripheral: peripheral)
+            }
+            return
+        }
+
+        // Android parity: afterNotifyEnabled() — CCCD write confirmed, now ready
         isConnected = true
         status = .ready
 
@@ -137,24 +160,24 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         if cmdCharacteristic != nil {
             sendLiveStartSequence()
         }
-    }
 
-    func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        if error != nil {
-            // Notification setup failed, try read polling
-            if let dataChar = dataCharacteristic, dataChar.properties.contains(.read) {
-                useReadPolling = true
-                startReadPolling(peripheral: peripheral)
-            }
-        }
+        // Data watchdog: if no data arrives within 15s despite being "ready",
+        // retry the live-start sequence (Android parity: dump-stall watchdog)
+        scheduleDataWatchdog(peripheral: peripheral)
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard error == nil, let data = characteristic.value, !data.isEmpty else { return }
 
         if characteristic.uuid == Self.dataCharUUID {
-            receivedFrame = true
-            streamWarmupTimer?.invalidate()
+            if !receivedFrame {
+                receivedFrame = true
+                // Cancel watchdog — data is flowing
+                dataWatchdogTimer?.invalidate()
+                dataWatchdogTimer = nil
+                streamWarmupTimer?.invalidate()
+                streamWarmupTimer = nil
+            }
             processIncomingData(data)
 
             // Schedule next read if polling
@@ -293,19 +316,40 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         peripheral.readValue(for: dataChar)
     }
 
+    // MARK: - Data Watchdog
+    // Android parity: dump-stall watchdog — retries live-start if no data arrives
+    // within dataWatchdogTimeout seconds of notify being enabled.
+
+    private func scheduleDataWatchdog(peripheral: CBPeripheral) {
+        dataWatchdogTimer?.invalidate()
+        dataWatchdogTimer = Timer.scheduledTimer(
+            withTimeInterval: Self.dataWatchdogTimeout, repeats: false
+        ) { [weak self] _ in
+            guard let self, !self.receivedFrame else { return }
+            if self.liveStartRetryCount < Self.maxLiveStartRetries, self.cmdCharacteristic != nil {
+                self.liveStartRetryCount += 1
+                print("[Beanie] No data received — retrying live-start (attempt \(self.liveStartRetryCount))")
+                self.sendLiveStartSequence()
+                self.scheduleDataWatchdog(peripheral: peripheral)
+            } else if let dataChar = self.dataCharacteristic, dataChar.properties.contains(.read) {
+                print("[Beanie] Falling back to read polling after watchdog timeout")
+                self.useReadPolling = true
+                self.startReadPolling(peripheral: peripheral)
+            }
+        }
+    }
+
     // MARK: - Stream Warmup
 
     private func scheduleStreamWarmupTimeout(peripheral: CBPeripheral) {
         streamWarmupTimer?.invalidate()
         streamWarmupTimer = Timer.scheduledTimer(withTimeInterval: Self.streamWarmupTimeout, repeats: false) { [weak self] _ in
-            guard let self = self, !self.receivedFrame else { return }
-
-            if self.liveStartRetryCount < Self.maxLiveStartRetries, self.cmdCharacteristic != nil {
-                self.liveStartRetryCount += 1
-                self.sendLiveStartSequence()
-                self.scheduleStreamWarmupTimeout(peripheral: peripheral)
-            } else if let dataChar = self.dataCharacteristic, dataChar.properties.contains(.read) {
+            guard let self, !self.receivedFrame else { return }
+            // CCCD write didn't confirm — try read polling as last resort
+            if let dataChar = self.dataCharacteristic, dataChar.properties.contains(.read) {
                 self.useReadPolling = true
+                self.isConnected = true
+                self.status = .ready
                 self.startReadPolling(peripheral: peripheral)
             }
         }

@@ -133,20 +133,4 @@ class HRBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
     }
 }
 
-// MARK: - BLE Device Status
 
-enum BLEDeviceStatus: String {
-    case idle = "Not set up"
-    case scanning = "Scanning"
-    case connecting = "Connecting"
-    case discovering = "Discovering"
-    case ready = "Connected"
-    case disconnected = "Disconnected"
-    
-    var isActive: Bool {
-        switch self {
-        case .ready: return true
-        default: return false
-        }
-    }
-}
