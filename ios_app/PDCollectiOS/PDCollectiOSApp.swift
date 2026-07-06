@@ -32,6 +32,7 @@ struct PDCollectiOSApp: App {
                     // Wire touch logger's data manager after the environment is available
                     if let loggingApp = UIApplication.shared as? LoggingApplication {
                         loggingApp.dataManager = appState.dataManager
+                        loggingApp.isCollecting = appState.isCollecting
                     }
                     // Request camera access for face distance — do not block launch
                     requestCameraPermissionIfNeeded()

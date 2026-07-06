@@ -18,6 +18,9 @@ class LoggingApplication: UIApplication {
     /// Set by AppDelegate after the app launches.
     var dataManager: DataManager?
 
+    /// Set to true when passive collection is active.
+    var isCollecting: Bool = false
+
     // MARK: - State
 
     private var lastTapTimestamp: Int64 = 0
@@ -28,7 +31,7 @@ class LoggingApplication: UIApplication {
     override func sendEvent(_ event: UIEvent) {
         super.sendEvent(event)
 
-        guard event.type == .touches, let dm = dataManager else { return }
+        guard isCollecting, event.type == .touches, let dm = dataManager else { return }
 
         for touch in event.allTouches ?? [] {
             let phase = touch.phase

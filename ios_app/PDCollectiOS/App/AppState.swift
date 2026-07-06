@@ -30,6 +30,10 @@ class AppState: ObservableObject {
     @Published var isCollecting: Bool {
         didSet {
             UserDefaults.standard.set(isCollecting, forKey: "isCollecting")
+            // Sync to LoggingApplication (touch logger gate)
+            if let loggingApp = UIApplication.shared as? LoggingApplication {
+                loggingApp.isCollecting = isCollecting
+            }
             isCollecting ? startCollection() : stopCollection()
         }
     }
@@ -68,6 +72,15 @@ class AppState: ObservableObject {
                                sensor: passiveSensor)
         bgCollection.registerTasks()
 
+        // Import keystrokes whenever app becomes active (foreground)
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .receive(on: DispatchQueue.global(qos: .utility))
+            .sink { [weak self] _ in
+                guard let self, self.isCollecting else { return }
+                self.keystrokeSync.importBufferedKeystrokes(dataManager: self.dataManager)
+            }
+            .store(in: &cancellables)
+
         // Resume collection if it was active before the app was killed
         if isCollecting { startCollection() }
     }
@@ -80,6 +93,8 @@ class AppState: ObservableObject {
         passiveSensor.start(dataManager: dataManager)
         appEventLogger.start(dataManager: dataManager)
         bgCollection.scheduleAll()
+        // Wire Bluetooth so HR and Beanie data gets written to disk
+        bluetoothManager.start(dataManager: dataManager, userProfile: userProfile)
         // Write daily profile snapshot
         dataManager.writeProfileSnapshot(profile: userProfile)
         // Import any buffered keystrokes from keyboard extension
