@@ -50,6 +50,10 @@ targets:
         BGTaskSchedulerPermittedIdentifiers:
           - com.pdcollect.ios.bg-refresh
           - com.pdcollect.ios.bg-processing
+        UIBackgroundModes:
+          - fetch
+          - processing
+          - bluetooth-central
     entitlements:
       path: PDCollectiOS/PDCollectiOS.entitlements
       properties:
