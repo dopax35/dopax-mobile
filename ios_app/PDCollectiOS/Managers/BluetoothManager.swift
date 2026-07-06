@@ -318,7 +318,7 @@ class BluetoothManager: NSObject, ObservableObject {
     
     private func startBeanieReconnectScan() {
         guard !userInitiatedBeanieDisconnect,
-              userProfile?.beanieDeviceIdentifier?.isEmpty == false else { return }
+              let beanieId = userProfile?.beanieDeviceIdentifier, !beanieId.isEmpty else { return }
         stopBeanieReconnectScan()
         scanningForBeanieReconnect = true
         beanieService.status = .scanning
@@ -368,8 +368,8 @@ extension BluetoothManager: CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
         guard let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] else { return }
         
-        let savedBeanieId = userProfile?.beanieDeviceIdentifier.flatMap { UUID(uuidString: $0) }
-        let savedHRId     = userProfile?.hrDeviceIdentifier.flatMap { UUID(uuidString: $0) }
+        let savedBeanieId = UUID(uuidString: userProfile?.beanieDeviceIdentifier ?? "")
+        let savedHRId     = UUID(uuidString: userProfile?.hrDeviceIdentifier ?? "")
         
         for peripheral in peripherals {
             if peripheral.identifier == savedBeanieId {
@@ -394,7 +394,7 @@ extension BluetoothManager: CBCentralManagerDelegate {
         
         // Silent background reconnect scan — check if this is our saved beanie
         if scanningForBeanieReconnect {
-            let savedBeanieId = userProfile?.beanieDeviceIdentifier.flatMap { UUID(uuidString: $0) }
+            let savedBeanieId = UUID(uuidString: userProfile?.beanieDeviceIdentifier ?? "")
             let isOurBeanie = id == savedBeanieId
                 || advServiceUUIDs.contains(Self.beanieServiceUUID)
                 || BeanieRegistry.isLikelyBeanie(name)

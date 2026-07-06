@@ -106,7 +106,7 @@ struct LoginView: View {
         }
     }
     
-    private func handleSignInResult(_ result: Result<Any, Error>) {
+    private func handleSignInResult<T>(_ result: Result<T, Error>) {
         switch result {
         case .success:
             // Sync profile

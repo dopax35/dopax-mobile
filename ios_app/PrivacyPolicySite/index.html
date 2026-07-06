@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - PDCollect</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #333333;
+      --heading-color: #111111;
+      --accent-color: #007aff;
+      --border-color: #eaeaea;
+      --card-bg: #f9f9f9;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --text-color: #e0e0e0;
+        --heading-color: #ffffff;
+        --accent-color: #0a84ff;
+        --border-color: #333333;
+        --card-bg: #1e1e1e;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      padding: 0 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      padding: 60px 0 40px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      color: var(--heading-color);
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      color: var(--heading-color);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-top: 40px;
+      margin-bottom: 15px;
+    }
+
+    h3 {
+      color: var(--heading-color);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-top: 25px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin-bottom: 15px;
+      font-size: 1rem;
+    }
+
+    ul {
+      margin-bottom: 20px;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: var(--accent-color);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+
+    .highlight {
+      font-weight: 600;
+      color: var(--heading-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Privacy Policy</h1>
+      <p><strong>PDCollect - Symptom Tracker</strong></p>
+      <p>Last Updated: July 2026</p>
+    </header>
+
+    <main>
+      <p>Welcome to PDCollect. Your privacy is of the utmost importance to us. This Privacy Policy explains how we collect, use, and protect your personal and health data when you use the PDCollect iOS application.</p>
+
+      <div class="card">
+        <h2>Our Core Privacy Principles</h2>
+        <ul>
+          <li><span class="highlight">Your data is yours:</span> We do not sell, rent, or share your data with advertisers or third parties.</li>
+          <li><span class="highlight">Local processing:</span> The majority of health and sensor data is processed locally on your iPhone.</li>
+          <li><span class="highlight">Strict access:</span> We only collect the data necessary for your personal health tracking and clinical research.</li>
+        </ul>
+      </div>
+
+      <h2>1. Data We Collect and Why</h2>
+      
+      <h3>Apple Health (HealthKit) Integration</h3>
+      <p>PDCollect integrates with the Health app (HealthKit) to read and analyze gait metrics such as <strong>Walking Speed</strong>, <strong>Step Length</strong>, and <strong>Heart Rate</strong>. We use this data exclusively to populate your in-app Dashboard and provide you with long-term symptom trends. We will not use or disclose HealthKit data to third parties for advertising, marketing, or other use-based data mining purposes.</p>
+
+      <h3>TrueDepth Camera (Face Data)</h3>
+      <p>During active motor tests (such as the Finger Tapping or Spiral Tracing tests), PDCollect may use the TrueDepth API to measure the distance between your face and the device. This ensures the phone is held at a consistent, clinically valid distance during the test.</p>
+      <ul>
+        <li><strong>No facial recognition:</strong> We do not identify you, nor do we capture or store images/video of your face.</li>
+        <li><strong>On-device only:</strong> Distance calculations happen entirely on your device in real-time.</li>
+        <li><strong>Zero sharing:</strong> Face tracking data is discarded immediately after the test and is never transmitted off your device or shared with third parties.</li>
+      </ul>
+
+      <h3>Motion and Touch Sensors</h3>
+      <p>When you perform active assessments (like Hand Turning or Leg Agility), the app collects high-frequency accelerometer and gyroscope data. During cognitive tests like the Trail Making Test (TMT), we log touchscreen coordinates and timing. This raw data is compiled locally into CSV files for your personal review or for you to export to your clinical team.</p>
+
+      <h3>Custom Keyboard Extension</h3>
+      <p>If you enable the PDCollect custom keyboard, it logs typing dynamics (such as key hold time and transition time) to monitor motor function passively. The keyboard does <strong>not</strong> log the actual letters, words, or passwords you type. All typing dynamic data is processed locally and securely encrypted.</p>
+
+      <h2>2. How Your Data is Stored</h2>
+      <p>All clinical data and CSV files are stored locally in your device's secure sandbox. If you explicitly choose to participate in a clinical study and enable Cloud Upload in settings, your data may be securely transmitted to a designated research server using industry-standard encryption (HTTPS). You are always in control of this setting.</p>
+
+      <h2>3. Third-Party Access</h2>
+      <p>We do not share your personal information, HealthKit data, or sensor data with any third parties without your explicit, opt-in consent. The only exception is if required by law.</p>
+
+      <h2>4. Your Rights and Choices</h2>
+      <p>You can revoke PDCollect's access to Apple Health at any time through the iOS Settings app or the Apple Health app. You can also delete all data collected by PDCollect by uninstalling the app or by navigating to the "Delete Data" option in the app's settings menu.</p>
+
+      <h2>5. Contact Us</h2>
+      <p>If you have any questions or concerns about this Privacy Policy or our data practices, please contact our support team or your clinical study coordinator.</p>
+    </main>
+  </div>
+</body>
+</html>

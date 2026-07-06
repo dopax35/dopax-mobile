@@ -194,7 +194,7 @@ struct SettingsView: View {
                 
                 // MARK: - Keystroke Logging
                 Section {
-                    let todayKey = "keystroke_count_\(Date().dateKeyString)"
+                    let todayKey = "keystroke_count_\(Date().dateKey)"
                     let count = UserDefaults(suiteName: "group.com.oriw.pdcollect.ios1.shared")?.integer(forKey: todayKey) ?? 0
                     
                     LabeledContent("Keys logged today", value: "\(count)")
