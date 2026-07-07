@@ -101,90 +101,9 @@ struct BluetoothDevicesView: View {
 
             // MARK: - Beanie Temperature Sensor
             Section {
-                // Current status
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if beanie.deviceName.isEmpty {
-                            Text("No device paired")
-                                .foregroundColor(.secondary)
-                        } else {
-                            Text(beanie.deviceName)
-                                .fontWeight(.medium)
-                            Text(beanie.status.rawValue)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    Spacer()
-                    statusDot(active: beanie.status == .ready)
-                }
-
-                // Live readings
-                if beanie.isConnected {
-                    HStack {
-                        Label("Skin Temp", systemImage: "thermometer.medium")
-                            .foregroundColor(.dopaxOrange)
-                        Spacer()
-                        Text(beanie.tskinC > 0 ? String(format: "%.1f °C", beanie.tskinC) : "Waiting...")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.dopaxOrange)
-                    }
-
-                    if beanie.heatFlux != 0 {
-                        LabeledContent("Heat Flux",
-                                       value: String(format: "%.2f cal/s", beanie.heatFlux))
-                    }
-
-                    LabeledContent("Inner / Outer",
-                                   value: String(format: "%.1f / %.1f °C", beanie.innerC, beanie.outerC))
-
-                    if let bat = beanie.batteryPct {
-                        HStack {
-                            Label("Battery", systemImage: bat > 20 ? "battery.75percent" : "battery.25percent")
-                            Spacer()
-                            Text("\(bat)%")
-                                .foregroundColor(bat > 20 ? .green : .red)
-                        }
-                    }
-                }
-
-                // Scan button
-                Button {
-                    btManager.scanForBeanieDevices()
-                } label: {
-                    Label(btManager.isScanning ? "Scanning..." : "Scan for Beanie Devices",
-                          systemImage: "antenna.radiowaves.left.and.right")
-                }
-                .disabled(btManager.isScanning || !btManager.isPoweredOn)
-
-                // Discovered devices
-                ForEach(btManager.discoveredBeanieDevices, id: \.id) { device in
-                    Button {
-                        btManager.connectBeanieDevice(id: device.id)
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(device.name)
-                                    .foregroundColor(.primary)
-                                Text(device.id.uuidString.prefix(8) + "...")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "link")
-                                .foregroundColor(.dopaxBlue)
-                        }
-                    }
-                }
-
-                // Disconnect button
-                if !beanie.deviceName.isEmpty {
-                    Button(role: .destructive) {
-                        btManager.disconnectBeanie()
-                    } label: {
-                        Label("Disconnect", systemImage: "xmark.circle")
-                    }
-                }
+                Text("Beanie support has been disabled.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             } header: {
                 Label("Beanie Temperature Sensor", systemImage: "thermometer")
             }

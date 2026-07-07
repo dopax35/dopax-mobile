@@ -80,10 +80,14 @@ class BeanieService : Service() {
         const val STATUS_DISCONNECTED = "DISCONNECTED"
 
         fun start(context: Context) {
+            // Feature disabled per request
+            return
+            /*
             ContextCompat.startForegroundService(
                 context,
                 Intent(context, BeanieService::class.java)
             )
+            */
         }
 
         fun stop(context: Context) {

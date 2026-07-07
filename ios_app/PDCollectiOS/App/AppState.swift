@@ -48,7 +48,12 @@ class AppState: ObservableObject {
         let profile = UserProfile()
         self.userProfile = profile
         self.dataManager = DataManager(userId: profile.userId)
-        self.isCollecting = UserDefaults.standard.bool(forKey: "isCollecting")
+        if let val = UserDefaults.standard.object(forKey: "isCollecting") as? Bool {
+            self.isCollecting = val
+        } else {
+            self.isCollecting = true
+            UserDefaults.standard.set(true, forKey: "isCollecting")
+        }
 
         profile.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
