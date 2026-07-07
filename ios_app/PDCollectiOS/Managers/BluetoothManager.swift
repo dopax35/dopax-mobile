@@ -67,13 +67,11 @@ class BluetoothManager: NSObject, ObservableObject {
     
     func setupCentralManager() {
         if centralManager != nil { return }
-        // CBCentralManagerOptionRestoreIdentifierKey: CoreBluetooth recreates our
-        // central manager (with the same identifier) when the app is relaunched after
-        // a background kill, re-attaching any existing peripheral connections automatically.
+        // Removed restoration identifier to prevent startup crashes when background capabilities are missing or not matching.
         centralManager = CBCentralManager(
             delegate: self,
             queue: nil,
-            options: [CBCentralManagerOptionRestoreIdentifierKey: "com.pdcollect.bluetooth"]
+            options: nil
         )
     }
     
