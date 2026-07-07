@@ -130,8 +130,9 @@ class SettingsActivity : AppCompatActivity() {
         bindMedicationEditor()
         updatePermissionStatus()
 
-        findViewById<Button>(R.id.btnManageBeanie).setOnClickListener {
-            startActivity(Intent(this, BeanieDevicePickerActivity::class.java))
+        findViewById<Button>(R.id.btnManageBeanie).apply {
+            isEnabled = false
+            text = "Disabled"
         }
         refreshBeanieUiFromProfile()
 
@@ -545,21 +546,13 @@ class SettingsActivity : AppCompatActivity() {
         tskinC: Double,
         heatFlux: Double
     ) {
-        tvBeanieDevice.text = if (deviceName.isBlank()) "No Beanie paired" else deviceName
-        tvBeanieStatus.text = if (connected && deviceName.isNotBlank()) "Connected - $deviceName" else status
+        tvBeanieDevice.text = "Beanie support disabled"
+        tvBeanieStatus.text = "Disabled"
         viewBeanieStatusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-            android.graphics.Color.parseColor(if (connected) "#43A047" else "#9E9E9E")
+            android.graphics.Color.parseColor("#9E9E9E")
         )
-        tvBeanieTemp.text = if (tskinC.isFinite()) {
-            String.format(Locale.US, "%.2f C", tskinC)
-        } else {
-            "-- C"
-        }
-        tvBeanieHeatFlux.text = if (heatFlux.isFinite()) {
-            String.format(Locale.US, "%.2f cal/s", heatFlux)
-        } else {
-            "-- cal/s"
-        }
+        tvBeanieTemp.text = "-- C"
+        tvBeanieHeatFlux.text = "-- cal/s"
     }
 
     private data class PermissionEntry(
