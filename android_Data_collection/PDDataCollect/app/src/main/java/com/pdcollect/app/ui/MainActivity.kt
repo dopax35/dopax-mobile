@@ -818,10 +818,18 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val needsAccessibility =
-            currentProfile.keyloggingEnabled ||
-                (currentProfile.passiveCollectionActive &&
-                    currentProfile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS)
+        if (currentProfile.keyloggingEnabled && !PermissionUtils.isKeyboardActive(this)) {
+            if (!PermissionUtils.isKeyboardEnabled(this)) {
+                PermissionUtils.openKeyboardSettings(this)
+            } else {
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                imm.showInputMethodPicker()
+            }
+            return
+        }
+
+        val needsAccessibility = currentProfile.passiveCollectionActive &&
+                currentProfile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS
         if (needsAccessibility &&
             !PermissionUtils.isAccessibilityServiceEnabled(this)
         ) {
