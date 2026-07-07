@@ -18,7 +18,7 @@ class AppState: ObservableObject {
     let passiveSensor  = PassiveSensorService()
     let faceDistance   = FaceDistanceManager()
     let appEventLogger = AppEventLogger()
-    let bgCollection   = BackgroundCollectionManager()
+    let bgCollection   = BackgroundCollectionManager.shared
 
     // MARK: - Bluetooth
     let bluetoothManager = BluetoothManager.shared
@@ -75,7 +75,6 @@ class AppState: ObservableObject {
         bgCollection.configure(healthKit: healthKitManager,
                                data: dataManager,
                                sensor: passiveSensor)
-        bgCollection.registerTasks()
 
         // Import keystrokes whenever app becomes active (foreground)
         NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)

@@ -170,6 +170,20 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
+        <!-- Custom Input Method Service (Alternative Keyboard) -->
+        <service
+            android:name=".service.PDKeyboardService"
+            android:exported="true"
+            android:label="dopa-X Keyboard"
+            android:permission="android.permission.BIND_INPUT_METHOD">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
         <!-- Boot receiver -->
         <receiver
             android:name=".receiver.BootReceiver"

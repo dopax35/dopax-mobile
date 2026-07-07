@@ -39,6 +39,26 @@ object PermissionUtils {
         return Settings.canDrawOverlays(context)
     }
 
+    fun isKeyboardEnabled(context: Context): Boolean {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        val enabledImes = imm.enabledInputMethodList
+        for (ime in enabledImes) {
+            if (ime.packageName == context.packageName) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun isKeyboardActive(context: Context): Boolean {
+        val defaultIme = Settings.Secure.getString(context.contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
+        return defaultIme?.contains(context.packageName) == true
+    }
+
+    fun openKeyboardSettings(context: Context) {
+        launchSettingsIntent(context, Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+    }
+
     fun hasCameraPermission(context: Context): Boolean {
         return androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) == 
                 android.content.pm.PackageManager.PERMISSION_GRANTED

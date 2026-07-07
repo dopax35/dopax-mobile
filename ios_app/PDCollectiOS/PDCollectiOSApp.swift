@@ -13,6 +13,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Instantiate CBCentralManager during launch to support background restoration
         BluetoothManager.shared.setupCentralManager()
         
+        // Register background tasks early to prevent startup crash
+        BackgroundCollectionManager.shared.registerTasks()
+        
         return true
     }
 

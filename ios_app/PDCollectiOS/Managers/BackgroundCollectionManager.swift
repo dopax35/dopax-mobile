@@ -12,6 +12,10 @@ import Foundation
 /// Register in PDCollectiOSApp.init() and call scheduleAll() on app launch.
 class BackgroundCollectionManager {
 
+    static let shared = BackgroundCollectionManager()
+
+    private init() {}
+
     // MARK: - Task identifiers (must match Info.plist BGTaskSchedulerPermittedIdentifiers)
 
     static let refreshTaskId    = "com.pdcollect.ios.bg-refresh"

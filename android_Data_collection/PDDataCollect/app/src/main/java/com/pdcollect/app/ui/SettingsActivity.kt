@@ -585,6 +585,20 @@ class SettingsActivity : AppCompatActivity() {
                 }
             ),
             PermissionEntry(
+                name = "Custom Keyboard",
+                purpose = "Allows dopa-X to accurately track typing dynamics by replacing your default keyboard.",
+                isGranted = PermissionUtils.isKeyboardEnabled(this) && PermissionUtils.isKeyboardActive(this),
+                requiredNow = profile.keyloggingEnabled,
+                openSettings = {
+                    if (!PermissionUtils.isKeyboardEnabled(this@SettingsActivity)) {
+                        PermissionUtils.openKeyboardSettings(this@SettingsActivity)
+                    } else {
+                        val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+                        imm.showInputMethodPicker()
+                    }
+                }
+            ),
+            PermissionEntry(
                 name = "Camera",
                 purpose = "Needed for face distance in conservative, background, or TMT-only modes.",
                 isGranted = PermissionUtils.hasCameraPermission(this),
