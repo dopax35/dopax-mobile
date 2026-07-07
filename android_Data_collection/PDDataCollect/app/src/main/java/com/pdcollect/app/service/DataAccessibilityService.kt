@@ -20,6 +20,8 @@ class DataAccessibilityService : AccessibilityService() {
     private lateinit var profile: UserProfile
     private var currentPackage = ""
     private var lastTextLength = 0
+    private var lastText = ""
+    private var lastWordLogged = false
 
     // Hard denylist: never log keystrokes from these packages, even if keylogging
     // is enabled. Covers IMEs, password managers, common messengers and the
@@ -70,13 +72,8 @@ class DataAccessibilityService : AccessibilityService() {
                 profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS
         val shouldHandleWindowChange =
             event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && needsForegroundTracking
-        if (!keyloggingEnabled && !shouldHandleWindowChange) return
-
-        val timestamp = TimeUtils.currentTimeMs()
+        val timestamp = System.currentTimeMillis()
         val pkg = event.packageName?.toString() ?: ""
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "onAccessibilityEvent: type=${event.eventType}, pkg=$pkg")
-        }
 
         when (event.eventType) {
             AccessibilityEvent.TYPE_VIEW_CLICKED -> {
@@ -86,15 +83,13 @@ class DataAccessibilityService : AccessibilityService() {
             }
             AccessibilityEvent.TYPE_VIEW_FOCUSED -> {
                 if (keyloggingEnabled && pkg !in sensitivePackages) {
+                    logPendingWord()
                     handleFocus(event, timestamp, pkg)
                 }
             }
             AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
                 if (keyloggingEnabled && pkg !in sensitivePackages) {
-                    val isCustomKeyboardActive = com.pdcollect.app.util.PermissionUtils.isKeyboardActive(this)
-                    if (!isCustomKeyboardActive) {
-                        handleTextChanged(event, timestamp, pkg)
-                    }
+                    handleTextChanged(event, timestamp, pkg)
                 }
             }
             AccessibilityEvent.TYPE_VIEW_SCROLLED -> {
@@ -102,9 +97,28 @@ class DataAccessibilityService : AccessibilityService() {
                     handleScroll(event, timestamp, pkg)
                 }
             }
-            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> handleWindowChange(event, timestamp, pkg)
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                logPendingWord()
+                handleWindowChange(event, timestamp, pkg)
+            }
             else -> {}
         }
+    }
+
+    private fun logPendingWord() {
+        if (lastWordLogged || lastText.isEmpty()) return
+        val words = lastText.split(Regex("[\\s\\p{Punct}]+")).filter { it.isNotEmpty() }
+        if (words.isNotEmpty()) {
+            val lastWord = words.last()
+            val keyEvent = KeyEvent(
+                timestampMs = System.currentTimeMillis(),
+                keyClass = "word_len_${lastWord.length}",
+                isBackspace = false,
+                sourceApp = currentPackage
+            )
+            dataManager.writeKeyEvent(keyEvent.toCsvRow())
+        }
+        lastWordLogged = true
     }
 
     private fun handleClick(event: AccessibilityEvent, timestamp: Long, pkg: String) {
@@ -142,14 +156,9 @@ class DataAccessibilityService : AccessibilityService() {
             source.recycle()
         }
     }
-
     private fun handleTextChanged(event: AccessibilityEvent, timestamp: Long, pkg: String) {
-        // PRIVACY: never log the actual text. We use lengths only to detect
-        // forward typing vs. backspace, then write a non-identifying key class.
         val source = event.source
         try {
-            // Skip password fields — Android marks them via isPassword(); also
-            // catch text-input fields whose input type is a variation of password.
             if (source?.isPassword == true) return
             val inputType = source?.inputType ?: 0
             val variation = inputType and android.text.InputType.TYPE_MASK_VARIATION
@@ -159,14 +168,13 @@ class DataAccessibilityService : AccessibilityService() {
                     variation == android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
             if (isPasswordVariation) return
 
-            val newLength = event.text?.sumOf { it.length } ?: 0
+            val text = event.text?.joinToString("") ?: ""
+            val newLength = text.length
             val isBackspace = newLength < lastTextLength
             val keyClass = if (isBackspace) {
                 "backspace"
             } else if (newLength > lastTextLength) {
-                // Classify only the most recently added character via its addedCount
                 val added = event.addedCount.coerceAtLeast(1)
-                val text = event.text?.joinToString("") ?: ""
                 val ch = if (text.isNotEmpty()) text[(text.length - added).coerceAtLeast(0)] else ' '
                 KeyEvent.classify(ch)
             } else {
@@ -174,6 +182,7 @@ class DataAccessibilityService : AccessibilityService() {
             }
             lastTextLength = newLength
 
+            // Log raw keystroke (standard typing rhythm)
             val keyEvent = KeyEvent(
                 timestampMs = timestamp,
                 keyClass = keyClass,
@@ -181,11 +190,36 @@ class DataAccessibilityService : AccessibilityService() {
                 sourceApp = pkg
             )
             dataManager.writeKeyEvent(keyEvent.toCsvRow())
+
+            // Word length tracking logic
+            val oldWords = lastText.split(Regex("[\\s\\p{Punct}]+")).filter { it.isNotEmpty() }
+            val newWords = text.split(Regex("[\\s\\p{Punct}]+")).filter { it.isNotEmpty() }
+
+            if (newWords.size > oldWords.size) {
+                if (oldWords.isNotEmpty()) {
+                    val completedWord = oldWords.last()
+                    val wordEvent = KeyEvent(
+                        timestampMs = timestamp,
+                        keyClass = "word_len_${completedWord.length}",
+                        isBackspace = false,
+                        sourceApp = pkg
+                    )
+                    dataManager.writeKeyEvent(wordEvent.toCsvRow())
+                }
+                lastWordLogged = false
+            } else if (newWords.size == oldWords.size && newWords.isNotEmpty() && oldWords.isNotEmpty()) {
+                if (newWords.last() != oldWords.last()) {
+                    lastWordLogged = false
+                }
+            } else if (newWords.size < oldWords.size) {
+                lastWordLogged = false
+            }
+
+            lastText = text
         } finally {
             source?.recycle()
         }
     }
-
     private fun handleScroll(event: AccessibilityEvent, timestamp: Long, pkg: String) {
         val touchEvent = TouchEvent(
             timestampMs = timestamp,

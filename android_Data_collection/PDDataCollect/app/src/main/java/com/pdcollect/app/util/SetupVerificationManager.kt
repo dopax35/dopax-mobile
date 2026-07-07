@@ -32,24 +32,20 @@ class SetupVerificationManager {
                 missing.add("On-time reminders")
             }
 
-            // 3. Keyboard: if keylogging is enabled, verify Custom Keyboard is active
-            if (profile.keyloggingEnabled && !PermissionUtils.isKeyboardActive(context)) {
-                missing.add("Custom Keyboard")
-            }
-
-            // 4. Critical: Interaction access (Accessibility) if needed for background face distance
-            val needsAccessibility = profile.passiveCollectionActive &&
-                    profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS
+            // 3. Critical: Interaction access (Accessibility) if needed for keylogging or background face distance
+            val needsAccessibility = profile.keyloggingEnabled ||
+                    (profile.passiveCollectionActive &&
+                        profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS)
             if (needsAccessibility && !PermissionUtils.isAccessibilityServiceEnabled(context)) {
                 missing.add("Interaction access")
             }
 
-            // 5. Critical: Camera (if face distance enabled)
+            // 4. Critical: Camera (if face distance enabled)
             if (profile.faceDistanceEnabled && !PermissionUtils.hasCameraPermission(context)) {
                 missing.add("Camera")
             }
 
-            // 6. Degraded: Notifications
+            // 5. Degraded: Notifications
             if (!PermissionUtils.hasNotificationPermission(context)) {
                 missing.add("Notifications")
             }
@@ -59,8 +55,7 @@ class SetupVerificationManager {
                 missing.any {
                     it == "Background reliability" ||
                         it == "On-time reminders" ||
-                        it == "Interaction access" ||
-                        it == "Custom Keyboard"
+                        it == "Interaction access"
                 } -> HealthStatus.CRITICAL
                 else -> HealthStatus.DEGRADED
             }
