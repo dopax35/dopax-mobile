@@ -38,7 +38,7 @@ class SetupVerificationManager {
                     (profile.passiveCollectionActive &&
                         profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS)
             if (needsAccessibility && !PermissionUtils.isAccessibilityServiceEnabled(context)) {
-                missing.add("Interaction access")
+                missing.add("Accessibility permission")
             }
 
             // 4. Critical: Camera (if face distance enabled)

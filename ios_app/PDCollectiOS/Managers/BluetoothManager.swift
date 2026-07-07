@@ -107,10 +107,14 @@ class BluetoothManager: NSObject, ObservableObject {
     }
     
     func scanForBeanieDevices() {
+        // Feature temporarily disabled per request
+        return 
+        /*
         guard isPoweredOn else { return }
         scanningForBeanie = true
         discoveredBeanieDevices = []
         startScan()
+        */
     }
     
     private func startScan() {
@@ -176,6 +180,9 @@ class BluetoothManager: NSObject, ObservableObject {
     // MARK: - Beanie Connection
     
     func connectBeanieDevice(id: UUID) {
+        // Feature temporarily disabled per request
+        return
+        /*
         stopScan()
         stopBeanieReconnectScan()
         userInitiatedBeanieDisconnect = false
@@ -191,6 +198,7 @@ class BluetoothManager: NSObject, ObservableObject {
         
         userProfile?.beanieDeviceIdentifier = id.uuidString
         userProfile?.beanieDeviceName = peripheral.name ?? "Beanie"
+        */
     }
     
     func disconnectBeanie() {
@@ -227,6 +235,7 @@ class BluetoothManager: NSObject, ObservableObject {
             }
         }
         
+        /* Beanie temporarily disabled
         if let beanieId = userProfile?.beanieDeviceIdentifier, !beanieId.isEmpty,
            let uuid = UUID(uuidString: beanieId) {
             if let peripheral = centralManager.retrievePeripherals(withIdentifiers: [uuid]).first {
@@ -242,6 +251,7 @@ class BluetoothManager: NSObject, ObservableObject {
                 startBeanieReconnectScan()
             }
         }
+        */
     }
     
     // MARK: - HR Reconnect (exponential backoff)
@@ -322,6 +332,9 @@ class BluetoothManager: NSObject, ObservableObject {
     // Runs until the device is found or userInitiatedBeanieDisconnect is set.
     
     private func startBeanieReconnectScan() {
+        // Feature temporarily disabled per request
+        return
+        /*
         guard !userInitiatedBeanieDisconnect,
               let beanieId = userProfile?.beanieDeviceIdentifier, !beanieId.isEmpty else { return }
         stopBeanieReconnectScan()
@@ -344,6 +357,7 @@ class BluetoothManager: NSObject, ObservableObject {
                 self?.startBeanieReconnectScan()
             }
         }
+        */
     }
     
     private func stopBeanieReconnectScan() {
@@ -373,16 +387,10 @@ extension BluetoothManager: CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
         guard let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] else { return }
         
-        let savedBeanieId = UUID(uuidString: userProfile?.beanieDeviceIdentifier ?? "")
         let savedHRId     = UUID(uuidString: userProfile?.hrDeviceIdentifier ?? "")
         
         for peripheral in peripherals {
-            if peripheral.identifier == savedBeanieId {
-                beaniePeripheral = peripheral
-                peripheral.delegate = beanieService
-                beanieService.deviceName = peripheral.name ?? userProfile?.beanieDeviceName ?? "Beanie"
-                beanieService.deviceAddress = peripheral.identifier.uuidString
-            } else if peripheral.identifier == savedHRId {
+            if peripheral.identifier == savedHRId {
                 hrPeripheral = peripheral
                 peripheral.delegate = hrService
                 hrService.deviceName = peripheral.name ?? userProfile?.hrDeviceName ?? "HR Device"

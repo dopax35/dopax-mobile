@@ -98,7 +98,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="2. How rigid or stiff did you feel?"
+                        android:text="2. How rigid or stiff did you feel? (1=None, 5=Severe)"
                         android:textStyle="bold"
                         android:textColor="@color/on_surface"
                         android:layout_marginBottom="12dp" />
@@ -136,7 +136,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="3. Level of effort to concentrate?"
+                        android:text="3. Level of effort to concentrate? (1=None, 5=Extreme)"
                         android:textStyle="bold"
                         android:textColor="@color/on_surface"
                         android:layout_marginBottom="12dp" />
@@ -174,7 +174,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="4. How much did you tremor in the last hour?"
+                        android:text="4. How much did you tremor in the last hour? (1=None, 5=Severe)"
                         android:textStyle="bold"
                         android:textColor="@color/on_surface"
                         android:layout_marginBottom="12dp" />
@@ -212,7 +212,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="5. How would you rate your overall day?"
+                        android:text="5. How would you rate your overall day? (1=Excellent, 5=Terrible)"
                         android:textStyle="bold"
                         android:textColor="@color/on_surface"
                         android:layout_marginBottom="12dp" />
@@ -250,7 +250,7 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Recent Symptoms"
+                        android:text="Recent Symptoms (1=None, 5=Severe)"
                         android:textStyle="bold"
                         android:textColor="@color/secondary"
                         android:layout_marginBottom="16dp" />

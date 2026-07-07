@@ -10,7 +10,7 @@
     </string-array>
     <string name="title_critical_setup">⚠️ Critical Setup Required</string>
     <string name="msg_permissions_missing">System permissions missing. Background collection may not be reliable.</string>
-    <string name="btn_repair_config">Repair Configuration</string>
+    <string name="btn_repair_config">Fix Settings</string>
     <string name="label_daily_tasks">Daily Tasks</string>
     <string name="btn_tmt">🧠  Trail Making Test</string>
     <string name="btn_user_report">📝  User Report</string>
