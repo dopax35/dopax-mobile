@@ -75,7 +75,7 @@ struct ProfileSetupView: View {
                                     }
                                 }
                                 Spacer()
-                                Image(systemName: "pencil").foregroundColor(.blue)
+                                Image(systemName: "pencil").foregroundColor(.dopaxBlue)
                             }
                         }
                     }

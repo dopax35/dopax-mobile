@@ -24,6 +24,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.pdcollect.app.BuildConfig
 import com.pdcollect.app.R
 import com.pdcollect.app.data.DataManager
 import com.pdcollect.app.data.UserProfile
@@ -193,9 +194,23 @@ class MainActivity : AppCompatActivity() {
             handleRepairAction()
         }
 
-        findViewById<android.view.View>(R.id.viewDebugTrigger)?.setOnClickListener {
-            it.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
-            startActivity(Intent(this, DebugDataPreviewActivity::class.java))
+        // Invisible 100dp×100dp corner tap target that opens the internal
+        // debug/data-preview screen (raw CSV contents + on-device file
+        // paths). Previously live in every build, so any participant who
+        // happened to tap the top-right corner of the dashboard could open
+        // it. Gated behind BuildConfig.DEBUG so it's wired up only in debug
+        // builds; in release builds the view is disabled and hidden so it
+        // can't intercept touches or be triggered at all.
+        val debugTrigger = findViewById<android.view.View>(R.id.viewDebugTrigger)
+        if (BuildConfig.DEBUG) {
+            debugTrigger?.setOnClickListener {
+                it.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+                startActivity(Intent(this, DebugDataPreviewActivity::class.java))
+            }
+        } else {
+            debugTrigger?.isClickable = false
+            debugTrigger?.isFocusable = false
+            debugTrigger?.visibility = android.view.View.GONE
         }
 
         scheduleDailyUploadWorker()

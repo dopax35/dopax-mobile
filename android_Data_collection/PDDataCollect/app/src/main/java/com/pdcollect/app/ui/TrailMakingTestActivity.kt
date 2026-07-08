@@ -14,6 +14,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.pdcollect.app.R
 import com.pdcollect.app.data.DataManager
 import com.pdcollect.app.data.UserProfile
@@ -74,15 +75,17 @@ class TrailMakingTestActivity : AppCompatActivity() {
             btnStart.setTestButtonState(enabled = false, label = "Test Running")
         }
 
-        tmtView.onTestComplete = { absoluteStart, totalTime, errors, pathData ->
+        tmtView.onTestComplete = { absoluteStart, totalTime, wrongTargetErrors, liftOffErrors, pathData ->
             isTestRunning = false
-            saveResult(absoluteStart, currentTestType, totalTime, errors, pathData)
+            saveResult(absoluteStart, currentTestType, totalTime, wrongTargetErrors, liftOffErrors, pathData)
+            val errorSummary = "Errors: ${wrongTargetErrors + liftOffErrors} " +
+                "($wrongTargetErrors wrong-target, $liftOffErrors lift-off)"
             if (currentTestType == "A") {
                 currentTestType = "B"
-                tvInstructions.text = "Part A Complete! Time: ${totalTime}ms, Errors: $errors\n\nNow Part B: Connect numbers and letters alternating (1→A→2→B→...→5).\n\nTap 'Start Part B'."
+                tvInstructions.text = "Part A Complete! Time: ${totalTime}ms, $errorSummary\n\nNow Part B: Connect numbers and letters alternating (1→A→2→B→...→5).\n\nTap 'Start Part B'."
                 btnStart.setTestButtonState(enabled = true, label = "Start Part B")
             } else {
-                tvInstructions.text = "Part B Complete! Time: ${totalTime}ms, Errors: $errors\n\nThank you! Both tests are done."
+                tvInstructions.text = "Part B Complete! Time: ${totalTime}ms, $errorSummary\n\nThank you! Both tests are done."
                 btnStart.setTestButtonState(enabled = true, label = "Restart Part A")
                 btnFinish.visibility = View.VISIBLE
                 currentTestType = "A"
@@ -138,11 +141,14 @@ class TrailMakingTestActivity : AppCompatActivity() {
         faceDistanceRecorder = null
     }
 
-    private fun saveResult(startTimeMs: Long, testType: String, totalTime: Long, errors: Int, pathData: String) {
+    private fun saveResult(
+        startTimeMs: Long, testType: String, totalTime: Long,
+        wrongTargetErrors: Int, liftOffErrors: Int, pathData: String
+    ) {
         val timestamp = TimeUtils.currentTimeMs()
         val segmentTimings = tmtView.getSegmentTimings()
         val fingerPath = tmtView.getFingerPath()
-        val row = "$startTimeMs,$timestamp,$testType,$totalTime,$errors," +
+        val row = "$startTimeMs,$timestamp,$testType,$totalTime,$wrongTargetErrors,$liftOffErrors," +
                 "\"${segmentTimings.replace("\"", "\"\"")}\",\"${fingerPath.replace("\"", "\"\"")}\",\"${pathData.replace("\"", "\"\"")}\""
         dataManager.writeTmtResult(row)
     }
@@ -212,7 +218,11 @@ class TrailMakingTestActivity : AppCompatActivity() {
         private var currentIndex = 0
         private var startTime = 0L
         private var absoluteStartTimeMs = 0L
-        private var errors = 0
+        // Two clinically-distinct TMT error types, both tracked and logged
+        // separately (matching iOS): touching the wrong numbered/lettered
+        // target, and lifting the finger before the whole trail is complete.
+        private var wrongTargetErrors = 0
+        private var liftOffErrors = 0
         private var isActive = false
         private val connectedPath = Path()
         private val segmentTimes = mutableListOf<JSONObject>()
@@ -222,8 +232,12 @@ class TrailMakingTestActivity : AppCompatActivity() {
         private var currentFingerX = 0f
         private var currentFingerY = 0f
         private var activeTracePath = Path()
+        // Index of the wrong target the finger is currently resting on, or -1.
+        // Used to edge-trigger error counting in checkWrongTargets() so one
+        // errant touch isn't counted dozens of times across ACTION_MOVE events.
+        private var activeWrongTargetIndex = -1
 
-        var onTestComplete: ((absoluteStart: Long, totalTime: Long, errors: Int, pathData: String) -> Unit)? = null
+        var onTestComplete: ((absoluteStart: Long, totalTime: Long, wrongTargetErrors: Int, liftOffErrors: Int, pathData: String) -> Unit)? = null
 
         private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
@@ -239,17 +253,20 @@ class TrailMakingTestActivity : AppCompatActivity() {
             textSize = 48f
             textAlign = Paint.Align.CENTER
         }
+        // Brand-consistent: confirmed path segments use the primary Dopa-X blue;
+        // the live in-progress trace uses the secondary purple, so the two are
+        // always visually distinct without introducing an off-palette color.
         private val completedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#2196F3")
+            color = ContextCompat.getColor(context, R.color.blue)
             style = Paint.Style.FILL
         }
         private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#2196F3")
+            color = ContextCompat.getColor(context, R.color.blue)
             style = Paint.Style.STROKE
             strokeWidth = 4f
         }
         private val touchLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#42A5F5")
+            color = ContextCompat.getColor(context, R.color.purple)
             style = Paint.Style.STROKE
             strokeWidth = 6f
             strokeCap = Paint.Cap.ROUND
@@ -260,7 +277,8 @@ class TrailMakingTestActivity : AppCompatActivity() {
         fun startTest(newTargets: List<TMTTarget>) {
             targets = newTargets
             currentIndex = 0
-            errors = 0
+            wrongTargetErrors = 0
+            liftOffErrors = 0
             isActive = true
             startTime = System.currentTimeMillis()
             absoluteStartTimeMs = startTime
@@ -270,6 +288,7 @@ class TrailMakingTestActivity : AppCompatActivity() {
             fingerPathPoints.apply { while (length() > 0) remove(0) }
             isTracingActive = false
             activeTracePath.reset()
+            activeWrongTargetIndex = -1
             layoutTargets()
             invalidate()
         }
@@ -292,7 +311,7 @@ class TrailMakingTestActivity : AppCompatActivity() {
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
-            canvas.drawColor(Color.parseColor("#F5F5F5"))
+            canvas.drawColor(ContextCompat.getColor(context, R.color.surface_container_low))
 
             // Draw connection lines
             canvas.drawPath(connectedPath, linePaint)
@@ -364,13 +383,24 @@ class TrailMakingTestActivity : AppCompatActivity() {
                         // Check if we hit the NEXT target
                         if (currentIndex < targets.size && isTouchOnTarget(x, y, targets[currentIndex])) {
                             completeSegment(elapsed)
+                        } else {
+                            checkWrongTargets(x, y)
                         }
                         invalidate()
                     }
                 }
                 MotionEvent.ACTION_UP -> {
+                    // Lifting the finger while actively tracing, before the
+                    // whole trail is complete, is the second clinically-scored
+                    // TMT error type (mirrors iOS, which has always tracked
+                    // this one). Resuming just requires touching back down on
+                    // the last completed target — see ACTION_DOWN above.
+                    if (isTracingActive && currentIndex in 1 until targets.size) {
+                        liftOffErrors++
+                    }
                     isTracingActive = false
                     activeTracePath.reset()
+                    activeWrongTargetIndex = -1
                     invalidate()
                 }
             }
@@ -402,18 +432,36 @@ class TrailMakingTestActivity : AppCompatActivity() {
             if (currentIndex >= targets.size) {
                 isActive = false
                 isTracingActive = false
-                onTestComplete?.invoke(absoluteStartTimeMs, elapsed, errors, fingerPathPoints.toString())
+                onTestComplete?.invoke(absoluteStartTimeMs, elapsed, wrongTargetErrors, liftOffErrors, fingerPathPoints.toString())
             }
         }
 
+        /**
+         * Flags a mistake when the finger is over any target other than the
+         * one it started tracing from and the one it's heading to next.
+         * Previously this method was never called from onTouchEvent, so
+         * wrong-target errors — one of the two clinically-scored TMT error
+         * types, alongside lift-offs and completion time — was always
+         * recorded as zero.
+         *
+         * ACTION_MOVE fires far more often than once per real mistake, so
+         * this edge-triggers on activeWrongTargetIndex: an error is only
+         * counted the moment the finger *enters* a wrong target, not on
+         * every subsequent move event while it's still resting there.
+         */
         private fun checkWrongTargets(x: Float, y: Float) {
-            for ((i, t) in targets.withIndex()) {
-                if (i != currentIndex && (i != currentIndex - 1 || !isTracingActive)) {
-                    if (isTouchOnTarget(x, y, t)) {
-                        errors++
-                        break
-                    }
+            val hitIndex = targets.indexOfFirst { isTouchOnTarget(x, y, it) }
+            val isMistake = hitIndex != -1 &&
+                hitIndex != currentIndex &&
+                !(hitIndex == currentIndex - 1 && isTracingActive)
+
+            if (isMistake) {
+                if (activeWrongTargetIndex != hitIndex) {
+                    wrongTargetErrors++
+                    activeWrongTargetIndex = hitIndex
                 }
+            } else {
+                activeWrongTargetIndex = -1
             }
         }
 

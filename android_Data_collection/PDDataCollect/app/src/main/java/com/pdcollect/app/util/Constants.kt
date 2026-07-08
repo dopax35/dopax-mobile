@@ -9,7 +9,6 @@ object Constants {
     const val APPS_FILE = "apps.csv"
     const val SCREEN_STATE_FILE = "screen_state.csv"
     const val TMT_RESULTS_FILE = "tmt_results.csv"
-    const val SCREENSHOTS_DIR = "screenshots"
     const val FACE_DISTANCE_FILE = "face_distance_refined.csv"
     const val PROFILE_FILE = "profile.csv"
     const val QUESTIONNAIRE_FILE = "questionnaire.csv"
@@ -19,7 +18,6 @@ object Constants {
     const val TEST_LEG_AGILITY_FILE = "leg_agility.csv"
     const val MEDICATION_FILE = "medication.csv"
     const val PHYSICAL_ACTIVITY_FILE = "physical_activity.csv"
-    const val SCREEN_CAPTURE_LOG_FILE = "screen_capture_log.csv"
     const val HR_FILE = "heart_rate.csv"
     const val BLINK_FILE = "blink_log.csv"
     const val VOICE_LOG_FILE = "voice_log.csv"
@@ -33,7 +31,11 @@ object Constants {
     // "enter","other" — never the literal character typed.
     const val KEYS_HEADER = "timestamp_ms,key_class,is_backspace,source_app"
     const val APPS_HEADER = "timestamp_ms,event_type,package_name,class_name"
-    const val TMT_HEADER = "start_time_ms,timestamp_ms,test_type,total_time_ms,errors,segment_timings_json,finger_path_json,path_data_json"
+    // v3: "errors" (wrong-target touches only) split into two columns so both
+    // clinically-relevant TMT error types are captured, matching iOS exactly
+    // (previously iOS's single "errors" column counted lift-offs instead —
+    // same column name, two different meanings across platforms).
+    const val TMT_HEADER = "start_time_ms,timestamp_ms,test_type,total_time_ms,wrong_target_errors,lift_off_errors,segment_timings_json,finger_path_json,path_data_json"
     const val FACE_DISTANCE_HEADER = "timestamp_ms,context,face_detected,landmarks_detected,eye_distance_px,focal_length_px,estimated_cm,confidence,head_euler_y,head_euler_z,method"
     const val PROFILE_HEADER = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json"
     const val QUESTIONNAIRE_HEADER = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score"
@@ -59,7 +61,6 @@ object Constants {
     const val LEG_AGILITY_HEADER = "timestamp_ms,elapsed_ms,event,gx,gy,gz,ax,ay,az,side,dominant_hand,affected_side"
     const val MEDICATION_HEADER = "timestamp_ms,taken_ms,med_name,dosage"
     const val PHYSICAL_ACTIVITY_HEADER = "timestamp_ms,activity_type,time_of_day_ms"
-    const val SCREEN_CAPTURE_LOG_HEADER = "timestamp_ms,package_name,pixels_changed,diff_percent,is_saved"
     const val HR_HEADER = "timestamp_ms,bpm,rr_interval_ms,device_address,device_name"
     const val BLINK_HEADER = "timestamp_ms,context,left_trough_prob,right_trough_prob,blink_rate_per_min"
     const val VOICE_LOG_HEADER = "timestamp_ms,filename,story_headline,duration_ms"
@@ -78,11 +79,6 @@ object Constants {
     // without dropping rows or rounding away signal detail.
     const val SENSOR_BATCH_LATENCY_US = 5_000_000
     const val SENSOR_DELAY_US = 20_000 // 50 Hz = 20 ms period
-
-    // Screen capture
-    const val SCREEN_CAPTURE_INTERVAL_MS = 15000L
-    const val SCREENSHOT_QUALITY = 40 // JPEG quality
-    const val PIXEL_DIFF_THRESHOLD = 0.01f // 1% pixel change to save
 
     // Face distance
     /** 1 Hz — one sample every 1000 ms. */
@@ -109,14 +105,12 @@ object Constants {
 
     // Notification
     const val CHANNEL_SENSOR = "sensor_collection"
-    const val CHANNEL_SCREEN = "screen_capture"
     const val CHANNEL_TMT = "tmt_reminder"
     const val CHANNEL_FACE = "face_distance"
     const val CHANNEL_HR = "hr_monitor"
     const val CHANNEL_BEANIE = "beanie_monitor"
     const val CHANNEL_EVENING = "evening_reminder"
     const val NOTIFICATION_ID_SENSOR = 1001
-    const val NOTIFICATION_ID_SCREEN = 1002
     const val NOTIFICATION_ID_TMT = 1003
     const val NOTIFICATION_ID_FACE = 1004
     const val NOTIFICATION_ID_HR = 1005
@@ -132,7 +126,6 @@ object Constants {
     const val PREF_AGE = "age"
     const val PREF_GENDER = "gender"
     const val PREF_MEDICATIONS = "medications"
-    const val PREF_SCREEN_CAPTURE_ENABLED = "screen_capture_enabled"
     const val PREF_KEYLOGGING_ENABLED = "keylogging_enabled"
     const val PREF_FACE_DISTANCE_ENABLED = "face_distance_enabled"
     const val PREF_FACE_DISTANCE_MODE = "face_distance_mode"
@@ -165,7 +158,4 @@ object Constants {
     const val PARTICIPANT_SIDE_BOTH = "Both"
     const val PARTICIPANT_SIDE_NONE = "None"
     const val PARTICIPANT_SIDE_UNKNOWN = "Unknown"
-
-    // Request codes
-    const val REQUEST_MEDIA_PROJECTION = 2001
 }

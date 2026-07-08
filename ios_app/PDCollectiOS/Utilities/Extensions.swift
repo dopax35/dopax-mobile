@@ -35,7 +35,7 @@ struct StatCard: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: icon)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.dopaxBlue)
                 Spacer()
             }
             Text(value)

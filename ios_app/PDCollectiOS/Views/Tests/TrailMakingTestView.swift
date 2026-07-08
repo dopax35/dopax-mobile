@@ -11,7 +11,14 @@ struct TrailMakingTestView: View {
     @State private var targets: [TMTTarget] = []
     @State private var nextIndex = 0
     @State private var lines: [(from: CGPoint, to: CGPoint, time: Double)] = []
-    @State private var errors = 0
+    // Two clinically-distinct TMT error types, both tracked and logged
+    // separately (matching Android): touching the wrong numbered/lettered
+    // target, and lifting the finger before the whole trail is complete.
+    @State private var wrongTargetErrors = 0
+    @State private var liftOffErrors = 0
+    // Debounces wrong-target detection so a lingering touch on a wrong
+    // target counts once per visit, not dozens of times across drag updates.
+    @State private var activeWrongTargetIndex: Int? = nil
     @State private var startTime: Date?
     @State private var segmentStart: Date?
     @State private var segmentTimes: [Double] = []
@@ -72,7 +79,7 @@ struct TrailMakingTestView: View {
         VStack(spacing: 24) {
             Image(systemName: part == .A ? "number.circle" : "character.cursor.ibeam")
                 .font(.system(size: 64))
-                .foregroundStyle(part == .A ? Color.purple : Color.indigo)
+                .foregroundStyle(accentColor)
 
             Text("Trail Making — Part \(part == .A ? "A" : "B")")
                 .font(.title2).fontWeight(.bold)
@@ -115,7 +122,7 @@ struct TrailMakingTestView: View {
 
                 // Error flash overlay
                 if errorFlash {
-                    Color.red.opacity(0.18)
+                    Color.dopaxStatusError.opacity(0.18)
                         .ignoresSafeArea()
                         .transition(.opacity)
                 }
@@ -188,6 +195,10 @@ struct TrailMakingTestView: View {
                                 }
                                 // Finger lifted — cancel rubber band
                                 dragPoint = nil
+                                // Lift-off always clears the wrong-target debounce
+                                // (mirrors Android's ACTION_UP resetting
+                                // activeWrongTargetIndex unconditionally).
+                                activeWrongTargetIndex = nil
                                 // Flash to signal lift-off
                                 if nextIndex > 0 && nextIndex < targets.count {
                                     triggerErrorFlash()
@@ -211,9 +222,9 @@ struct TrailMakingTestView: View {
 
                         Spacer()
 
-                        Label("\(errors)", systemImage: "xmark")
+                        Label("\(wrongTargetErrors + liftOffErrors)", systemImage: "xmark")
                             .font(.headline)
-                            .foregroundStyle(errors > 0 ? .orange : .primary)
+                            .foregroundStyle((wrongTargetErrors + liftOffErrors) > 0 ? .dopaxOrange : .primary)
                             .padding(.horizontal, 10).padding(.vertical, 6)
                             .background(.ultraThinMaterial).cornerRadius(10)
                     }
@@ -232,9 +243,10 @@ struct TrailMakingTestView: View {
         ScrollView {
             VStack(spacing: 20) {
                 VStack(spacing: 8) {
-                    Image(systemName: isPersonalBest ? "trophy.fill" : (errors == 0 ? "checkmark.circle.fill" : "exclamationmark.circle.fill"))
+                    let hadErrors = wrongTargetErrors > 0 || liftOffErrors > 0
+                    Image(systemName: isPersonalBest ? "trophy.fill" : (hadErrors ? "exclamationmark.circle.fill" : "checkmark.circle.fill"))
                         .font(.system(size: 64))
-                        .foregroundStyle(isPersonalBest ? .yellow : (errors == 0 ? accentColor : .orange))
+                        .foregroundStyle(isPersonalBest ? .yellow : (hadErrors ? .dopaxOrange : accentColor))
 
                     Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
                         .font(.title).fontWeight(.bold)
@@ -246,7 +258,8 @@ struct TrailMakingTestView: View {
                 VStack(spacing: 8) {
                     resultRow("Part", "TMT-\(part == .A ? "A" : "B")")
                     resultRow("Total Time", String(format: "%.2f s", Double(totalMs) / 1000))
-                    resultRow("Lift-offs", "\(errors)", note: errors > 2 ? "⚠️" : nil)
+                    resultRow("Wrong-Target Touches", "\(wrongTargetErrors)", note: wrongTargetErrors > 2 ? "⚠️" : nil)
+                    resultRow("Lift-offs", "\(liftOffErrors)", note: liftOffErrors > 2 ? "⚠️" : nil)
                     if !segmentTimes.isEmpty {
                         let avg = segmentTimes.reduce(0,+) / Double(segmentTimes.count)
                         resultRow("Avg Segment", String(format: "%.1f ms", avg))
@@ -354,7 +367,7 @@ struct TrailMakingTestView: View {
             Text(label).foregroundStyle(.secondary)
             Spacer()
             Text(value).fontWeight(.semibold)
-            if let n = note { Text(n).font(.caption).foregroundStyle(.orange) }
+            if let n = note { Text(n).font(.caption).foregroundStyle(.dopaxOrange) }
         }
     }
 
@@ -367,7 +380,7 @@ struct TrailMakingTestView: View {
                 Text("\(s)-day streak!").fontWeight(.semibold)
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
-            .background(.orange.opacity(0.12)).cornerRadius(20)
+            .background(.dopaxOrange.opacity(0.12)).cornerRadius(20)
         }
     }
 
@@ -379,7 +392,7 @@ struct TrailMakingTestView: View {
         }
     }
 
-    private var accentColor: Color { part == .A ? .purple : .indigo }
+    private var accentColor: Color { part == .A ? .dopaxBlue : .dopaxPurple }
 
     // MARK: - Logic
 
@@ -451,6 +464,29 @@ struct TrailMakingTestView: View {
                 computeResults()
                 saveResult()
             }
+        } else {
+            checkWrongTarget(at: loc)
+        }
+    }
+
+    /// Flags a mistake when the finger is over any target other than the one
+    /// it started tracing from and the one it's heading to next (mirrors
+    /// Android's `checkWrongTargets` exactly, including the edge-trigger
+    /// debounce via `activeWrongTargetIndex` so a lingering touch on a wrong
+    /// target counts once, not once per drag-update frame).
+    private func checkWrongTarget(at loc: CGPoint) {
+        let hitIndex = targets.indices.first { i in
+            hypot(loc.x - targets[i].position.x, loc.y - targets[i].position.y) <= Constants.TMT.targetRadius
+        }
+        let isMistake = hitIndex != nil && hitIndex != nextIndex && hitIndex != nextIndex - 1
+
+        if isMistake, let hit = hitIndex {
+            if activeWrongTargetIndex != hit {
+                wrongTargetErrors += 1
+                activeWrongTargetIndex = hit
+            }
+        } else {
+            activeWrongTargetIndex = nil
         }
     }
 
@@ -463,7 +499,7 @@ struct TrailMakingTestView: View {
     }
 
     private func triggerErrorFlash() {
-        errors += 1
+        liftOffErrors += 1
         withAnimation(.easeOut(duration: 0.1)) { errorFlash = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation { errorFlash = false }
@@ -511,7 +547,8 @@ struct TrailMakingTestView: View {
             endMs: endMs,
             testType: part == .A ? "A" : "B",
             totalMs: totalMs,
-            errors: errors,
+            wrongTargetErrors: wrongTargetErrors,
+            liftOffErrors: liftOffErrors,
             segmentTimingsJSON: segmentTimingsJSON,
             fingerPathJSON: fingerPathJSON
         )

@@ -20,6 +20,10 @@ class DebugDataPreviewActivity : AppCompatActivity() {
         val dataManager = DataManager(this, profile)
         val dayDir = dataManager.getDayDir()
         val today = TimeUtils.todayDateString()
+        // Only used to resolve dayDir above — close it immediately so its
+        // background HandlerThread doesn't leak for the life of the app
+        // process every time this (debug-trigger-reachable) screen opens.
+        dataManager.closeAll()
 
         findViewById<TextView>(R.id.tvDateLabel).text = "Showing data for: $today\nPath: ${dayDir.absolutePath}"
 

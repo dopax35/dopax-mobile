@@ -18,15 +18,6 @@ object NotificationHelper {
             setShowBadge(false)
         }
 
-        val screenChannel = NotificationChannel(
-            Constants.CHANNEL_SCREEN,
-            "Screen Capture",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Ongoing notification for screen capture"
-            setShowBadge(false)
-        }
-
         val tmtChannel = NotificationChannel(
             Constants.CHANNEL_TMT,
             "TMT Reminders",
@@ -71,7 +62,7 @@ object NotificationHelper {
         }
 
         manager.createNotificationChannels(
-            listOf(sensorChannel, screenChannel, tmtChannel, faceChannel, hrChannel, beanieChannel, eveningChannel)
+            listOf(sensorChannel, tmtChannel, faceChannel, hrChannel, beanieChannel, eveningChannel)
         )
     }
 }

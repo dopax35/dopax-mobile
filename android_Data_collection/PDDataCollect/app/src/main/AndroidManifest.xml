@@ -7,7 +7,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <!-- SCREEN_CAPTURE_DISABLED: FOREGROUND_SERVICE_MEDIA_PROJECTION removed intentionally -->
+    <!-- FOREGROUND_SERVICE_MEDIA_PROJECTION intentionally absent: the Screen Capture /
+         "Visual Context" feature (MediaProjection-based screenshot capture) was fully
+         removed (July 2026 review) — see service/ScreenCaptureService.kt. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"

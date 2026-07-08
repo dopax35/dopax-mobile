@@ -157,16 +157,25 @@ class VoiceSampleActivity : AppCompatActivity() {
             }
             conn.disconnect()
 
-            if (items.isEmpty()) return randomFallback()
+            // This reads live third-party news headlines out loud to a study
+            // population that the app's own questionnaire screens for anxiety
+            // and depression. Breaking news can include distressing content
+            // (attacks, casualties, disasters) with no editorial control on
+            // our side, so filter those items out before they can be picked
+            // as a "read this aloud" passage — safe curated fallback stories
+            // are used if too little safe content remains.
+            val safeItems = items.filterNot { isDistressingContent("${it.title} ${it.description}") }
+
+            if (safeItems.isEmpty()) return randomFallback()
 
             // Pick a random primary story; extend significantly to ensure scrolling is required
-            items.shuffle()
-            val primary = items[0]
+            safeItems.shuffle()
+            val primary = safeItems[0]
             var body = primary.description
 
             // Add up to 3 secondary stories to ensure plenty of text for 60 seconds
-            for (i in 1 until minOf(4, items.size)) {
-                val next = items[i]
+            for (i in 1 until minOf(4, safeItems.size)) {
+                val next = safeItems[i]
                 body = "$body\n\n${next.title}\n\n${next.description}"
             }
 
@@ -176,6 +185,27 @@ class VoiceSampleActivity : AppCompatActivity() {
             android.util.Log.w("VoiceSample", "RSS fetch failed", e)
             randomFallback()
         }
+    }
+
+    /**
+     * Heuristic safety net for the live news feed above: excludes headlines
+     * covering death, violence, terror, or disaster so participants aren't
+     * unexpectedly asked to read distressing news aloud. Not a substitute for
+     * real editorial moderation, but cheap insurance since this text is
+     * otherwise shown completely unfiltered.
+     */
+    private fun isDistressingContent(text: String): Boolean {
+        val blocklist = listOf(
+            // Hebrew
+            "נהרג", "נהרגו", "נהרגה", "הרוג", "הרוגים", "רצח", "נרצח", "התאבד", "התאבדות",
+            "פיגוע", "טרור", "מחבל", "חטוף", "חטופים", "חטיפה", "טבח", "מלחמה", "אסון",
+            "פיצוץ", "מטען חבלה", "ירי", "נפגעים", "תאונת דרכים קטלנית", "התאבדות",
+            // English (occasional mixed-language wire content)
+            "killed", "dead", "death", "murder", "terror attack", "hostage", "massacre",
+            "suicide", "bombing", "shooting", "casualties"
+        )
+        val lower = text.lowercase()
+        return blocklist.any { lower.contains(it.lowercase()) }
     }
 
     private fun stripHtml(html: String): String {
@@ -369,6 +399,10 @@ class VoiceSampleActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         cleanupRecorder()
+        // DataManager starts a background HandlerThread in its constructor
+        // that only stops via closeAll() — without this call it leaked for
+        // the rest of the app process every time this screen was opened.
+        dataManager.closeAll()
         super.onDestroy()
     }
 }

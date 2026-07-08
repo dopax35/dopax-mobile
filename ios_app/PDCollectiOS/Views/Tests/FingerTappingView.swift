@@ -66,7 +66,7 @@ struct FingerTappingView: View {
         VStack(spacing: 24) {
             Image(systemName: "hand.point.up")
                 .font(.system(size: 64))
-                .foregroundStyle(.blue)
+                .foregroundStyle(.dopaxBlue)
                 .modifier(PulseModifier())
 
             Text("Finger Tapping Test")
@@ -78,13 +78,13 @@ struct FingerTappingView: View {
                                text: "Each tap makes it jump to a new random position")
                 instructionRow(icon: "3.circle.fill", text: "Each hand gets 10 seconds")
             }
-            .padding().background(.blue.opacity(0.08)).cornerRadius(14)
+            .padding().background(.dopaxBlue.opacity(0.08)).cornerRadius(14)
 
             streakBanner
 
             Button("Start — Left Hand") { startHand(.left) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.blue)
+                .tint(.dopaxBlue)
         }
         .padding()
     }
@@ -94,7 +94,7 @@ struct FingerTappingView: View {
     private var betweenView: some View {
         VStack(spacing: 24) {
             Image(systemName: "hands.clap.fill")
-                .font(.system(size: 64)).foregroundStyle(.green)
+                .font(.system(size: 64)).foregroundStyle(.dopaxPurple)
                 .modifier(PulseModifier())
 
             Text("Left hand done! 🎉")
@@ -108,7 +108,7 @@ struct FingerTappingView: View {
 
             Button("Start — Right Hand") { startHand(.right) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.green)
+                .tint(.dopaxPurple)
         }
         .padding()
     }
@@ -124,12 +124,12 @@ struct FingerTappingView: View {
                 Spacer()
                 Text(String(format: "%.1f s", timeLeft))
                     .font(.headline.monospacedDigit())
-                    .foregroundStyle(timeLeft < 3 ? .red : .primary)
+                    .foregroundStyle(timeLeft < 3 ? .dopaxStatusError : .primary)
             }
             .padding()
 
             ProgressView(value: (duration - timeLeft), total: duration)
-                .tint(timeLeft < 3 ? .red : targetColor)
+                .tint(timeLeft < 3 ? .dopaxStatusError : targetColor)
 
             // Count badge
             HStack {
@@ -223,7 +223,7 @@ struct FingerTappingView: View {
                 VStack(spacing: 8) {
                     Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
                         .font(.system(size: 64))
-                        .foregroundStyle(isPersonalBest ? .yellow : .green)
+                        .foregroundStyle(isPersonalBest ? .yellow : .dopaxStatusSuccess)
                         .modifier(PulseModifier())
 
                     Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
@@ -237,10 +237,10 @@ struct FingerTappingView: View {
 
                 VStack(spacing: 0) {
                     scoreSection("Left Hand", features: leftFeatures,
-                                 count: leftCount, color: .blue)
+                                 count: leftCount, color: .dopaxBlue)
                     Divider()
                     scoreSection("Right Hand", features: rightFeatures,
-                                 count: rightCount, color: .green)
+                                 count: rightCount, color: .dopaxPurple)
                 }
                 .cardStyle()
 
@@ -250,7 +250,7 @@ struct FingerTappingView: View {
                     .font(.callout).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
-                    .background(.orange.opacity(0.08))
+                    .background(.dopaxOrange.opacity(0.08))
                     .cornerRadius(12)
 
                 Button("Done") { dismiss() }
@@ -317,7 +317,7 @@ struct FingerTappingView: View {
             Text(label).foregroundStyle(.secondary)
             Spacer()
             Text(value).fontWeight(.semibold)
-            if let n = note { Text(n).font(.caption).foregroundStyle(.orange) }
+            if let n = note { Text(n).font(.caption).foregroundStyle(.dopaxOrange) }
         }
     }
 
@@ -330,19 +330,19 @@ struct FingerTappingView: View {
                 Text("\(s)-day streak!").fontWeight(.semibold)
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
-            .background(.orange.opacity(0.12)).cornerRadius(20)
+            .background(.dopaxOrange.opacity(0.12)).cornerRadius(20)
         }
     }
 
     @ViewBuilder
     private func instructionRow(icon: String, text: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: icon).foregroundStyle(.blue)
+            Image(systemName: icon).foregroundStyle(.dopaxBlue)
             Text(text).font(.callout)
         }
     }
 
-    private var targetColor: Color { currentHand == .left ? .blue : .green }
+    private var targetColor: Color { currentHand == .left ? .dopaxBlue : .dopaxPurple }
 
     // MARK: - Logic
 

@@ -69,6 +69,15 @@ class DataExportActivity : AppCompatActivity() {
         handler.post(refreshRunnable)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // DataManager starts a background HandlerThread in its constructor
+        // that only stops via closeAll(); this screen is reachable repeatedly
+        // from the nav drawer ("Data & Privacy"), so each visit was leaking
+        // one more idle thread for the rest of the app process's life.
+        dataManager.closeAll()
+    }
+
     override fun onPause() {
         super.onPause()
         handler.removeCallbacks(refreshRunnable)

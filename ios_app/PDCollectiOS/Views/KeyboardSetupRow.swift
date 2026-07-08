@@ -38,7 +38,7 @@ struct KeyboardSetupRow: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.blue)
+                .tint(.dopaxBlue)
 
                 Text("Tap above → General → Keyboard → Keyboards → Add New Keyboard → PDCollect Keyboard")
                     .font(.caption2)

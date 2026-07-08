@@ -182,7 +182,7 @@ struct SettingsView: View {
                                     }
                                 }
                                 Spacer()
-                                Image(systemName: "pencil").foregroundColor(.blue)
+                                Image(systemName: "pencil").foregroundColor(.dopaxBlue)
                             }
                         }
                     }
@@ -270,7 +270,11 @@ struct SettingsView: View {
                 Button("Reset", role: .destructive) { resetConsent() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This will stop collection, delete all data, and return you to the consent screen.")
+                // Matches the Android app's withdrawal disclosure: the original
+                // one-line iOS message didn't mention that this only deletes the
+                // on-device copy, which could lead a participant to believe
+                // withdrawing here also erases already-uploaded research data.
+                Text("This will stop collection, delete all data on this device, and return you to the consent screen.\n\nData already uploaded to research servers is not affected by this action — to request its removal, contact the research team using the email in the Privacy Policy.\n\nThis cannot be undone.")
             }
             .sheet(item: $editingMedication) { med in
                 MedicationEditSheet(medication: med, profile: profile)
@@ -325,7 +329,7 @@ struct SettingsView: View {
         let beanie = appState.bluetoothManager.beanieService
         let anyConnected = hr.isConnected || beanie.isConnected
         Circle()
-            .fill(anyConnected ? Color.green : Color.gray.opacity(0.4))
+            .fill(anyConnected ? Color.dopaxStatusSuccess : Color.dopaxGray50.opacity(0.4))
             .frame(width: 10, height: 10)
     }
 }

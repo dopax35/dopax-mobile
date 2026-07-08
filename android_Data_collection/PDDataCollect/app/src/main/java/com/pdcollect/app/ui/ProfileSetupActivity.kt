@@ -30,7 +30,6 @@ class ProfileSetupActivity : AppCompatActivity() {
     private val medicationViews = mutableListOf<Triple<LinearLayout, EditText, EditText>>() // row, name, dose
     
     // Explicitly using MaterialSwitch to match activity_profile_setup.xml
-    private lateinit var switchScreenCapture: com.google.android.material.materialswitch.MaterialSwitch
     private lateinit var switchKeylogging: com.google.android.material.materialswitch.MaterialSwitch
     private lateinit var switchFaceDistance: com.google.android.material.materialswitch.MaterialSwitch
     private lateinit var switchAutoUpload: com.google.android.material.materialswitch.MaterialSwitch
@@ -65,7 +64,6 @@ class ProfileSetupActivity : AppCompatActivity() {
         val pairShellyButton = findViewById<Button>(R.id.btnPairShelly)
         val saveButton = findViewById<Button>(R.id.btnSave)
         
-        switchScreenCapture = findViewById(R.id.switchScreenCapture)
         switchKeylogging = findViewById(R.id.switchKeylogging)
         switchFaceDistance = findViewById(R.id.switchFaceDistance)
         switchAutoUpload = findViewById(R.id.switchAutoUpload)
@@ -91,7 +89,6 @@ class ProfileSetupActivity : AppCompatActivity() {
             } else -1
             if (genderIndex >= 0) genderSpinner.setText(profile.gender, false)
             
-            switchScreenCapture.isChecked = profile.screenCaptureEnabled
             switchKeylogging.isChecked = profile.keyloggingEnabled
             switchFaceDistance.isChecked = profile.faceDistanceEnabled
             switchAutoUpload.isChecked = profile.autoUploadEnabled
@@ -101,7 +98,6 @@ class ProfileSetupActivity : AppCompatActivity() {
         } else {
             // Fresh setup defaults: passive collection starts after setup is saved,
             // while optional sub-features stay opt-in.
-            switchScreenCapture.isChecked = false
             switchKeylogging.isChecked = false
             switchFaceDistance.isChecked = false
             switchAutoUpload.isChecked = true
@@ -165,7 +161,6 @@ class ProfileSetupActivity : AppCompatActivity() {
             profile.gender = gender
             profile.medications = buildMedicationsJson()
             
-            profile.screenCaptureEnabled = switchScreenCapture.isChecked
             profile.keyloggingEnabled = switchKeylogging.isChecked
             profile.faceDistanceMode = selectedFaceDistanceMode()
             profile.autoUploadEnabled = switchAutoUpload.isChecked
@@ -187,9 +182,13 @@ class ProfileSetupActivity : AppCompatActivity() {
             // up in exactly one place.
             val dataManager = com.pdcollect.app.data.DataManager(this@ProfileSetupActivity, profile)
             dataManager.writeProfileSnapshot()
-            
+
             lifecycleScope.launch {
                 com.pdcollect.app.data.FirebaseSyncManager.saveProfileToCloud(profile, dataManager)
+                // Release the background HandlerThread DataManager's constructor
+                // starts — nothing else in this Activity holds a reference to
+                // this instance once the cloud sync call above returns.
+                dataManager.closeAll()
             }
 
             try {
@@ -214,7 +213,6 @@ class ProfileSetupActivity : AppCompatActivity() {
             profile.age > 0 ||
             profile.gender.isNotBlank() ||
             hasMedications ||
-            profile.screenCaptureEnabled ||
             profile.keyloggingEnabled ||
             profile.faceDistanceEnabled ||
             !profile.autoUploadEnabled ||
@@ -387,12 +385,6 @@ class ProfileSetupActivity : AppCompatActivity() {
                         .setTitle("Allow camera for face distance?")
                         .setMessage(
                             "This estimates how far your face is from the screen without storing photos or video.\n\n" +
-                                "test battery — useful for interpreting motor data.\n\n" +
-                                "or use it during passive collection and tests. Faces are processed " +
-                                "on your device by ML Kit; only the distance number is saved."
-                        )
-                        .setMessage(
-                            "This estimates how far your face is from the screen without storing photos or video.\n\n" +
                                 "You can keep it conservative so it runs only while dopa-X is open, " +
                                 "or use it during passive collection and tests. Faces are processed " +
                                 "on your device by ML Kit; only the distance number is saved."
@@ -452,52 +444,6 @@ class ProfileSetupActivity : AppCompatActivity() {
             }
         }
 
-        // Visual Context (screen capture) — currently disabled in the build
-        // but the toggle is left in for future activation. The two extra
-        // permissions (overlay + usage access) are pre-requested here so
-        // when the feature is re-enabled the participant doesn't get
-        // bounced through three system screens in a row.
-        switchScreenCapture.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                if (!android.provider.Settings.canDrawOverlays(this)) {
-                    AlertDialog.Builder(this)
-                        .setTitle("Allow recording-status indicator?")
-                        .setMessage(
-                            "Visual Context shows a small floating dot on your screen whenever recording " +
-                                "is active, so you always know when dopa-X is capturing.\n\n" +
-                                "The next screen asks for \"Display over other apps\" — this is what lets " +
-                                "the dot stay visible above whatever app you're using."
-                        )
-                        .setPositiveButton("Continue") { _, _ ->
-                            val intent = Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                android.net.Uri.parse("package:$packageName"))
-                            startActivity(intent)
-                        }
-                        .setNegativeButton("Cancel") { _, _ -> switchScreenCapture.isChecked = false }
-                        .show()
-                } else if (!PermissionUtils.hasUsageStatsPermission(this)) {
-                    AlertDialog.Builder(this)
-                        .setTitle("Allow app-usage detection?")
-                        .setMessage(
-                            "So research data can be matched to the right activity (e.g. \"typed for " +
-                                "5 min in WhatsApp\"), dopa-X needs to know which app is in the foreground.\n\n" +
-                                "On the next screen, scroll to \"dopa-X\" and toggle \"Permit usage access\" on. " +
-                                "No app contents are read — only the package name (e.g. com.whatsapp)."
-                        )
-                        .setPositiveButton("Go to Settings") { _, _ ->
-                            PermissionUtils.openUsageAccessSettings(this)
-                        }
-                        .setNegativeButton("Cancel") { _, _ -> switchScreenCapture.isChecked = false }
-                        .show()
-                }
-            } else {
-                if (PermissionUtils.hasUsageStatsPermission(this) || PermissionUtils.canDrawOverlays(this)) {
-                    showRevokeDialog("Usage Access / Overlay", "Visual Context") {
-                        PermissionUtils.openAppSettings(this)
-                    }
-                }
-            }
-        }
     }
 
     private fun showRevokeDialog(permName: String, featureName: String, action: () -> Unit) {

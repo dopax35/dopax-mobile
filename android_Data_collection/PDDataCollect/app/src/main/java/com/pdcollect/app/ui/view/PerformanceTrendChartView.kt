@@ -4,6 +4,9 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
+import com.pdcollect.app.R
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -28,8 +31,11 @@ class PerformanceTrendChartView @JvmOverloads constructor(
     private var showNegative = false  // for bias chart (negative values)
 
     // ── Paints ────────────────────────────────────────────────────────────────
+    // Primary series uses the brand blue (was a generic Material cyan); the
+    // secondary/error series stays a semantic red, shared with status_error
+    // used elsewhere in the app for the same "error count" meaning.
     private val primaryLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#00B0FF")   // Cyan 500
+        color = ContextCompat.getColor(context, R.color.blue)
         strokeWidth = 5f
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
@@ -39,11 +45,11 @@ class PerformanceTrendChartView @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
     private val primaryDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#00B0FF")
+        color = ContextCompat.getColor(context, R.color.blue)
         style = Paint.Style.FILL
     }
     private val secondaryDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#FF5252")   // Red accent
+        color = ContextCompat.getColor(context, R.color.status_error)
         style = Paint.Style.FILL
     }
     private val secondaryDotBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -52,23 +58,23 @@ class PerformanceTrendChartView @JvmOverloads constructor(
         strokeWidth = 3f
     }
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#F5F5F5")
+        color = ContextCompat.getColor(context, R.color.surface_container_low)
         strokeWidth = 1.5f
         style = Paint.Style.STROKE
     }
     private val axisLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#757575")
+        color = ContextCompat.getColor(context, R.color.black_70)
         textSize = 28f
         textAlign = Paint.Align.CENTER
         typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
     }
     private val valueLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#9E9E9E")
+        color = ContextCompat.getColor(context, R.color.gray_50)
         textSize = 26f
         textAlign = Paint.Align.CENTER
     }
     private val zeroLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E0E0E0")
+        color = ContextCompat.getColor(context, R.color.divider)
         strokeWidth = 3f
         style = Paint.Style.STROKE
     }
@@ -78,7 +84,7 @@ class PerformanceTrendChartView @JvmOverloads constructor(
     private var xPositions = FloatArray(0)
     private var yPositions = FloatArray(0)
     private val emptyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#BDBDBD")
+        color = ContextCompat.getColor(context, R.color.gray_30)
         textSize = 34f
         textAlign = Paint.Align.CENTER
     }
@@ -90,7 +96,7 @@ class PerformanceTrendChartView @JvmOverloads constructor(
     private val paddingBottom = 80f
 
     private val rightAxisLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#FF5252")
+        color = ContextCompat.getColor(context, R.color.status_error)
         textSize = 26f
         textAlign = Paint.Align.LEFT
         typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
@@ -186,7 +192,8 @@ class PerformanceTrendChartView @JvmOverloads constructor(
 
             primaryFillPaint.shader = LinearGradient(
                 0f, chartTop, 0f, chartBottom,
-                Color.parseColor("#4400B0FF"), Color.TRANSPARENT,
+                ColorUtils.setAlphaComponent(ContextCompat.getColor(context, R.color.blue), 0x44),
+                Color.TRANSPARENT,
                 Shader.TileMode.CLAMP
             )
         }

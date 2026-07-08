@@ -45,7 +45,7 @@ struct MedicationLogView: View {
                         .font(.subheadline)
                 } icon: {
                     Image(systemName: "pill.fill")
-                        .foregroundColor(.gray)
+                        .foregroundColor(.dopaxGray50)
                 }
                 .padding(.vertical, 4)
             } else {
@@ -61,7 +61,7 @@ struct MedicationLogView: View {
     private func medicationRow(_ med: Medication) -> some View {
         HStack {
             Image(systemName: "pill.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.dopaxBlue)
                 .font(.title3)
 
             VStack(alignment: .leading) {
@@ -75,7 +75,7 @@ struct MedicationLogView: View {
 
             if justLoggedMed == med.name {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                    .foregroundColor(.dopaxStatusSuccess)
                     .font(.title2)
                     .transition(.scale.combined(with: .opacity))
             } else {
@@ -105,7 +105,7 @@ struct MedicationLogView: View {
                         .font(.subheadline)
                 } icon: {
                     Image(systemName: "clock")
-                        .foregroundColor(.gray)
+                        .foregroundColor(.dopaxGray50)
                 }
             } else {
                 ForEach(recentLogs.reversed(), id: \.timestampMs) { log in
@@ -122,7 +122,7 @@ struct MedicationLogView: View {
                         }
                         Spacer()
                         Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(.dopaxStatusSuccess)
                     }
                 }
             }
@@ -142,7 +142,7 @@ struct MedicationLogView: View {
             VStack(spacing: 24) {
                 Image(systemName: "pill.fill")
                     .font(.system(size: 48))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.dopaxBlue)
 
                 Text("Log \(med.name)")
                     .font(.title2.weight(.semibold))

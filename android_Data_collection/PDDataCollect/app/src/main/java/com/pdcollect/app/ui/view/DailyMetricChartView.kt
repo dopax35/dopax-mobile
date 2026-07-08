@@ -12,6 +12,8 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import androidx.core.content.ContextCompat
+import com.pdcollect.app.R
 import com.pdcollect.app.data.DashboardSummaryStore
 import kotlin.math.max
 import kotlin.math.min
@@ -338,7 +340,7 @@ class DailyMetricChartView @JvmOverloads constructor(
                 isPrimary = true,
                 points = primary,
                 markers = markers,
-                color = TODAY_COLOR,
+                color = todayColor,
                 strokeWidth = 5f,
                 pointRadius = 4.5f
             )
@@ -524,10 +526,14 @@ class DailyMetricChartView @JvmOverloads constructor(
         )
     }
 
+    // Brand blue for "today" — was a one-off Material blue (#0D5BD7); the two
+    // comparison-day grays stay as-is, they're an intentional shared fade
+    // scale with TrendSummaryChartView's neutral chart tokens.
+    private val todayColor = ContextCompat.getColor(context, R.color.blue)
+
     companion object {
         private const val MINUTES_PER_DAY = 24f * 60f
         private const val MAX_ZOOM = 6f
-        private val TODAY_COLOR = Color.parseColor("#0D5BD7")
         private val PREVIOUS_DAY_COLOR = Color.parseColor("#9098A6")
         private val TWO_DAYS_AGO_COLOR = Color.parseColor("#C0C6D0")
     }

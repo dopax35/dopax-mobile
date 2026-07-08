@@ -73,7 +73,9 @@ class BeanieDevicePickerActivity : AppCompatActivity() {
 
             tvBeanieStatus.text = if (connected) "Connected - $name" else status
             viewBeanieDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                android.graphics.Color.parseColor(if (connected) "#43A047" else "#9E9E9E")
+                ContextCompat.getColor(
+                    context, if (connected) R.color.status_success else R.color.gray_50
+                )
             )
             tvCurrentTemp.text = if (tskin.isFinite()) {
                 String.format(Locale.US, "%.2f C", tskin)
@@ -299,7 +301,7 @@ class BeanieDevicePickerActivity : AppCompatActivity() {
             tvCurrentTemp.text = "-- C"
             tvCurrentHeatFlux.text = "-- cal/s"
             viewBeanieDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                android.graphics.Color.parseColor("#9E9E9E")
+                ContextCompat.getColor(this, R.color.gray_50)
             )
             return
         }
@@ -311,7 +313,9 @@ class BeanieDevicePickerActivity : AppCompatActivity() {
             snapshot?.status ?: "Checking status..."
         }
         viewBeanieDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-            android.graphics.Color.parseColor(if (snapshot?.connected == true) "#43A047" else "#9E9E9E")
+            ContextCompat.getColor(
+                this, if (snapshot?.connected == true) R.color.status_success else R.color.gray_50
+            )
         )
         tvCurrentTemp.text = if ((snapshot?.tskinC ?: Double.NaN).isFinite()) {
             String.format(Locale.US, "%.2f C", snapshot!!.tskinC)

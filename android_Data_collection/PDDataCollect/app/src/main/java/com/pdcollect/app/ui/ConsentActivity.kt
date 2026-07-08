@@ -24,6 +24,7 @@ class ConsentActivity : AppCompatActivity() {
     private lateinit var profile: UserProfile
     private var pdfRenderer: PdfRenderer? = null
     private var parcelFileDescriptor: ParcelFileDescriptor? = null
+    private var consentDocumentLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +42,12 @@ class ConsentActivity : AppCompatActivity() {
         val agreeButton = findViewById<Button>(R.id.agreeButton)
         val signatureInput = findViewById<TextInputEditText>(R.id.signatureInput)
 
-        // Render PDF
+        // Render PDF. Pages are scaled to the device's actual screen width in
+        // pixels (NOT densityDpi * points/72, which double-applies density and
+        // produces multi-hundred-MB bitmaps per page on high-density phones —
+        // e.g. ~150MB/page at xxxhdpi for an A4 page, easily OOM-crashing this
+        // screen for every new participant on a 3-page consent form).
+        var pagesRendered = 0
         try {
             val file = File(cacheDir, "consent_form.pdf")
             if (!file.exists()) {
@@ -53,40 +59,66 @@ class ConsentActivity : AppCompatActivity() {
             }
 
             parcelFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-            pdfRenderer = PdfRenderer(parcelFileDescriptor!!)
+            val renderer = PdfRenderer(parcelFileDescriptor!!)
+            pdfRenderer = renderer
 
-            val pageCount = pdfRenderer!!.pageCount
-            for (i in 0 until pageCount) {
-                val page = pdfRenderer!!.openPage(i)
-                val bitmap = Bitmap.createBitmap(
-                    resources.displayMetrics.densityDpi * page.width / 72,
-                    resources.displayMetrics.densityDpi * page.height / 72,
-                    Bitmap.Config.ARGB_8888
-                )
-                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                
-                val imageView = ImageView(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ).apply {
-                        setMargins(0, 0, 0, 16)
+            // Cap render width at the screen width (already in real device
+            // pixels) so we never render at a higher resolution than the
+            // screen can even display.
+            val targetWidthPx = resources.displayMetrics.widthPixels
+
+            for (i in 0 until renderer.pageCount) {
+                try {
+                    renderer.openPage(i).use { page ->
+                        val scale = targetWidthPx.toFloat() / page.width
+                        val widthPx = targetWidthPx
+                        val heightPx = (page.height * scale).toInt().coerceAtLeast(1)
+                        val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
+                        page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+                        val imageView = ImageView(this).apply {
+                            layoutParams = LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                            ).apply {
+                                setMargins(0, 0, 0, 16)
+                            }
+                            setImageBitmap(bitmap)
+                            adjustViewBounds = true
+                        }
+                        pdfContainer.addView(imageView)
+                        pagesRendered++
                     }
-                    setImageBitmap(bitmap)
-                    adjustViewBounds = true
+                } catch (pageError: Exception) {
+                    // Skip this page but keep trying the rest — one corrupt
+                    // page shouldn't hide the entire consent document.
+                    android.util.Log.e("ConsentActivity", "Failed to render consent page $i", pageError)
                 }
-                pdfContainer.addView(imageView)
-                page.close()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("ConsentActivity", "Failed to load consent document", e)
+        }
+
+        consentDocumentLoaded = pagesRendered > 0
+        if (!consentDocumentLoaded) {
+            // Never allow silent sign-off on a document the participant could
+            // not actually see. Show a clear error and offer a retry instead
+            // of leaving a blank box next to an enabled checkbox.
+            val errorView = TextView(this).apply {
+                text = "We couldn't load the consent document. Please check your storage space " +
+                    "and try again, or contact the study team before continuing."
+                setTextColor(resources.getColor(R.color.error, theme))
+                textSize = 14f
+            }
+            pdfContainer.addView(errorView)
+            checkbox.isEnabled = false
         }
 
         agreeButton.isEnabled = false
 
         fun validate() {
             val name = signatureInput.text?.toString()?.trim() ?: ""
-            agreeButton.isEnabled = checkbox.isChecked && name.isNotEmpty()
+            agreeButton.isEnabled = consentDocumentLoaded && checkbox.isChecked && name.isNotEmpty()
         }
 
         checkbox.setOnCheckedChangeListener { _, _ -> validate() }

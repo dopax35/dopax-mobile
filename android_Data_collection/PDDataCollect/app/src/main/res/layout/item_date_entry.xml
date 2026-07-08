@@ -26,14 +26,14 @@
                 android:layout_weight="1"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#212121" />
+                android:textColor="@color/black_90" />
 
             <TextView
                 android:id="@+id/tvSize"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
-                android:textColor="#757575" />
+                android:textColor="@color/black_70" />
 
             <ImageView
                 android:id="@+id/ivUploaded"
@@ -42,7 +42,7 @@
                 android:layout_marginStart="8dp"
                 android:src="@android:drawable/checkbox_on_background"
                 android:visibility="gone"
-                app:tint="#4CAF50" />
+                app:tint="@color/status_success" />
 
         </LinearLayout>
 
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="12sp"
-            android:textColor="#999999" />
+            android:textColor="@color/gray_50" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -75,7 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Delete"
-                android:textColor="#D32F2F" />
+                android:textColor="@color/error" />
 
         </LinearLayout>
 

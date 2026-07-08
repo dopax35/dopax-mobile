@@ -1,0 +1,46 @@
+# dopa-X / PDCollect — Usability, UI, and Stability Review
+
+Reviewed both native apps (Android/Kotlin, ~16k lines; iOS/Swift) end to end: manifest/permissions, theme and design-system compliance, every consent/onboarding/settings screen, all five motor tests, the passive-collection services, Bluetooth integrations, and data-upload paths. This is a mature, actively-maintained research app (v3.7.20 on Android) with a lot of prior hardening already in place — the bugs found below are specific and mostly narrow, not systemic neglect. 22 fixes were made directly in the code. A handful of items are flagged for a product/clinical decision rather than fixed, since the right answer isn't a pure code question.
+
+Real compilation/test execution wasn't possible in this sandbox (the project's bundled JDK and Android SDK are Windows binaries; the sandbox's own JDK is v11 vs. the project's required v17). Every fix was instead re-read in full after editing and cross-checked against sibling files and existing unit tests for consistency.
+
+## Highest-impact fixes
+
+**Android consent screen could crash, and even when it didn't, hid 2 of 3 pages of the consent document.** `ConsentActivity` rendered the PDF at `screenDensity × points/72`, which produces ~150MB *per page* on a typical high-density phone (three A4 pages ≈ 450MB of bitmaps held at once) — a near-certain OutOfMemory crash on the very first screen every new participant sees. Independently, the container showing the rendered pages had a hardcoded `300dp` height with no scrolling, so even without the crash, only the top of page 1 was ever visible — participants could check "I have read and understand" and sign without any way to see pages 2–3. Fixed both: pages now render at actual screen-width resolution, the container is scrollable, each page renders independently (one bad page no longer blanks the rest), and the Agree button is disabled with a visible error if the document fails to load.
+
+**iOS consent screen's "scrolled to bottom" gate was completely disconnected.** The state variable existed and was being set, but nothing ever read it — the Agree button was always enabled, so a participant could tap through without reading anything, and the scroll-position tracking itself would have marked "scrolled" almost immediately on render even if it *had* been wired up. Rewired the scroll detection to genuinely compare content position against the viewport, and the button is now disabled until the participant reaches the bottom.
+
+**Trail Making Test never recorded errors.** TMT is clinically scored on time *and* errors, but the wrong-target-detection method was fully written and never called from the touch handler — every session recorded exactly 0 errors, silently, since this was written. Wired it in, with edge-triggering so a lingering touch on a wrong target counts once, not dozens of times across touch-move events.
+
+**A background thread leaked every time seven different Android screens were opened.** `DataManager` starts a live `HandlerThread` in its constructor that only stops via an explicit `closeAll()`. Settings, Data Export, Debug Preview, Questionnaire, Profile Setup, and Spiral Tracing all constructed one and never closed it — Settings' instance additionally holds ~11 open file writers via `initializePassiveLogs()`. Voice Sample had the same gap plus a genuine data-loss risk, since its writes are buffered and were never flushed. All seven now close cleanly on exit, matching the pattern the other screens already used correctly.
+
+**iOS custom fonts and camera permission text were both broken.** The bundled Rajdhani/Outfit fonts were never registered in `Info.plist`'s `UIAppFonts`, so every headline styled with the app's custom type scale silently fell back to the system font — and separately, `Outfit-Medium` was referenced in code but the bundled file is actually `Outfit-Thin` (confirmed via the font's internal name table), so that style would have kept falling back even after fixing the registration. Also fixed: `NSCameraUsageDescription` told users the camera was "to scan documents" when it's actually used for on-device face-distance estimation — misleading permission text in a clinical-consent context.
+
+## Other fixes
+
+- **Voice Sample test read unfiltered live news aloud** to a population the app's own questionnaire screens for anxiety and depression. Added a keyword filter (Hebrew + English) that excludes headlines about death, violence, terror, or disaster before they can be selected as a reading passage, falling back to the existing curated stories.
+- **Two dialogs stacked on top of each other** after finishing any Active Test (the encouragement "nudge" and the questionnaire prompt fired simultaneously) — the developer had left comments acknowledging this was unresolved. Now sequenced properly: the questionnaire prompt only appears after the nudge is dismissed.
+- **Android login screen had no recovery path on failed sign-in** — a real auth failure (not user-cancel) left a blank screen with only a toast telling the user to "check logs." Now shows a plain-language message and closes cleanly so reopening the app retries, matching the existing cancel-path behavior.
+- **iOS "Reset & Withdraw" undersold what it actually does.** The message didn't mention that this only deletes the on-device copy — already-uploaded research data isn't affected. A participant could reasonably believe withdrawing here erases everything everywhere. Copy now matches Android's more complete disclosure.
+- **iOS `CloudUploader` leaked a `URLSession` + delegate per uploaded date** — delegate-backed sessions aren't released just because they go out of scope; needed an explicit `finishTasksAndInvalidate()`.
+- **iOS background-upload loop ignored task cancellation** — `BGProcessingTask`'s expiration handler called `.cancel()` on the Swift `Task`, but nothing checked `Task.isCancelled`, so an upload run kept burning already-expired background time. Added the check.
+- Two smaller correctness/cleanup items: a leftover duplicate `.setMessage(...)` call in Profile Setup (dead code, second call silently won), and a missing `timestamps`-array guard in `PDAlgorithms.spiralFeatures` that force-unwraps on two parallel arrays that are currently always kept in lockstep but aren't defensively guaranteed to be.
+
+## Follow-up (July 2026): the six flagged items above
+
+Every item flagged above got an explicit answer and, except the first, a code change:
+
+- **Beanie**: confirmed intentional — the sensor "will be enabled shortly." Left exactly as-is, no code changes.
+- **Screen Capture / "Visual Context"**: confirmed it was never supposed to take real screenshots — the intent was only a lightweight "did the screen change" signal, which `DataAccessibilityService`'s existing `ACTION_FOREGROUND_APP_CHANGED` broadcast already covers. Removed entirely — service, Settings toggle, constants, strings — rather than wiring up real screen capture.
+- **Color palette**: Dopa-X (not `DESIGN.md`'s "Empathetic Anchor" spec) confirmed as current intent. Standardized both platforms on the four Dopa-X hues (blue `#2828C6`, blue_dark `#0F0F3D`, purple `#5B34A4`, orange `#FF5C35`) for brand-accent colors — charts, buttons, icons, the left/right ordinal coloring on bilateral motor tests — while deliberately leaving semantic status colors (success/error), traffic-light severity scales, and OS- or third-party-mandated colors (e.g. Google Sign-In) untouched.
+- **TMT errors**: both platforms now track both clinically-relevant error types. Android gained lift-off detection, iOS gained wrong-target detection, and both write an identical 9-column schema (`...,wrong_target_errors,lift_off_errors,...`) to `tmt_results.csv`.
+- **iOS Voice Sample**: built the missing screen from scratch — same RSS-fetch-with-distressing-content-filter and curated Hebrew fallback stories as Android, a 60-second `AVAudioRecorder` flow, and a `voice_log.csv` schema identical to Android's (`timestamp_ms,filename,story_headline,duration_ms`).
+- **Debug trigger**: gated behind `BuildConfig.DEBUG`. Wired up in debug builds only; in release/participant-facing builds the invisible view is unclickable, unfocusable, and hidden, so it can no longer be triggered by an accidental tap.
+
+## Still flagged — needs a product decision
+
+- A few tap targets (e.g. medication row's "X" remove button) remain narrower than the app's own documented 48px minimum for tremor accommodation. Not part of the follow-up list above; still worth a pass.
+
+## What was already solid
+
+Both platforms show real, prior investment in stability: Android's `BeanieService` and `HandTurningActivity` have careful GATT-lifecycle and TTS/sensor cleanup with defensive stale-callback guards; the changelog in `build.gradle.kts` documents a long history of real fixes (GATT leaks, NaN graph handling, Android 14 background-start restrictions, Samsung auto-rotate teardown); iOS's `DataManager` sidesteps the whole "leaked background thread" bug class by design (opens and closes a file handle per write rather than holding one open); permission-rationale copy throughout Profile Setup is unusually thorough and honest about what each permission does; and the study-withdrawal flow (once the iOS copy fix above lands) is honest about what it does and doesn't undo.

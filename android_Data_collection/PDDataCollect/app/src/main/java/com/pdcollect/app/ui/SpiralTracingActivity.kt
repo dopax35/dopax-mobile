@@ -124,6 +124,13 @@ class SpiralTracingActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         writeEndRow()
+        // Without this, DataManager's background HandlerThread and open CSV
+        // writer are never closed — every spiral-tracing attempt (this screen
+        // is re-launched per hand) leaks a thread, and any buffered touch
+        // samples that hadn't hit the periodic flush yet are silently lost.
+        // All the other motor-test activities already close their DataManager
+        // here; this one was missing it.
+        dataManager.closeAll()
         super.onDestroy()
     }
 

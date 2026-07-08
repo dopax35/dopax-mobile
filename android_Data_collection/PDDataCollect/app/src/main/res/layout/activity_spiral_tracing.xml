@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFFFFF">
+    android:background="@color/surface">
 
     <TextView
         android:id="@+id/tvTitle"
@@ -41,7 +41,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_margin="16dp"
-        android:background="#F0F0F0" />
+        android:background="@color/surface_container_low" />
     
     <Button
         android:id="@+id/btnFinishSpiral"

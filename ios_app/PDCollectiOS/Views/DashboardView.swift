@@ -23,6 +23,11 @@ struct DashboardView: View {
                     // Collection status banner (new — iPhone branch)
                     collectionStatusSection
 
+                    // Quick-access entry to the Voice Sample task — mirrors
+                    // Android's MainActivity hero card (not part of the
+                    // Active Tests list on either platform).
+                    voiceSampleQuickAction
+
                     if isLoading {
                         ProgressView("Loading HealthKit data…")
                             .padding(.top, 40)
@@ -69,7 +74,7 @@ struct DashboardView: View {
                     ServiceStatusCard(
                         title: "Sensors",
                         icon: "gyroscope",
-                        color: appState.passiveSensor.isRunning ? .green : .gray,
+                        color: appState.passiveSensor.isRunning ? .dopaxStatusSuccess : .dopaxGray50,
                         detail: appState.passiveSensor.isRunning
                             ? "\(appState.passiveSensor.totalReadingsToday) readings today"
                             : "Stopped"
@@ -78,7 +83,7 @@ struct DashboardView: View {
                         title: "Face Cam",
                      
                         icon: "camera.fill",
-                        color: appState.faceDistance.isRunning ? .green : .gray,
+                        color: appState.faceDistance.isRunning ? .dopaxStatusSuccess : .dopaxGray50,
                         detail: appState.faceDistance.isRunning
                             ? "\(appState.faceDistance.samplesCollected) samples"
                             : "Stopped"
@@ -86,13 +91,13 @@ struct DashboardView: View {
                     ServiceStatusCard(
                         title: "Touch Log",
                         icon: "hand.point.up",
-                        color: appState.appEventLogger.isRunning ? .green : .gray,
+                        color: appState.appEventLogger.isRunning ? .dopaxStatusSuccess : .dopaxGray50,
                         detail: appState.appEventLogger.isRunning ? "Active" : "Stopped"
                     )
                     ServiceStatusCard(
                         title: "BG Tasks",
                         icon: "clock.arrow.2.circlepath",
-                        color: .blue,
+                        color: .dopaxBlue,
                         detail: "Scheduled"
                     )
                 }
@@ -102,7 +107,7 @@ struct DashboardView: View {
             if !appState.isCollecting {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
+                        .foregroundColor(.dopaxOrange)
                     Text("Collection is paused. Enable it in Settings.")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -114,6 +119,37 @@ struct DashboardView: View {
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
         .padding(.horizontal)
+    }
+
+    // MARK: - Voice Sample Quick Action
+
+    private var voiceSampleQuickAction: some View {
+        NavigationLink(destination: VoiceSampleView().environmentObject(appState)) {
+            HStack(spacing: 14) {
+                Image(systemName: "mic.fill")
+                    .font(.title2)
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Color.dopaxDarkBlue)
+                    .cornerRadius(10)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Voice Sample").fontWeight(.medium)
+                    Text("Read a short story aloud · 60 s")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(16)
+            .padding(.horizontal)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Subviews (existing)
@@ -186,12 +222,12 @@ struct DashboardView: View {
                             y: .value(metricLabel, p.value)
                         )
                         .interpolationMethod(.catmullRom)
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.dopaxBlue)
                         PointMark(
                             x: .value("Date", p.date, unit: .day),
                             y: .value(metricLabel, p.value)
                         )
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(.dopaxBlue)
                     }
                     .chartXAxis { AxisMarks(values: .stride(by: .day, count: 7)) { _ in AxisGridLine(); AxisTick(); AxisValueLabel(format: .dateTime.month().day()) } }
                     .frame(height: 220)
@@ -209,7 +245,7 @@ struct DashboardView: View {
         VStack(spacing: 16) {
             Image(systemName: "heart.text.square")
                 .font(.system(size: 56))
-                .foregroundColor(.blue)
+                .foregroundColor(.dopaxBlue)
             Text("HealthKit Data")
                 .font(.title2).fontWeight(.semibold)
             Text("Walk with your iPhone in your pocket for a few days and iOS will automatically compute gait metrics that appear here.")
@@ -259,10 +295,10 @@ struct DashboardView: View {
 
                     // 10% reference line (symmetric threshold)
                     RuleMark(y: .value("Symmetric", 10.0))
-                        .foregroundStyle(Color.green.opacity(0.6))
+                        .foregroundStyle(Color.dopaxStatusSuccess.opacity(0.6))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
                         .annotation(position: .trailing) {
-                            Text("10%").font(.caption2).foregroundStyle(.green)
+                            Text("10%").font(.caption2).foregroundStyle(.dopaxStatusSuccess)
                         }
                 }
                 .chartXAxis {
@@ -280,8 +316,8 @@ struct DashboardView: View {
                 .frame(height: 220)
                 .padding(.horizontal)
                 .chartForegroundStyleScale([
-                    "Finger Tapping": Color.blue,
-                    "Leg Agility":    Color.red
+                    "Finger Tapping": Color.dopaxBlue,
+                    "Leg Agility":    Color.dopaxPurple
                 ])
             }
 
@@ -486,12 +522,12 @@ struct DashboardView: View {
                         y: .value("Score", p.value)
                     )
                     .interpolationMethod(.catmullRom)
-                    .foregroundStyle(Color.purple)
+                    .foregroundStyle(Color.dopaxPurple)
                     PointMark(
                         x: .value("Date", p.date, unit: .day),
                         y: .value("Score", p.value)
                     )
-                    .foregroundStyle(Color.purple)
+                    .foregroundStyle(Color.dopaxPurple)
                 }
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day, count: 7)) { _ in
@@ -653,7 +689,7 @@ struct DashboardView: View {
                 for rawLine in content.components(separatedBy: "\n").dropFirst() {
                     let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !line.isEmpty else { continue }
-                    let cols = csvSplit(line, maxCols: 8)
+                    let cols = csvSplit(line, maxCols: 9)
                     guard cols.count >= 4 else { continue }
                     let testType = cols[2].trimmingCharacters(in: .whitespacesAndNewlines)
                     let totalTimeMs = Double(cols[3]) ?? 0

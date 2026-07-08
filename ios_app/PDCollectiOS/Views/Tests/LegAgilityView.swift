@@ -24,6 +24,10 @@ struct LegAgilityView: View {
 
     private let duration = Constants.TestDuration.legAgility
 
+    // First-tested side (Right) is blue, second (Left) is purple — same ordinal
+    // convention used by FingerTappingView/HandTurningView for their two sides.
+    private var sideColor: Color { currentSide == .right ? .dopaxBlue : .dopaxPurple }
+
     private static func nowMs() -> Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
     private static func monoNs() -> UInt64 { clock_gettime_nsec_np(CLOCK_UPTIME_RAW) }
     private func elapsedMs() -> Int64 { Int64((Self.monoNs() - monoStartMs) / 1_000_000) }
@@ -55,7 +59,7 @@ struct LegAgilityView: View {
     private var instructionsView: some View {
         VStack(spacing: 24) {
             Image(systemName: "figure.walk.motion")
-                .font(.system(size: 64)).foregroundStyle(.red)
+                .font(.system(size: 64)).foregroundStyle(.dopaxBlue)
                 .modifier(PulseModifier())
 
             Text("Leg Agility Test")
@@ -67,13 +71,13 @@ struct LegAgilityView: View {
                 instructionRow(icon: "clock", text: "Keep going for 10 seconds")
                 instructionRow(icon: "arrow.left.and.right", text: "You will repeat for both legs")
             }
-            .padding().background(.red.opacity(0.08)).cornerRadius(14)
+            .padding().background(.dopaxBlue.opacity(0.08)).cornerRadius(14)
 
             streakBanner
 
             Button("Start — Right Leg") { startLeg(.right) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.red)
+                .tint(.dopaxBlue)
         }
         .padding()
     }
@@ -83,7 +87,7 @@ struct LegAgilityView: View {
     private var betweenView: some View {
         VStack(spacing: 24) {
             Image(systemName: "hands.clap.fill")
-                .font(.system(size: 64)).foregroundStyle(.red)
+                .font(.system(size: 64)).foregroundStyle(.dopaxPurple)
                 .modifier(PulseModifier())
 
             Text("Right leg done! 🎉")
@@ -97,7 +101,7 @@ struct LegAgilityView: View {
 
             Button("Start — Left Leg") { startLeg(.left) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.red)
+                .tint(.dopaxPurple)
         }
         .padding()
     }
@@ -110,14 +114,14 @@ struct LegAgilityView: View {
 
             Text(currentSide.rawValue + " Leg")
                 .font(.title).fontWeight(.bold)
-                .foregroundStyle(.red)
+                .foregroundStyle(sideColor)
 
             Text(String(format: "%.1f s", timeLeft))
                 .font(.system(size: 64, weight: .bold, design: .monospaced))
-                .foregroundStyle(timeLeft < 3 ? .red : .primary)
+                .foregroundStyle(timeLeft < 3 ? .dopaxStatusError : .primary)
 
             ProgressView(value: duration - timeLeft, total: duration)
-                .tint(.red)
+                .tint(timeLeft < 3 ? .dopaxStatusError : sideColor)
                 .padding(.horizontal, 32)
 
             Spacer()
@@ -137,7 +141,7 @@ struct LegAgilityView: View {
                 VStack(spacing: 8) {
                     Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
                         .font(.system(size: 64))
-                        .foregroundStyle(isPersonalBest ? .yellow : .red)
+                        .foregroundStyle(isPersonalBest ? .yellow : .dopaxStatusSuccess)
                         .modifier(PulseModifier())
 
                     Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
@@ -149,9 +153,9 @@ struct LegAgilityView: View {
                 }
 
                 VStack(spacing: 0) {
-                    scoreSection("Right Leg", features: rightFeatures, color: .red)
+                    scoreSection("Right Leg", features: rightFeatures, color: .dopaxBlue)
                     Divider()
-                    scoreSection("Left Leg", features: leftFeatures, color: .orange)
+                    scoreSection("Left Leg", features: leftFeatures, color: .dopaxPurple)
                 }
                 .cardStyle()
 
@@ -161,12 +165,12 @@ struct LegAgilityView: View {
                     .font(.callout).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
-                    .background(.red.opacity(0.08))
+                    .background(.dopaxOrange.opacity(0.08))
                     .cornerRadius(12)
 
                 Button("Done") { dismiss() }
                     .buttonStyle(.borderedProminent).controlSize(.large)
-                    .tint(.red)
+                    .tint(.dopaxBlue)
             }
             .padding()
         }
@@ -230,7 +234,7 @@ struct LegAgilityView: View {
             Text(label).foregroundStyle(.secondary)
             Spacer()
             Text(value).fontWeight(.semibold)
-            if let n = note { Text(n).font(.caption).foregroundStyle(.orange) }
+            if let n = note { Text(n).font(.caption).foregroundStyle(.dopaxOrange) }
         }
     }
 
@@ -243,14 +247,14 @@ struct LegAgilityView: View {
                 Text("\(s)-day streak!").fontWeight(.semibold)
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
-            .background(.orange.opacity(0.12)).cornerRadius(20)
+            .background(.dopaxOrange.opacity(0.12)).cornerRadius(20)
         }
     }
 
     @ViewBuilder
     private func instructionRow(icon: String, text: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: icon).foregroundStyle(.red)
+            Image(systemName: icon).foregroundStyle(.dopaxBlue)
             Text(text).font(.callout)
         }
     }

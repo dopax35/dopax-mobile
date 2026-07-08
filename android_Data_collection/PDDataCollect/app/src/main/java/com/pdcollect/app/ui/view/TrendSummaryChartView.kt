@@ -10,6 +10,8 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
+import androidx.core.content.ContextCompat
+import com.pdcollect.app.R
 import com.pdcollect.app.data.DashboardSummaryStore
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -32,10 +34,12 @@ class TrendSummaryChartView @JvmOverloads constructor(
     private var activePointerId = MotionEvent.INVALID_POINTER_ID
     private var lastTouchX = 0f
 
+    // The 3 brand hues double as a categorical palette for however many trend
+    // series are plotted (was 3 unrelated Material colors).
     private val palette = listOf(
-        Color.parseColor("#0057B8"),
-        Color.parseColor("#E67E22"),
-        Color.parseColor("#2E8B57")
+        ContextCompat.getColor(context, R.color.blue),
+        ContextCompat.getColor(context, R.color.orange),
+        ContextCompat.getColor(context, R.color.purple)
     )
 
     private val titlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {

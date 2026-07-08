@@ -55,7 +55,7 @@ struct HandTurningView: View {
     private var instructionsView: some View {
         VStack(spacing: 24) {
             Image(systemName: "arrow.clockwise")
-                .font(.system(size: 64)).foregroundStyle(.green)
+                .font(.system(size: 64)).foregroundStyle(.dopaxBlue)
                 .modifier(PulseModifier())
 
             Text("Hand Turning Test")
@@ -66,13 +66,13 @@ struct HandTurningView: View {
                 instructionRow(icon: "arrow.clockwise.circle", text: "Rotate palm UP then DOWN repeatedly")
                 instructionRow(icon: "clock", text: "Keep going for 10 seconds — as fast as possible")
             }
-            .padding().background(.green.opacity(0.08)).cornerRadius(14)
+            .padding().background(.dopaxBlue.opacity(0.08)).cornerRadius(14)
 
             streakBanner
 
             Button("Start — Left Hand") { startHand(.left) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.green)
+                .tint(.dopaxBlue)
         }
         .padding()
     }
@@ -82,7 +82,7 @@ struct HandTurningView: View {
     private var betweenView: some View {
         VStack(spacing: 24) {
             Image(systemName: "hands.clap.fill")
-                .font(.system(size: 64)).foregroundStyle(.green)
+                .font(.system(size: 64)).foregroundStyle(.dopaxPurple)
                 .modifier(PulseModifier())
 
             Text("Left hand done! 🎉")
@@ -96,7 +96,7 @@ struct HandTurningView: View {
 
             Button("Start — Right Hand") { startHand(.right) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.green)
+                .tint(.dopaxPurple)
         }
         .padding()
     }
@@ -114,12 +114,12 @@ struct HandTurningView: View {
             // Countdown ring
             ZStack {
                 Circle()
-                    .stroke(Color.green.opacity(0.15), lineWidth: 14)
+                    .stroke(Color.dopaxBlue.opacity(0.15), lineWidth: 14)
                     .frame(width: 200, height: 200)
 
                 Circle()
                     .trim(from: 0, to: CGFloat((duration - timeLeft) / duration))
-                    .stroke(timeLeft < 3 ? Color.red : Color.green,
+                    .stroke(timeLeft < 3 ? Color.dopaxStatusError : Color.dopaxBlue,
                             style: StrokeStyle(lineWidth: 14, lineCap: .round))
                     .frame(width: 200, height: 200)
                     .rotationEffect(.degrees(-90))
@@ -128,14 +128,14 @@ struct HandTurningView: View {
                 VStack(spacing: 6) {
                     Text(String(format: "%.1f", timeLeft))
                         .font(.system(size: 56, weight: .bold, design: .monospaced))
-                        .foregroundStyle(timeLeft < 3 ? .red : .primary)
+                        .foregroundStyle(timeLeft < 3 ? .dopaxStatusError : .primary)
                     Text("seconds").foregroundStyle(.secondary)
                 }
             }
 
             Text("Keep rotating your hand!")
                 .font(.title2).fontWeight(.semibold)
-                .foregroundStyle(.green)
+                .foregroundStyle(.dopaxBlue)
 
             // Live gyro visualisation
             LiveGyroArc(gyroZ: appState.motionManager.latestGyroZ)
@@ -157,7 +157,7 @@ struct HandTurningView: View {
                 VStack(spacing: 8) {
                     Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
                         .font(.system(size: 64))
-                        .foregroundStyle(isPersonalBest ? .yellow : .green)
+                        .foregroundStyle(isPersonalBest ? .yellow : .dopaxStatusSuccess)
                         .modifier(PulseModifier())
 
                     Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
@@ -171,9 +171,9 @@ struct HandTurningView: View {
 
                 // Score cards – Left & Right side by side
                 VStack(spacing: 0) {
-                    scoreSection("Left Hand", features: leftFeatures, color: .blue)
+                    scoreSection("Left Hand", features: leftFeatures, color: .dopaxBlue)
                     Divider()
-                    scoreSection("Right Hand", features: rightFeatures, color: .green)
+                    scoreSection("Right Hand", features: rightFeatures, color: .dopaxPurple)
                 }
                 .cardStyle()
 
@@ -193,12 +193,12 @@ struct HandTurningView: View {
                     .font(.callout).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
-                    .background(.green.opacity(0.08))
+                    .background(.dopaxOrange.opacity(0.08))
                     .cornerRadius(12)
 
                 Button("Done") { dismiss() }
                     .buttonStyle(.borderedProminent).controlSize(.large)
-                    .tint(.green)
+                    .tint(.dopaxBlue)
             }
             .padding()
         }
@@ -288,7 +288,7 @@ struct HandTurningView: View {
             Text(label).foregroundStyle(.secondary)
             Spacer()
             Text(value).fontWeight(.semibold)
-            if let n = note { Text(n).font(.caption).foregroundStyle(.orange) }
+            if let n = note { Text(n).font(.caption).foregroundStyle(.dopaxOrange) }
         }
     }
 
@@ -301,14 +301,14 @@ struct HandTurningView: View {
                 Text("\(s)-day streak!").fontWeight(.semibold)
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
-            .background(.orange.opacity(0.12)).cornerRadius(20)
+            .background(.dopaxOrange.opacity(0.12)).cornerRadius(20)
         }
     }
 
     @ViewBuilder
     private func instructionRow(icon: String, text: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: icon).foregroundStyle(.green)
+            Image(systemName: icon).foregroundStyle(.dopaxBlue)
             Text(text).font(.callout)
         }
     }
@@ -410,7 +410,7 @@ private struct LiveGyroArc: View {
                 let fraction = min(abs(gyroZ) / 8.0, 0.7)
                 Circle()
                     .trim(from: 0.15, to: 0.15 + fraction)
-                    .stroke(gyroZ > 0 ? Color.blue : Color.orange,
+                    .stroke(gyroZ > 0 ? Color.dopaxBlue : Color.dopaxOrange,
                             style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .frame(width: 100, height: 100)
                     .rotationEffect(.degrees(90))
@@ -436,7 +436,7 @@ struct LiveTremorBar: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color(.systemGray5)).frame(height: 14)
                     Capsule()
-                        .fill(magnitude > 2.0 ? Color.orange : Color.green)
+                        .fill(magnitude > 2.0 ? Color.dopaxOrange : Color.dopaxStatusSuccess)
                         .frame(width: geo.size.width * min(magnitude / 4.0, 1.0), height: 14)
                         .animation(.easeOut(duration: 0.05), value: magnitude)
                 }

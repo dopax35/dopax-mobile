@@ -77,13 +77,13 @@ struct DataExportView: View {
 
                 if appState.dataManager.isUploaded(date) {
                     Image(systemName: "checkmark.icloud.fill")
-                        .foregroundColor(.green)
+                        .foregroundColor(.dopaxStatusSuccess)
                 }
             }
 
             if uploadingDate == date {
                 ProgressView(value: uploadProgress)
-                    .tint(.blue)
+                    .tint(.dopaxBlue)
                     .padding(.top, 4)
             } else {
                 HStack(spacing: 12) {
@@ -100,7 +100,7 @@ struct DataExportView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                    .tint(.blue)
+                    .tint(.dopaxBlue)
 
                     Spacer()
 

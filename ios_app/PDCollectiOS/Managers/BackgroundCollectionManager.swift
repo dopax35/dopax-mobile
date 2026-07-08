@@ -138,6 +138,12 @@ class BackgroundCollectionManager {
         let uploader = CloudUploader()
 
         for dateStr in dates {
+            // The BGProcessingTask expirationHandler calls op.cancel(), but
+            // that only flips a flag — it doesn't stop this loop by itself.
+            // Without this check, an upload run that gets cancelled because
+            // the system revoked our background time keeps burning that
+            // (already-expired) time budget uploading further dates anyway.
+            if Task.isCancelled { return }
             if dateStr == todayKey || dm.isUploaded(dateStr) { continue }
 
             do {

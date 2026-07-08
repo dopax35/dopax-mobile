@@ -52,10 +52,6 @@ class UserProfile(context: Context) {
         get() = prefs.getString(Constants.PREF_MEDICATIONS, "[]") ?: "[]"
         set(value) = prefs.edit().putString(Constants.PREF_MEDICATIONS, value).apply()
 
-    var screenCaptureEnabled: Boolean
-        get() = prefs.getBoolean(Constants.PREF_SCREEN_CAPTURE_ENABLED, true)
-        set(value) = prefs.edit().putBoolean(Constants.PREF_SCREEN_CAPTURE_ENABLED, value).apply()
-
     var keyloggingEnabled: Boolean
         get() = prefs.getBoolean(Constants.PREF_KEYLOGGING_ENABLED, true)
         set(value) = prefs.edit().putBoolean(Constants.PREF_KEYLOGGING_ENABLED, value).apply()
@@ -181,7 +177,6 @@ class UserProfile(context: Context) {
             "age" to age,
             "gender" to gender,
             "medications" to medications,
-            "screenCaptureEnabled" to screenCaptureEnabled,
             "keyloggingEnabled" to keyloggingEnabled,
             "faceDistanceMode" to faceDistanceMode,
             "passiveCollectionActive" to passiveCollectionActive,
@@ -210,7 +205,6 @@ class UserProfile(context: Context) {
         (map["age"] as? Long)?.let { editor.putInt(Constants.PREF_AGE, it.toInt()) }
         (map["gender"] as? String)?.let { editor.putString(Constants.PREF_GENDER, it) }
         (map["medications"] as? String)?.let { editor.putString(Constants.PREF_MEDICATIONS, it) }
-        (map["screenCaptureEnabled"] as? Boolean)?.let { editor.putBoolean(Constants.PREF_SCREEN_CAPTURE_ENABLED, it) }
         (map["keyloggingEnabled"] as? Boolean)?.let { editor.putBoolean(Constants.PREF_KEYLOGGING_ENABLED, it) }
         (map["faceDistanceMode"] as? String)?.let { editor.putString(Constants.PREF_FACE_DISTANCE_MODE, it) }
         (map["passiveCollectionActive"] as? Boolean)?.let { editor.putBoolean(Constants.PREF_PASSIVE_COLLECTION_ACTIVE, it) }

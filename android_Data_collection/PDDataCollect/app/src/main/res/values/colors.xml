@@ -37,4 +37,30 @@
     
     <color name="outline_variant">@color/gray_30</color>
     <color name="error">#B00020</color>
+
+    <!-- Tonal containers derived from the brand hues, for large surfaces (cards,
+         banners) where the saturated brand color itself would be too heavy.
+         Added during the July 2026 color-consistency pass to replace one-off
+         hex values that had drifted from the brand palette (e.g. a Material
+         amber warning banner, and unnamed light-blue/light-purple card tints). -->
+    <color name="blue_container">#F8F9FF</color>
+    <color name="blue_container_outline">#D1D9FF</color>
+    <color name="purple_container">#FDF8FF</color>
+    <color name="purple_container_outline">#E6D1FF</color>
+    <color name="orange_container">#FFF1EC</color>
+    <color name="orange_container_outline">#FFC7B3</color>
+    <color name="on_orange_container">#8A3113</color>
+    <color name="error_container">#FFF3F3</color>
+    <color name="error_container_outline">#FFCDD2</color>
+
+    <!-- Semantic status colors. Meaning (connected/disconnected, live-reading)
+         is universal and intentionally distinct from the brand hues above —
+         named here instead of left as scattered magic hex duplicates. -->
+    <color name="status_success">#4CAF50</color>
+    <color name="status_error">#F44336</color>
+
+    <!-- Neutral chrome aliases, named instead of one-off hex duplicates of the
+         grays already defined above. -->
+    <color name="divider">@color/outline_variant</color>
+    <color name="on_header_secondary">#CCFFFFFF</color>
 </resources>

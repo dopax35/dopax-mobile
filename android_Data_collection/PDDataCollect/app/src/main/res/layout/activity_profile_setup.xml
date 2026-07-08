@@ -403,13 +403,6 @@
                         android:layout_marginBottom="16dp" />
 
                     <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/switchScreenCapture"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/label_visual_context"
-                        android:layout_marginBottom="12dp" />
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
                         android:id="@+id/switchKeylogging"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

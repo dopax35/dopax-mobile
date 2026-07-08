@@ -66,13 +66,13 @@ class HRDevicePickerActivity : AppCompatActivity() {
                 tvCurrentBpm.text = if (bpm > 0) "$bpm bpm" else status ?: "Ready"
                 tvHrStatus.text = "Connected · $name"
                 viewHrDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                    android.graphics.Color.parseColor("#43A047")
+                    ContextCompat.getColor(context, R.color.status_success)
                 )
             } else {
                 tvCurrentBpm.text = "— bpm"
                 tvHrStatus.text = status ?: "Disconnected"
                 viewHrDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                    android.graphics.Color.parseColor("#9E9E9E")
+                    ContextCompat.getColor(context, R.color.gray_50)
                 )
             }
         }

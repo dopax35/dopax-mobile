@@ -116,7 +116,7 @@ struct BluetoothDevicesView: View {
     @ViewBuilder
     private func statusDot(active: Bool) -> some View {
         Circle()
-            .fill(active ? Color.green : Color.gray.opacity(0.4))
+            .fill(active ? Color.dopaxStatusSuccess : Color.dopaxGray50.opacity(0.4))
             .frame(width: 10, height: 10)
     }
 }

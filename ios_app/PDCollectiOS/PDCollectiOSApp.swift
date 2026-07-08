@@ -35,6 +35,14 @@ struct PDCollectiOSApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
+                // App-wide default accent: without this, every control that
+                // doesn't set an explicit .tint (nav bar back buttons, links,
+                // toggles, alerts, unstyled buttons) falls back to the generic
+                // iOS system blue instead of the Dopa-X brand blue. Setting it
+                // once here is what makes those default-styled elements
+                // consistent with the explicitly-tinted ones throughout the
+                // app. (July 2026 color-consistency pass.)
+                .tint(.dopaxBlue)
                 .onAppear {
                     // Wire touch logger's data manager after the environment is available
                     if let loggingApp = UIApplication.shared as? LoggingApplication {

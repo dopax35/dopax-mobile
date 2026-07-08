@@ -58,7 +58,7 @@ struct SpiralTracingView: View {
     private var instructionsView: some View {
         VStack(spacing: 24) {
             Image(systemName: "tornado")
-                .font(.system(size: 64)).foregroundStyle(.orange)
+                .font(.system(size: 64)).foregroundStyle(.dopaxOrange)
                 .modifier(PulseModifier())
 
             Text("Spiral Tracing Test")
@@ -71,13 +71,13 @@ struct SpiralTracingView: View {
                 instructionRow(icon: "hand.raised", text: "Lift your finger to finish")
                 instructionRow(icon: "arrow.triangle.2.circlepath", text: "You will repeat for each hand")
             }
-            .padding().background(.orange.opacity(0.08)).cornerRadius(14)
+            .padding().background(.dopaxOrange.opacity(0.08)).cornerRadius(14)
 
             streakBanner
 
             Button("Start — Left Hand") { startHand(.left) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.orange)
+                .tint(.dopaxBlue)
         }
         .padding()
     }
@@ -87,7 +87,7 @@ struct SpiralTracingView: View {
     private var betweenView: some View {
         VStack(spacing: 24) {
             Image(systemName: "hands.clap.fill")
-                .font(.system(size: 64)).foregroundStyle(.green)
+                .font(.system(size: 64)).foregroundStyle(.dopaxPurple)
                 .modifier(PulseModifier())
 
             Text("Left hand done! 🎉")
@@ -103,7 +103,7 @@ struct SpiralTracingView: View {
 
             Button("Start — Right Hand") { startHand(.right) }
                 .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.green)
+                .tint(.dopaxPurple)
         }
         .padding()
     }
@@ -118,11 +118,11 @@ struct SpiralTracingView: View {
                 ZStack {
                     // Reference spiral — wide stroke band (guide)
                     SpiralShape(size: geo.size)
-                        .stroke(Color.gray.opacity(0.30), lineWidth: 22)
+                        .stroke(Color.dopaxGray50.opacity(0.30), lineWidth: 22)
 
                     // Reference spiral — centre dashed line
                     SpiralShape(size: geo.size)
-                        .stroke(Color.gray.opacity(0.65),
+                        .stroke(Color.dopaxGray50.opacity(0.65),
                                 style: StrokeStyle(lineWidth: 2, dash: [5, 4]))
 
                     // User's trace — color changes based on deviation
@@ -216,7 +216,7 @@ struct SpiralTracingView: View {
             VStack(spacing: 20) {
                 Image(systemName: isPersonalBest ? "trophy.fill" : "checkmark.circle.fill")
                     .font(.system(size: 64))
-                    .foregroundStyle(isPersonalBest ? .yellow : .orange)
+                    .foregroundStyle(isPersonalBest ? .yellow : .dopaxStatusSuccess)
                     .modifier(PulseModifier())
 
                 Text(isPersonalBest ? "New Personal Best! 🏅" : "Test Complete")
@@ -227,17 +227,17 @@ struct SpiralTracingView: View {
 
                 // Left hand score
                 if let f = leftFeatures {
-                    spiralScoreGauge(f, title: "Left Hand – Tracing Quality", color: .blue)
+                    spiralScoreGauge(f, title: "Left Hand – Tracing Quality")
                 }
 
                 // Right hand score
                 if let f = rightFeatures {
-                    spiralScoreGauge(f, title: "Right Hand – Tracing Quality", color: .green)
+                    spiralScoreGauge(f, title: "Right Hand – Tracing Quality")
                 }
 
                 // Left detail card
                 VStack(spacing: 8) {
-                    Text("Left Hand").font(.headline).foregroundStyle(.blue)
+                    Text("Left Hand").font(.headline).foregroundStyle(.dopaxBlue)
                     resultRow("Duration",        String(format: "%.1f s", Double(leftDurationMs) / 1000))
                     resultRow("Points Recorded", "\(leftPath.count)")
                     if let f = leftFeatures {
@@ -248,7 +248,7 @@ struct SpiralTracingView: View {
 
                 // Right detail card
                 VStack(spacing: 8) {
-                    Text("Right Hand").font(.headline).foregroundStyle(.green)
+                    Text("Right Hand").font(.headline).foregroundStyle(.dopaxPurple)
                     resultRow("Duration",        String(format: "%.1f s", Double(rightDurationMs) / 1000))
                     resultRow("Points Recorded", "\(rightPath.count)")
                     if let f = rightFeatures {
@@ -264,12 +264,12 @@ struct SpiralTracingView: View {
                     .font(.callout).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding()
-                    .background(.orange.opacity(0.08))
+                    .background(.dopaxOrange.opacity(0.08))
                     .cornerRadius(12)
 
                 Button("Done") { dismiss() }
                     .buttonStyle(.borderedProminent).controlSize(.large)
-                    .tint(.orange)
+                    .tint(.dopaxBlue)
             }
             .padding()
         }
@@ -294,8 +294,7 @@ struct SpiralTracingView: View {
 
     @ViewBuilder
     private func spiralScoreGauge(_ f: PDAlgorithms.SpiralFeatures,
-                                   title: String = "Tracing Quality",
-                                   color baseColor: Color = .orange) -> some View {
+                                   title: String = "Tracing Quality") -> some View {
         // Composite score 0–100: lower RMSE and tremor = better
         let rmseScore   = max(0, 100 - f.spiralFitRMSE * 2)
         let tremorScore = max(0, 100 - f.tremorRatio * 200)
@@ -342,10 +341,10 @@ struct SpiralTracingView: View {
             }
             HStack {
                 Text(String(format: "L %.1f", leftRMSE))
-                    .font(.caption).foregroundStyle(.blue)
+                    .font(.caption).foregroundStyle(.dopaxBlue)
                 Spacer()
                 Text(String(format: "R %.1f", rightRMSE))
-                    .font(.caption).foregroundStyle(.green)
+                    .font(.caption).foregroundStyle(.dopaxPurple)
             }
             GeometryReader { g in
                 ZStack(alignment: .leading) {
@@ -369,7 +368,7 @@ struct SpiralTracingView: View {
             Text(label).foregroundStyle(.secondary)
             Spacer()
             Text(value).fontWeight(.semibold)
-            if let n = note { Text(n).font(.caption).foregroundStyle(.orange) }
+            if let n = note { Text(n).font(.caption).foregroundStyle(.dopaxOrange) }
         }
     }
 
@@ -382,14 +381,14 @@ struct SpiralTracingView: View {
                 Text("\(s)-day streak!").fontWeight(.semibold)
             }
             .padding(.horizontal, 16).padding(.vertical, 8)
-            .background(.orange.opacity(0.12)).cornerRadius(20)
+            .background(.dopaxOrange.opacity(0.12)).cornerRadius(20)
         }
     }
 
     @ViewBuilder
     private func instructionRow(icon: String, text: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: icon).foregroundStyle(.orange)
+            Image(systemName: icon).foregroundStyle(.dopaxOrange)
             Text(text).font(.callout)
         }
     }

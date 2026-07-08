@@ -7,7 +7,7 @@ import kotlin.random.Random
 
 object NudgeGenerator {
 
-    fun showNudgeAfterTest(context: Context, testName: String) {
+    fun showNudgeAfterTest(context: Context, testName: String, onDismiss: () -> Unit = {}) {
         val genericMessages = listOf(
             "Great job completing the $testName!",
             "Keep up the good work! Consistent tracking helps research.",
@@ -53,6 +53,7 @@ object NudgeGenerator {
             .setPositiveButton("Awesome!") { dialog, _ ->
                 dialog.dismiss()
             }
+            .setOnDismissListener { onDismiss() }
             .show()
     }
 }

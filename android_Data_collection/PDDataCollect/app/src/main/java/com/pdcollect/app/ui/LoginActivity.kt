@@ -35,7 +35,17 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 val errorMsg = "Sign in failed: ${response.error?.errorCode} - ${response.error?.message}"
                 android.util.Log.e("LoginActivity", errorMsg, response.error)
-                Toast.makeText(this, "Sign in failed. Check logs.", Toast.LENGTH_LONG).show()
+                // This activity has no layout of its own (FirebaseUI's screen is the
+                // UI); if we don't finish() here, a failed sign-in leaves the user
+                // stranded on a blank screen with no visible way to retry. Closing
+                // lets them reopen the app, which restarts the sign-in flow — same
+                // recovery path as the "user cancelled" branch above.
+                Toast.makeText(
+                    this,
+                    "Sign in didn't go through. Please check your internet connection and reopen the app to try again.",
+                    Toast.LENGTH_LONG
+                ).show()
+                finish()
             }
         }
     }

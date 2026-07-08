@@ -207,6 +207,15 @@ class SettingsActivity : AppCompatActivity() {
         pairingScanner = null
         pairingDialog?.dismiss()
         pairingDialog = null
+        // settingsDataManager calls initializePassiveLogs(), which opens ~11
+        // BufferedWriters up front (touch/keys/apps/sensors/etc) plus a
+        // background HandlerThread. Without closeAll() here, every visit to
+        // Settings left all of that open for the rest of the app process.
+        // Guarded the same way MainActivity guards its own DataManager, in
+        // case onCreate() returns early before settingsDataManager is set.
+        if (::settingsDataManager.isInitialized) {
+            settingsDataManager.closeAll()
+        }
     }
 
     private fun bindFeatureToggles() {
@@ -549,7 +558,7 @@ class SettingsActivity : AppCompatActivity() {
         tvBeanieDevice.text = "Beanie support disabled"
         tvBeanieStatus.text = "Disabled"
         viewBeanieStatusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-            android.graphics.Color.parseColor("#9E9E9E")
+            ContextCompat.getColor(this, R.color.gray_50)
         )
         tvBeanieTemp.text = "-- C"
         tvBeanieHeatFlux.text = "-- cal/s"

@@ -16,7 +16,7 @@ struct LoginView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 100, height: 100)
-                    .foregroundColor(.blue)
+                    .foregroundColor(.dopaxBlue)
                 
                 Text("Welcome to PDCollect")
                     .font(.largeTitle)
@@ -72,7 +72,7 @@ struct LoginView: View {
                 
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
-                        .foregroundColor(.red)
+                        .foregroundColor(.dopaxError)
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)

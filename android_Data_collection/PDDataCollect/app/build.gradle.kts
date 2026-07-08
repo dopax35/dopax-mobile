@@ -109,8 +109,8 @@ android {
         // - Build: Updated google-services.json SHA-1 hashes and verified Firebase Auth flow.
         // v3.7.1 (vc 87): Firestore Sync Fixes
         // - Feat: Added email, signature, and graph metrics to Firebase uploads.
-        versionCode = 106
-        versionName = "3.7.20"
+        versionCode = 107
+        versionName = "3.7.21"
     }
 
     signingConfigs {
@@ -142,6 +142,14 @@ android {
                 debugSymbolLevel = "FULL"
             }
         }
+    }
+
+    // BuildConfig.DEBUG is used to gate the hidden debug-data-preview corner
+    // trigger on the dashboard (see MainActivity) so it's inert in release/
+    // participant-facing builds. AGP 8+ no longer generates BuildConfig by
+    // default, so this must be opted into explicitly.
+    buildFeatures {
+        buildConfig = true
     }
 
     // Store .so files uncompressed in the AAB — required for Play to process

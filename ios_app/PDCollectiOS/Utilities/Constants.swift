@@ -34,8 +34,13 @@ enum Constants {
         /// timestamp_ms, elapsed_ms, event, x, y, action, side, dominant_hand, affected_side
         static let spiralTracingHeader  = "timestamp_ms,elapsed_ms,event,x,y,action,side,dominant_hand,affected_side\n"
 
-        /// start_time_ms, timestamp_ms, test_type, total_time_ms, errors, segment_timings_json, finger_path_json, path_data_json
-        static let tmtResultsHeader     = "start_time_ms,timestamp_ms,test_type,total_time_ms,errors,segment_timings_json,finger_path_json,path_data_json\n"
+        /// start_time_ms, timestamp_ms, test_type, total_time_ms, wrong_target_errors, lift_off_errors, segment_timings_json, finger_path_json, path_data_json
+        /// v2: "errors" (lift-offs only) split into two columns so both
+        /// clinically-relevant TMT error types are captured, matching Android
+        /// exactly (previously Android's single "errors" column counted
+        /// wrong-target touches instead — same column name, two different
+        /// meanings across platforms).
+        static let tmtResultsHeader     = "start_time_ms,timestamp_ms,test_type,total_time_ms,wrong_target_errors,lift_off_errors,segment_timings_json,finger_path_json,path_data_json\n"
 
         // ── Passive / sensor files ─────────────────────────────────────────
         static let questionnaireFile    = "questionnaire.csv"
@@ -52,6 +57,7 @@ enum Constants {
         static let medicationFile       = "medication.csv"
         static let physicalActivityFile = "physical_activity.csv"
         static let profileFile          = "profile.csv"
+        static let voiceLogFile         = "voice_log.csv"
 
         // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score\n"
@@ -68,6 +74,8 @@ enum Constants {
         static let medicationHeader     = "timestamp_ms,taken_ms,med_name,dosage\n"
         static let physicalActivityHeader = "timestamp_ms,activity_type,time_of_day_ms\n"
         static let profileHeader        = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json\n"
+        /// timestamp_ms, filename, story_headline, duration_ms — matches Android exactly.
+        static let voiceLogHeader       = "timestamp_ms,filename,story_headline,duration_ms\n"
     }
 
     // MARK: - Test Durations

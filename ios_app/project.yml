@@ -36,6 +36,7 @@ targets:
         NSCameraUsageDescription: "This app uses the camera to scan documents"
         NSHealthShareUsageDescription: "This app uses Health data to monitor Parkinson's symptoms"
         NSHealthUpdateUsageDescription: "This app writes Health data to track Parkinson's symptoms"
+        NSMicrophoneUsageDescription: "This app records short voice samples of you reading a story aloud during the Voice Sample task, used to analyze speech patterns related to Parkinson's symptoms."
         NSBluetoothAlwaysUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
         NSBluetoothPeripheralUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
         UIRequiresFullScreen: true
@@ -91,8 +92,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
-        MARKETING_VERSION: 3.7.15
-        CURRENT_PROJECT_VERSION: 103
+        MARKETING_VERSION: 3.7.16
+        CURRENT_PROJECT_VERSION: 104
         DEVELOPMENT_TEAM: YD2UPLT5JG
         INFOPLIST_FILE: PDCollectiOS/Info.plist
         CODE_SIGN_STYLE: Automatic

@@ -26,7 +26,7 @@ PDDataCollect/app/src/main/java/com/pdcollect/app/
 │   └── TMTReminderReceiver.kt   # Schedules TMT reminders at 10 AM and 4 PM
 ├── service/
 │   ├── SensorCollectionService.kt     # Foreground service: accel/gyro/mag at max rate
-│   ├── ScreenCaptureService.kt        # Foreground service: screenshots every 10s with change detection
+│   ├── ScreenCaptureService.kt        # Removed (July 2026) — was MediaProjection screenshot capture; see file header
 │   ├── FaceDistanceService.kt         # Foreground service: front camera face distance every 5s
 │   └── DataAccessibilityService.kt    # Captures touches, keystrokes, app switches system-wide
 ├── ui/
@@ -55,7 +55,6 @@ Files per day:
 - `apps.csv` — app open/close events
 - `tmt_results.csv` — Trail Making Test results with full touch paths
 - `face_distance.csv` — face distance proxy and facial metrics from front camera
-- `screenshots/` — JPEG screenshots (50% quality, change-detection filtered)
 
 ## User Flow
 
@@ -67,7 +66,6 @@ Files per day:
 ## Key Data Collection Details
 
 - **Sensors**: Buffered writes — flushes every 5 seconds or at 500 readings
-- **Screenshots**: Captured every 10s at half resolution; only saved if >5% pixel difference from previous
 - **Face Distance**: Uses the front camera (CameraX `ImageAnalysis`, no preview) with ML Kit Face Detection to estimate how far the phone is from the participant's face. A frame is captured every 5 seconds; ML Kit returns the face bounding box, and `distance_ratio` is computed as `face_width_px / frame_width_px` — a larger ratio means the face is closer. The service also records eye-open probabilities, smile probability, and head euler angles (Y = left/right turn, Z = tilt), which are useful for detecting PD-related reduced blinking and facial masking. Collection pauses automatically when the screen is off and resumes when it turns on. Runs as a foreground service (`LifecycleService`) with `foregroundServiceType="camera"`.
 - **Accessibility Service**: Must be manually enabled by user in Android Settings; captures touches, keys, app events
 - **TMT**: Deterministic layout (seed=42) so all participants see same arrangement

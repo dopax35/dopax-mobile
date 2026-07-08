@@ -33,7 +33,7 @@ struct PhysicalActivityLogView: View {
             // Activity type picker
             HStack {
                 Image(systemName: iconForActivity(selectedActivity))
-                    .foregroundColor(.orange)
+                    .foregroundColor(.dopaxOrange)
                     .font(.title3)
 
                 Picker("Activity Type", selection: $selectedActivity) {
@@ -59,7 +59,7 @@ struct PhysicalActivityLogView: View {
                     Spacer()
                     if showSuccess {
                         Label("Logged!", systemImage: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(.dopaxStatusSuccess)
                             .fontWeight(.semibold)
                             .transition(.scale.combined(with: .opacity))
                     } else {
@@ -70,7 +70,7 @@ struct PhysicalActivityLogView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .tint(showSuccess ? .green : .blue)
+            .tint(showSuccess ? .dopaxStatusSuccess : .dopaxBlue)
             .controlSize(.large)
             .disabled(showSuccess)
             .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
@@ -93,13 +93,13 @@ struct PhysicalActivityLogView: View {
                         .font(.subheadline)
                 } icon: {
                     Image(systemName: "clock")
-                        .foregroundColor(.gray)
+                        .foregroundColor(.dopaxGray50)
                 }
             } else {
                 ForEach(recentLogs.reversed(), id: \.timestampMs) { log in
                     HStack {
                         Image(systemName: iconForActivity(log.activityType))
-                            .foregroundColor(.orange)
+                            .foregroundColor(.dopaxOrange)
                             .font(.title3)
                             .frame(width: 32)
 
@@ -114,7 +114,7 @@ struct PhysicalActivityLogView: View {
                         Spacer()
 
                         Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(.green)
+                            .foregroundColor(.dopaxStatusSuccess)
                     }
                 }
             }

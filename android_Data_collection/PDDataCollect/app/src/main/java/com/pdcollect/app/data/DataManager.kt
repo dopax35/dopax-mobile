@@ -62,12 +62,6 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         return dir
     }
 
-    fun screenshotsDir(): File {
-        val dir = File(dayDir(), Constants.SCREENSHOTS_DIR)
-        if (!dir.exists()) dir.mkdirs()
-        return dir
-    }
-
     @Synchronized
     fun initializePassiveLogs() {
         android.util.Log.d("DataManager", "Initializing passive logs...")
@@ -78,7 +72,6 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         getWriter(Constants.SENSORS_FILE, Constants.SENSORS_HEADER)
         getWriter(Constants.MEDICATION_FILE, Constants.MEDICATION_HEADER)
         getWriter(Constants.PHYSICAL_ACTIVITY_FILE, Constants.PHYSICAL_ACTIVITY_HEADER)
-        getWriter(Constants.SCREEN_CAPTURE_LOG_FILE, Constants.SCREEN_CAPTURE_LOG_HEADER)
         getWriter(Constants.HR_FILE, Constants.HR_HEADER)
         getWriter(Constants.BLINK_FILE, Constants.BLINK_HEADER)
         getWriter(Constants.VOICE_LOG_FILE, Constants.VOICE_LOG_HEADER)
@@ -242,14 +235,6 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         writer.write(row)
         writer.newLine()
         writer.flush()
-    }
-
-    fun writeScreenCaptureLog(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.SCREEN_CAPTURE_LOG_FILE, Constants.SCREEN_CAPTURE_LOG_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
     }
 
     @Synchronized
@@ -495,7 +480,8 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         val dateLabel: String,
         val testType: String,
         val totalTimeMs: Long,
-        val errors: Int
+        val wrongTargetErrors: Int,
+        val liftOffErrors: Int
     )
 
     data class TappingSession(
@@ -515,12 +501,13 @@ class DataManager(private val context: Context, private val userProfile: UserPro
                 file.bufferedReader().useLines { lines ->
                     lines.drop(1).forEach { line ->
                         val cols = splitCsvLine(line)
-                        if (cols.size >= 5) {
+                        if (cols.size >= 6) {
                             results.add(TmtSession(
                                 dateLabel = dir.name,
                                 testType  = cols[2].trim(),
                                 totalTimeMs = cols[3].trim().toLongOrNull() ?: 0L,
-                                errors    = cols[4].trim().toIntOrNull() ?: 0
+                                wrongTargetErrors = cols[4].trim().toIntOrNull() ?: 0,
+                                liftOffErrors     = cols[5].trim().toIntOrNull() ?: 0
                             ))
                         }
                     }

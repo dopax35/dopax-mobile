@@ -83,6 +83,12 @@ struct CloudUploader {
 
         let delegate = UploadDelegate(progressHandler: progressHandler)
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
+        // A delegate-backed URLSession keeps a strong reference to its
+        // delegate until explicitly invalidated — it does NOT get released
+        // just because `session` goes out of scope. A new session is created
+        // per upload call, so without this the app leaked one session +
+        // delegate per uploaded date for the rest of the process's life.
+        defer { session.finishTasksAndInvalidate() }
         let (_, response) = try await session.upload(for: req, fromFile: fileURL)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             throw UploadError.httpError(http.statusCode)

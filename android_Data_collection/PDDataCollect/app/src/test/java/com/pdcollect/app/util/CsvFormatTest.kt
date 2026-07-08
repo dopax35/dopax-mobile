@@ -38,10 +38,12 @@ class CsvFormatTest {
     }
 
     @Test
-    fun tmtHeader_has8Columns() {
+    fun tmtHeader_has9Columns() {
         val cols = Constants.TMT_HEADER.split(",")
-        assertEquals(8, cols.size)
+        assertEquals(9, cols.size)
         assertEquals("start_time_ms", cols[0])
+        assertEquals("wrong_target_errors", cols[4])
+        assertEquals("lift_off_errors", cols[5])
     }
 
     @Test

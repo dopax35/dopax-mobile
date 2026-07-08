@@ -6,7 +6,24 @@ extension Color {
     static let dopaxOrange = Color(hex: 0xFF5C35)
     static let dopaxPurple = Color(hex: 0x5B34A4)
     static let dopaxWarmGray = Color(hex: 0xF0F4F8)
-    
+
+    // Neutrals — mirror Android's colors.xml Dopa-X Brand Palette grays
+    // (black_90/black_80/black_70/gray_50/gray_30), so both platforms draw
+    // from the same named neutral scale instead of each picking its own
+    // one-off grays. Added during the July 2026 color-consistency pass.
+    static let dopaxBlack90 = Color(hex: 0x3D3D3D)
+    static let dopaxBlack80 = Color(hex: 0x525252)
+    static let dopaxBlack70 = Color(hex: 0x666666)
+    static let dopaxGray50 = Color(hex: 0x8F8F8F)
+    static let dopaxGray30 = Color(hex: 0xCCCCCC)
+
+    // Semantic status colors — meaning (destructive/error, connected/success)
+    // is universal and intentionally distinct from the brand hues above.
+    // Mirrors Android's `error` / `status_success` / `status_error` resources.
+    static let dopaxError = Color(hex: 0xB00020)
+    static let dopaxStatusSuccess = Color(hex: 0x4CAF50)
+    static let dopaxStatusError = Color(hex: 0xF44336)
+
     // Legacy maps to ease transition
     static let primaryBlue = dopaxBlue
     static let secondaryPurple = dopaxPurple
@@ -51,7 +68,14 @@ struct DopaxH3: ViewModifier {
 struct DopaxH4: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.custom("Outfit-Medium", size: 12))
+            // The bundled Outfit.ttf's real PostScript name is "Outfit-Thin"
+            // (confirmed via the font's name table) — there is no Medium
+            // weight file in the project. Referencing "Outfit-Medium" here
+            // never matched, so this label style silently rendered in the
+            // system font instead of Outfit. If a Medium weight is wanted
+            // for legibility at this small (12pt) size, add an
+            // Outfit-Medium.ttf to the project and register it in Info.plist.
+            .font(.custom("Outfit-Thin", size: 12))
             .textCase(.uppercase)
     }
 }

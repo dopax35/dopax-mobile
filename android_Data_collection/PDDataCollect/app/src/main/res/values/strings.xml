@@ -34,7 +34,6 @@
     <string name="desc_test_reminders">Set times to run the full assessment</string>
     <string name="hint_random_time">* A 3rd random time will trigger between 3PM - 8PM.</string>
     <string name="title_data_collection">Data Collection</string>
-    <string name="label_visual_context">Visual Context (every 10s)</string>
     <string name="label_interaction_logging">Interaction Logging</string>
     <string name="label_spatial_tracking">Face Distance</string>
     <string name="label_face_distance_app_foreground">Conservative: only while dopa-X is open</string>

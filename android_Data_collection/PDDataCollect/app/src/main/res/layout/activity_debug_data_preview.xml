@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#FFFFFF">
+    android:background="@color/surface">
 
     <LinearLayout
         android:id="@+id/llContainer"
@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="13sp"
-            android:textColor="#666666"
+            android:textColor="@color/black_70"
             android:layout_marginBottom="16dp" />
 
         <!-- Sensors -->
@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 
@@ -72,7 +72,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 
@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 
@@ -120,7 +120,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 
@@ -144,7 +144,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 
@@ -168,7 +168,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 
@@ -192,7 +192,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 
@@ -216,7 +216,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="#F0F0F0"
+                android:background="@color/surface_container_low"
                 android:padding="8dp" />
         </HorizontalScrollView>
 

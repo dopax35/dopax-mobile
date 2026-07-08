@@ -179,7 +179,11 @@ enum PDAlgorithms {
     /// Mirrors `extract_spiral_features` + `fit_archimedean_spiral` in basic_functions.py.
     static func spiralFeatures(path: [CGPoint], timestamps: [Date],
                                canvasSize: CGSize) -> SpiralFeatures? {
-        guard path.count >= 20 else { return nil }
+        // timestamps is force-unwrapped below; also guard its count so a
+        // caller that ever lets `path` and `timestamps` drift out of lockstep
+        // (they're maintained as two parallel arrays rather than one array of
+        // structs) gets a safe `nil` instead of a crash.
+        guard path.count >= 20, !timestamps.isEmpty else { return nil }
         let n = path.count
         let x = path.map { Double($0.x) }
         let y = path.map { Double($0.y) }

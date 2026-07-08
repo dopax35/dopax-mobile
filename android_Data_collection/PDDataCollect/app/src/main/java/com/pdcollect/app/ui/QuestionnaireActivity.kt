@@ -29,6 +29,14 @@ class QuestionnaireActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        // DataManager's background HandlerThread only stops via closeAll();
+        // this screen is opened after almost every test, so leaving this out
+        // leaked one more idle thread per questionnaire opened.
+        dataManager.closeAll()
+        super.onDestroy()
+    }
+
     private fun setupSpinners() {
         val scores = listOf("1", "2", "3", "4", "5")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, scores)

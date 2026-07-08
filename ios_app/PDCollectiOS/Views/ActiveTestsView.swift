@@ -13,13 +13,15 @@ struct ActiveTestsView: View {
                     // Due today banner
                     dueTodaySection
 
-                    // Test groups
-                    testGroup(title: "🧠 Cognitive", color: .purple, tests: [
+                    // Test groups — each test gets one of the 4 Dopa-X brand
+                    // hues as a distinct legend color (was a mix of brand and
+                    // non-brand system colors: indigo/green/red).
+                    testGroup(title: "🧠 Cognitive", tests: [
                         TestConfig(
                             title: "Trail Making A",
                             subtitle: "Connect numbers 1–10 in order",
                             icon: "number.circle",
-                            color: .purple,
+                            color: .dopaxBlue,
                             testType: "trail_making_A",
                             destination: AnyView(TrailMakingTestView(part: .A))
                         ),
@@ -27,18 +29,18 @@ struct ActiveTestsView: View {
                             title: "Trail Making B",
                             subtitle: "Alternate numbers and letters",
                             icon: "character.cursor.ibeam",
-                            color: .indigo,
+                            color: .dopaxPurple,
                             testType: "trail_making_B",
                             destination: AnyView(TrailMakingTestView(part: .B))
                         ),
                     ])
 
-                    testGroup(title: "💪 Motor", color: .blue, tests: [
+                    testGroup(title: "💪 Motor", tests: [
                         TestConfig(
                             title: "Finger Tapping",
                             subtitle: "Alternate taps · 10 s per hand",
                             icon: "hand.point.up",
-                            color: .blue,
+                            color: .dopaxBlue,
                             testType: "finger_tapping",
                             destination: AnyView(FingerTappingView())
                         ),
@@ -46,7 +48,7 @@ struct ActiveTestsView: View {
                             title: "Hand Turning",
                             subtitle: "Pronation/supination · 10 s",
                             icon: "arrow.clockwise",
-                            color: .green,
+                            color: .dopaxPurple,
                             testType: "hand_turning",
                             destination: AnyView(HandTurningView())
                         ),
@@ -54,7 +56,7 @@ struct ActiveTestsView: View {
                             title: "Spiral Tracing",
                             subtitle: "Trace the spiral accurately",
                             icon: "tornado",
-                            color: .orange,
+                            color: .dopaxOrange,
                             testType: "spiral_tracing",
                             destination: AnyView(SpiralTracingView())
                         ),
@@ -62,7 +64,7 @@ struct ActiveTestsView: View {
                             title: "Leg Agility",
                             subtitle: "Alternate heel taps · 10 s",
                             icon: "figure.walk.motion",
-                            color: .red,
+                            color: .dopaxDarkBlue,
                             testType: "leg_agility",
                             destination: AnyView(LegAgilityView())
                         ),
@@ -90,7 +92,7 @@ struct ActiveTestsView: View {
             }
             .frame(width: 90)
             .padding()
-            .background(.orange.opacity(0.1))
+            .background(.dopaxOrange.opacity(0.1))
             .cornerRadius(16)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -151,7 +153,7 @@ struct ActiveTestsView: View {
     // MARK: - Test Group
 
     @ViewBuilder
-    private func testGroup(title: String, color: Color,
+    private func testGroup(title: String,
                            tests: [TestConfig]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.headline).padding(.horizontal)
@@ -209,7 +211,7 @@ private struct TestRow: View {
                     if done {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 16))
-                            .foregroundStyle(.green)
+                            .foregroundStyle(.dopaxStatusSuccess)
                             .background(Color.white.clipShape(Circle()))
                             .offset(x: 18, y: -18)
                     }
@@ -239,8 +241,8 @@ private struct TestRow: View {
     }
 
     private func ringColor(done: Bool, days: Int?) -> Color {
-        if done { return .green }
-        guard let d = days else { return .gray.opacity(0.3) }
+        if done { return .dopaxStatusSuccess }
+        guard let d = days else { return .dopaxGray30.opacity(0.3) }
         return d <= 1 ? .yellow : .orange
     }
 }
@@ -253,7 +255,7 @@ private struct MiniProgressBar: View {
         GeometryReader { g in
             ZStack(alignment: .leading) {
                 Capsule().fill(Color(.systemGray5)).frame(height: 6)
-                Capsule().fill(Color.green)
+                Capsule().fill(Color.dopaxStatusSuccess)
                     .frame(width: g.size.width * value, height: 6)
                     .animation(.easeOut, value: value)
             }
@@ -285,7 +287,7 @@ private struct DueTodayChip: View {
     }
 
     private var chipColor: Color {
-        guard let d = daysSince else { return .gray }
+        guard let d = daysSince else { return .dopaxGray50 }
         return d == 0 ? .orange : (d <= 1 ? .yellow : .red)
     }
 }

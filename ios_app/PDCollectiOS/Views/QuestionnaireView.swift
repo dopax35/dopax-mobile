@@ -73,7 +73,7 @@ struct QuestionnaireView: View {
                             .frame(maxWidth: .infinity)
                             .foregroundColor(.white)
                             .padding(.vertical, 8)
-                            .background(Color.blue)
+                            .background(Color.dopaxBlue)
                             .cornerRadius(8)
                     }
                     .listRowBackground(Color.clear)
@@ -91,7 +91,7 @@ struct QuestionnaireView: View {
         Section {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
-                    Image(systemName: icon).foregroundColor(.blue)
+                    Image(systemName: icon).foregroundColor(.dopaxBlue)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title).fontWeight(.medium)
                         Text(subtitle).font(.caption).foregroundColor(.secondary)
@@ -101,7 +101,7 @@ struct QuestionnaireView: View {
                     ForEach(1...5, id: \.self) { val in
                         VStack(spacing: 4) {
                             Circle()
-                                .fill(binding.wrappedValue >= val ? Color.blue : Color(.systemGray4))
+                                .fill(binding.wrappedValue >= val ? Color.dopaxBlue : Color(.systemGray4))
                                 .frame(width: 32, height: 32)
                                 .overlay(Text("\(val)").font(.caption).fontWeight(.bold).foregroundColor(.white))
                                 .onTapGesture { binding.wrappedValue = val }
@@ -139,7 +139,7 @@ struct QuestionnaireView: View {
     private var thankYouView: some View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 72)).foregroundColor(.green)
+                .font(.system(size: 72)).foregroundColor(.dopaxStatusSuccess)
             Text("Survey Submitted").font(.title).fontWeight(.bold)
             Text("Thank you for completing today's survey.")
                 .foregroundColor(.secondary).multilineTextAlignment(.center)

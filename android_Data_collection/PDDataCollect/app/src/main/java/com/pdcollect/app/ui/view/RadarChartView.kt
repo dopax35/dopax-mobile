@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.content.ContextCompat
+import com.pdcollect.app.R
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -34,24 +36,24 @@ class RadarChartView @JvmOverloads constructor(
     // ── Paints ────────────────────────────────────────────────────────────────
 
     private val webPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#E0E0E0")
+        color = ContextCompat.getColor(context, R.color.divider)
         strokeWidth = 1.5f
         style = Paint.Style.STROKE
     }
     private val axisPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#BDBDBD")
+        color = ContextCompat.getColor(context, R.color.gray_30)
         strokeWidth = 1f
         style = Paint.Style.STROKE
     }
 
-    // Current (blue) fill + stroke
+    // Current (brand blue) fill + stroke
     private val currentFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#2196F3")
+        color = ContextCompat.getColor(context, R.color.blue)
         style = Paint.Style.FILL
         alpha = 100
     }
     private val currentStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#1565C0")
+        color = ContextCompat.getColor(context, R.color.blue_dark)
         strokeWidth = 4f
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
@@ -59,12 +61,12 @@ class RadarChartView @JvmOverloads constructor(
 
     // Average (gray) fill + stroke
     private val avgFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#9E9E9E")
+        color = ContextCompat.getColor(context, R.color.gray_50)
         style = Paint.Style.FILL
         alpha = 55
     }
     private val avgStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#757575")
+        color = ContextCompat.getColor(context, R.color.black_70)
         strokeWidth = 2.5f
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
@@ -72,19 +74,19 @@ class RadarChartView @JvmOverloads constructor(
     }
 
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#616161")
+        color = ContextCompat.getColor(context, R.color.black_70)
         textSize = 36f
         textAlign = Paint.Align.CENTER
     }
     private val subLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#9E9E9E")
+        color = ContextCompat.getColor(context, R.color.gray_50)
         textSize = 28f
         textAlign = Paint.Align.CENTER
     }
 
     // ── Dot paints for current data ───────────────────────────────────────────
     private val currentDotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#1976D2")
+        color = ContextCompat.getColor(context, R.color.blue)
         style = Paint.Style.FILL
     }
 
@@ -194,14 +196,15 @@ class RadarChartView @JvmOverloads constructor(
         // Blue dot + "Today"
         canvas.drawCircle(lx - 70f, ly + 4f, 8f, currentDotPaint)
         val todayPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.parseColor("#1976D2"); textSize = 30f; textAlign = Paint.Align.LEFT
+            color = ContextCompat.getColor(context, R.color.blue); textSize = 30f; textAlign = Paint.Align.LEFT
         }
         canvas.drawText("Today", lx - 55f, ly + 12f, todayPaint)
 
         if (hasAverage) {
-            canvas.drawCircle(lx - 70f, ly + 40f, 8f, Paint().apply { color = Color.parseColor("#9E9E9E"); style = Paint.Style.FILL })
+            val avgColor = ContextCompat.getColor(context, R.color.gray_50)
+            canvas.drawCircle(lx - 70f, ly + 40f, 8f, Paint().apply { color = avgColor; style = Paint.Style.FILL })
             val avgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#9E9E9E"); textSize = 30f; textAlign = Paint.Align.LEFT
+                color = avgColor; textSize = 30f; textAlign = Paint.Align.LEFT
             }
             canvas.drawText("30d avg", lx - 55f, ly + 48f, avgPaint)
         }

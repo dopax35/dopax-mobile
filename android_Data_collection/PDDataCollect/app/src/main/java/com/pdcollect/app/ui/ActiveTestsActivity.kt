@@ -57,23 +57,21 @@ class ActiveTestsActivity : AppCompatActivity() {
             
             Handler(Looper.getMainLooper()).postDelayed({
                 if (!isFinishing && !isDestroyed) {
-                    com.pdcollect.app.util.NudgeGenerator.showNudgeAfterTest(this, testName)
-                    // We'll prompt the questionnaire in another dialog immediately after
-                    // but since the nudge shows a dialog, it's better to show them sequentially.
-                    // The NudgeGenerator will show its dialog. After dismissing, maybe we show questionnaire?
-                    // To keep it simple, we just show the Nudge and skip questionnaire prompt, 
-                    // or show questionnaire if they dismiss Nudge. For now, just show the nudge.
-                    promptQuestionnaire(testName)
+                    // Show the congratulatory nudge first, then the questionnaire
+                    // prompt only after the user dismisses it — showing both
+                    // AlertDialogs at once stacks two competing prompts right
+                    // after a demanding motor test, which is confusing.
+                    com.pdcollect.app.util.NudgeGenerator.showNudgeAfterTest(this, testName) {
+                        if (!isFinishing && !isDestroyed) {
+                            promptQuestionnaire(testName)
+                        }
+                    }
                 }
             }, 400)
         }
     }
 
     private fun promptQuestionnaire(testName: String) {
-        // NudgeGenerator shows an AlertDialog. If we show another one immediately, they overlap.
-        // I will change NudgeGenerator to take a callback, but for now they will just overlap or one will hide the other.
-        // Let's just rely on the nudge for now. Wait, I want both.
-        // Actually, let's just let them overlap, Android AlertDialogs stack properly.
         AlertDialog.Builder(this)
             .setTitle("How are you feeling?")
             .setMessage("Would you like to fill in the questionnaire now?")

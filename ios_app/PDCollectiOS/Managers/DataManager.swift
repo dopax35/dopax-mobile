@@ -84,12 +84,12 @@ class DataManager: ObservableObject {
     // MARK: TMT
     /// One summary row per completed TMT part, matching Android tmt_results.csv.
     func writeTMTResult(startMs: Int64, endMs: Int64, testType: String,
-                        totalMs: Int, errors: Int,
+                        totalMs: Int, wrongTargetErrors: Int, liftOffErrors: Int,
                         segmentTimingsJSON: String,
                         fingerPathJSON: String) {
         let escapedSegments = segmentTimingsJSON.replacingOccurrences(of: "\"", with: "\"\"")
         let escapedFingerPath = fingerPathJSON.replacingOccurrences(of: "\"", with: "\"\"")
-        let row = "\(startMs),\(endMs),\(testType),\(totalMs),\(errors),\"\(escapedSegments)\",\"\(escapedFingerPath)\",\"\(escapedFingerPath)\"\n"
+        let row = "\(startMs),\(endMs),\(testType),\(totalMs),\(wrongTargetErrors),\(liftOffErrors),\"\(escapedSegments)\",\"\(escapedFingerPath)\",\"\(escapedFingerPath)\"\n"
         append(row, to: todayDir, filename: Constants.CSV.tmtResultsFile,
                header: Constants.CSV.tmtResultsHeader)
     }
@@ -217,6 +217,26 @@ class DataManager: ObservableObject {
         let row = "\(nowMs),\(profile.userId),\(profile.age),\(profile.gender),\(profile.dominantHand),\(profile.affectedSide),\(medsJSON)\n"
         append(row, to: todayDir, filename: Constants.CSV.profileFile,
                header: Constants.CSV.profileHeader)
+    }
+
+    // MARK: - Voice Sample
+
+    /// Returns a fresh file URL for a new voice-sample recording, creating
+    /// the containing "voice" subdirectory under today's data folder if
+    /// needed. Mirrors Android's File(getDayDir(), "voice")/voice_<ts>.m4a.
+    func newVoiceRecordingURL(timestamp: Int64) -> URL {
+        let dir = todayDir.appendingPathComponent("voice")
+        ensureDir(dir)
+        return dir.appendingPathComponent("voice_\(timestamp).m4a")
+    }
+
+    /// Appends one row to voice_log.csv (schema matches Android exactly).
+    func writeVoiceLogEntry(filename: String, headline: String, durationMs: Int64) {
+        let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
+        let safeHeadline = headline.replacingOccurrences(of: "\"", with: "\"\"")
+        let row = "\(timestamp),\"\(filename)\",\"\(safeHeadline)\",\(durationMs)\n"
+        append(row, to: todayDir, filename: Constants.CSV.voiceLogFile,
+               header: Constants.CSV.voiceLogHeader)
     }
 
     // MARK: - Internal append (thread-safe)
