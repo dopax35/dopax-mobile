@@ -29,6 +29,27 @@ extension Color {
     static let secondaryPurple = dopaxPurple
 }
 
+extension ShapeStyle where Self == Color {
+    static var dopaxDarkBlue: Color { .dopaxDarkBlue }
+    static var dopaxBlue: Color { .dopaxBlue }
+    static var dopaxOrange: Color { .dopaxOrange }
+    static var dopaxPurple: Color { .dopaxPurple }
+    static var dopaxWarmGray: Color { .dopaxWarmGray }
+
+    static var dopaxBlack90: Color { .dopaxBlack90 }
+    static var dopaxBlack80: Color { .dopaxBlack80 }
+    static var dopaxBlack70: Color { .dopaxBlack70 }
+    static var dopaxGray50: Color { .dopaxGray50 }
+    static var dopaxGray30: Color { .dopaxGray30 }
+
+    static var dopaxError: Color { .dopaxError }
+    static var dopaxStatusSuccess: Color { .dopaxStatusSuccess }
+    static var dopaxStatusError: Color { .dopaxStatusError }
+
+    static var primaryBlue: Color { .primaryBlue }
+    static var secondaryPurple: Color { .secondaryPurple }
+}
+
 extension Color {
     init(hex: UInt, alpha: Double = 1) {
         self.init(
