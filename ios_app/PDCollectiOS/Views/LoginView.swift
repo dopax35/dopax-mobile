@@ -1,5 +1,4 @@
 import SwiftUI
-import AuthenticationServices
 import GoogleSignInSwift
 
 struct LoginView: View {
@@ -34,21 +33,21 @@ struct LoginView: View {
                     ProgressView("Signing in...")
                 } else {
                     VStack(spacing: 16) {
-                        SignInWithAppleButton(.continue) { request in
-                            // Handled by AuthManager
-                        } onCompletion: { _ in
-                            // Handled by AuthManager
-                        }
-                        .frame(height: 50)
-                        .cornerRadius(8)
-                        .padding(.horizontal)
-                        .overlay {
-                            // Intercept tap to use our custom AuthManager flow
-                            Button(action: handleAppleSignIn) {
-                                Color.clear
+                        Button(action: handleAppleSignIn) {
+                            HStack {
+                                Image(systemName: "apple.logo")
+                                    .font(.title2)
+                                Text("Sign in with Apple")
+                                    .fontWeight(.semibold)
                             }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.black)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
                         }
-                        
+                        .padding(.horizontal)
+
                         Button(action: handleGoogleSignIn) {
                             HStack {
                                 Image(systemName: "g.circle.fill")
