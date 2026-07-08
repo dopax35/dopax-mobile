@@ -389,7 +389,12 @@ private final class SimpleRSSParser: NSObject, XMLParserDelegate {
     private var currentElement = ""
     private var inItem = false
     private var title = ""
-    private var description = ""
+    // Named descriptionText, not description — SimpleRSSParser subclasses
+    // NSObject (required for XMLParserDelegate), and NSObject already vends
+    // its own `description` property, so a stored property with that exact
+    // name collides with it (Swift then reports it as an invalid override
+    // and every reference to `description` in this class as ambiguous).
+    private var descriptionText = ""
 
     func parse(data: Data) -> [Item] {
         items = []
@@ -406,7 +411,7 @@ private final class SimpleRSSParser: NSObject, XMLParserDelegate {
         if elementName == "item" {
             inItem = true
             title = ""
-            description = ""
+            descriptionText = ""
         }
     }
 
@@ -424,7 +429,7 @@ private final class SimpleRSSParser: NSObject, XMLParserDelegate {
         guard inItem else { return }
         switch currentElement {
         case "title": title += string
-        case "description": description += string
+        case "description": descriptionText += string
         default: break
         }
     }
@@ -433,7 +438,7 @@ private final class SimpleRSSParser: NSObject, XMLParserDelegate {
                 namespaceURI: String?, qualifiedName qName: String?) {
         guard elementName == "item", inItem else { return }
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let cleanDescription = stripHtml(description.trimmingCharacters(in: .whitespacesAndNewlines))
+        let cleanDescription = stripHtml(descriptionText.trimmingCharacters(in: .whitespacesAndNewlines))
         if !cleanTitle.isEmpty && cleanDescription.count > 40 {
             items.append(Item(title: cleanTitle, description: cleanDescription))
         }
