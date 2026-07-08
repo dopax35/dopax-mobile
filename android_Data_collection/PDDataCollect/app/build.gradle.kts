@@ -109,8 +109,8 @@ android {
         // - Build: Updated google-services.json SHA-1 hashes and verified Firebase Auth flow.
         // v3.7.1 (vc 87): Firestore Sync Fixes
         // - Feat: Added email, signature, and graph metrics to Firebase uploads.
-        versionCode = 107
-        versionName = "3.7.21"
+        versionCode = 108
+        versionName = "3.7.22"
     }
 
     signingConfigs {

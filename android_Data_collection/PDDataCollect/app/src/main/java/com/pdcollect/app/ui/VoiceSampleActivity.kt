@@ -168,14 +168,16 @@ class VoiceSampleActivity : AppCompatActivity() {
 
             if (safeItems.isEmpty()) return randomFallback()
 
-            // Pick a random primary story; extend significantly to ensure scrolling is required
-            safeItems.shuffle()
-            val primary = safeItems[0]
+            // Pick a random primary story; extend significantly to ensure scrolling is required.
+            // filterNot() returns an immutable List, which has no in-place shuffle() (that's
+            // MutableList-only) — shuffled() returns a new shuffled List instead.
+            val shuffledItems = safeItems.shuffled()
+            val primary = shuffledItems[0]
             var body = primary.description
 
             // Add up to 3 secondary stories to ensure plenty of text for 60 seconds
-            for (i in 1 until minOf(4, safeItems.size)) {
-                val next = safeItems[i]
+            for (i in 1 until minOf(4, shuffledItems.size)) {
+                val next = shuffledItems[i]
                 body = "$body\n\n${next.title}\n\n${next.description}"
             }
 

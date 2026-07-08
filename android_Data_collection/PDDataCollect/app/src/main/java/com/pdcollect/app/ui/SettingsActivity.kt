@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
 import android.provider.Settings
+import android.util.TypedValue
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -451,9 +452,19 @@ class SettingsActivity : AppCompatActivity() {
         val removeBtn = Button(this).apply {
             text = "X"
             setPadding(0, 0, 0, 0)
+            // DESIGN.md requires a 48dp-minimum tap target for tremor
+            // accommodation. This used a raw `100` here, but LayoutParams
+            // built in code (not inflated from XML) take raw pixels, not dp —
+            // on a high-density phone like the Galaxy S25 (~3x density),
+            // 100px is only ~33dp, well under the minimum and easy to miss
+            // with a tremor. Convert 48dp to px explicitly and apply it to
+            // both dimensions for a proper square touch target.
+            val minTapTargetPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 48f, resources.displayMetrics
+            ).toInt()
             layoutParams = LinearLayout.LayoutParams(
-                100,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                minTapTargetPx,
+                minTapTargetPx,
                 0.3f
             )
             setOnClickListener {

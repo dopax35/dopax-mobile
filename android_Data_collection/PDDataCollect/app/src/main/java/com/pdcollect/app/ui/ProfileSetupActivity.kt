@@ -2,6 +2,7 @@ package com.pdcollect.app.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
 import android.widget.AutoCompleteTextView
 import android.widget.ArrayAdapter
@@ -338,7 +339,14 @@ class ProfileSetupActivity : AppCompatActivity() {
         val removeBtn = Button(this).apply {
             text = "X"
             setPadding(0, 0, 0, 0)
-            layoutParams = LinearLayout.LayoutParams(100, LinearLayout.LayoutParams.WRAP_CONTENT, 0.3f)
+            // DESIGN.md requires a 48dp-minimum tap target for tremor
+            // accommodation. Raw `100` here is pixels, not dp, when
+            // LayoutParams are built in code — ~33dp on a ~3x-density phone
+            // like the Galaxy S25. Convert 48dp to px explicitly.
+            val minTapTargetPx = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 48f, resources.displayMetrics
+            ).toInt()
+            layoutParams = LinearLayout.LayoutParams(minTapTargetPx, minTapTargetPx, 0.3f)
             setOnClickListener {
                 medicationContainer.removeView(row)
                 medicationViews.removeAll { it.first == row }

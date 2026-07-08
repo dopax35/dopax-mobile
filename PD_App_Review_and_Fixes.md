@@ -37,9 +37,12 @@ Every item flagged above got an explicit answer and, except the first, a code ch
 - **iOS Voice Sample**: built the missing screen from scratch — same RSS-fetch-with-distressing-content-filter and curated Hebrew fallback stories as Android, a 60-second `AVAudioRecorder` flow, and a `voice_log.csv` schema identical to Android's (`timestamp_ms,filename,story_headline,duration_ms`).
 - **Debug trigger**: gated behind `BuildConfig.DEBUG`. Wired up in debug builds only; in release/participant-facing builds the invisible view is unclickable, unfocusable, and hidden, so it can no longer be triggered by an accidental tap.
 
-## Still flagged — needs a product decision
+## Follow-up (July 2026, round 2): build feedback
 
-- A few tap targets (e.g. medication row's "X" remove button) remain narrower than the app's own documented 48px minimum for tremor accommodation. Not part of the follow-up list above; still worth a pass.
+A real build caught two more things static re-reading hadn't:
+
+- **Android build failure**: `VoiceSampleActivity.kt` called `.shuffle()` on the result of `.filterNot { }`, which returns an immutable `List` — `shuffle()` is `MutableList`-only, so this never compiled. Changed to `.shuffled()`, which returns a new shuffled list and needs no mutability.
+- **Medication row "X" button was under the 48dp tremor-accommodation minimum**: root cause was the same in both places it appears (`SettingsActivity.kt` and `ProfileSetupActivity.kt`, which each have their own copy of the medication editor) — the button's `LinearLayout.LayoutParams` were constructed in code with a raw `100`, and LayoutParams built in Kotlin (not inflated from XML) take pixels, not dp. On a high-density phone like the Galaxy S25 that's roughly 33dp — noticeably under the 48dp minimum. Fixed by converting 48dp to pixels explicitly (`TypedValue.applyDimension`) and applying it to both width and height in both files. iOS has no equivalent bug: its medication list uses swipe-to-delete rather than an inline remove button, which doesn't have a small-fixed-size tap target to begin with.
 
 ## What was already solid
 
