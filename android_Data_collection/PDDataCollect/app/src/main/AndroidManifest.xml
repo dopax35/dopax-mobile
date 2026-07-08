@@ -170,6 +170,25 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
+        <!--
+            PDCollect Keyboard — bilingual (Hebrew / English) IME.
+            Tracks typing metrics (word length, backspace rate) without recording
+            actual characters. Users must enable it in:
+            Settings → General Management → Keyboard → On-screen keyboards → PDCollect Keyboard
+        -->
+        <service
+            android:name=".service.PDKeyboardService"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+
 
         <!-- Boot receiver -->
         <receiver

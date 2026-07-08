@@ -9,7 +9,7 @@ class SetupVerificationManager {
     enum class HealthStatus {
         OPTIMAL,    // Everything configured perfectly
         DEGRADED,   // Missing minor permissions (Notifications)
-        CRITICAL    // Missing critical background permissions (Battery, Alarms, Accessibility)
+        CRITICAL    // Missing critical background permissions (Battery, Alarms, Keyboard)
     }
 
     data class AppHealth(
@@ -21,7 +21,7 @@ class SetupVerificationManager {
         fun checkHealth(context: Context): AppHealth {
             val missing = mutableListOf<String>()
             val profile = UserProfile(context)
-            
+
             // 1. Critical: Battery Optimization
             if (!PermissionUtils.isIgnoringBatteryOptimizations(context)) {
                 missing.add("Background reliability")
@@ -32,20 +32,25 @@ class SetupVerificationManager {
                 missing.add("On-time reminders")
             }
 
-            // 3. Critical: Interaction access (Accessibility) if needed for keylogging or background face distance
-            val needsAccessibility = profile.keyloggingEnabled ||
-                    (profile.passiveCollectionActive &&
-                        profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS)
+            // 3. Critical: PDCollect Keyboard must be enabled when keylogging is on
+            if (profile.keyloggingEnabled && !PermissionUtils.isKeyboardEnabled(context)) {
+                missing.add("PDCollect Keyboard")
+            }
+
+            // 4. Critical: Interaction access (Accessibility) only for background face-distance
+            val needsAccessibility =
+                profile.passiveCollectionActive &&
+                    profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS
             if (needsAccessibility && !PermissionUtils.isAccessibilityServiceEnabled(context)) {
                 missing.add("Interaction access")
             }
 
-            // 4. Critical: Camera (if face distance enabled)
+            // 5. Critical: Camera (if face distance enabled)
             if (profile.faceDistanceEnabled && !PermissionUtils.hasCameraPermission(context)) {
                 missing.add("Camera")
             }
 
-            // 5. Degraded: Notifications
+            // 6. Degraded: Notifications
             if (!PermissionUtils.hasNotificationPermission(context)) {
                 missing.add("Notifications")
             }
@@ -55,6 +60,7 @@ class SetupVerificationManager {
                 missing.any {
                     it == "Background reliability" ||
                         it == "On-time reminders" ||
+                        it == "PDCollect Keyboard" ||
                         it == "Interaction access"
                 } -> HealthStatus.CRITICAL
                 else -> HealthStatus.DEGRADED

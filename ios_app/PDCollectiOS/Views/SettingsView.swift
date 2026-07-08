@@ -82,7 +82,18 @@ struct SettingsView: View {
                     Label("Sensor Service", systemImage: "gyroscope")
                 }
 
-                // MARK: - Bluetooth Devices
+                // MARK: - PDCollect Keyboard Setup
+                Section {
+                    KeyboardSetupRow()
+                } header: {
+                    Label("PDCollect Keyboard", systemImage: "keyboard")
+                } footer: {
+                    Text("The PDCollect Keyboard enables typing metrics (word length, backspace rate). " +
+                         "It is bilingual (Hebrew / English) and never stores what you type.")
+                        .font(.caption)
+                }
+
+
                 Section {
                     NavigationLink {
                         BluetoothDevicesView(

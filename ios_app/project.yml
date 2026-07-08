@@ -59,6 +59,8 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        com.apple.developer.applesignin:
+          - Default
         com.apple.security.application-groups:
           - group.com.oriw.pdcollect.ios1.shared
     capabilities:
@@ -89,8 +91,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
-        MARKETING_VERSION: 3.7.14
-        CURRENT_PROJECT_VERSION: 102
+        MARKETING_VERSION: 3.7.15
+        CURRENT_PROJECT_VERSION: 103
         DEVELOPMENT_TEAM: YD2UPLT5JG
         INFOPLIST_FILE: PDCollectiOS/Info.plist
         CODE_SIGN_STYLE: Automatic
@@ -120,6 +122,9 @@ targets:
             PrefersRightToLeft: false
             PrimaryLanguage: en-US
             RequestsOpenAccess: true
+            Languages:
+              - en-US
+              - he
           NSExtensionPointIdentifier: com.apple.keyboard-service
           NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).KeyboardViewController"
     entitlements:

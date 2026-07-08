@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Hebrew keyboard layout for PDKeyboardService.
+    Key order per row follows the standard Israeli hardware keyboard mapping,
+    written LEFT-TO-RIGHT in XML (Android handles RTL display automatically
+    when the device locale is iw/he).
+
+    Row 1:  פ ם ן ו ט א ר ק ' /
+    Row 2:  ף ך ל ח י ע כ ג ד ש
+    Row 3:  ⌫  ץ ת צ מ נ ה ב ס ז
+    Row 4:  עA(lang-toggle)  ,  SPACE  .  ↵
+
+    KEYCODE_LANG_TOGGLE (-100) is handled by PDKeyboardService to flip to English.
+    KEYCODE_DELETE       (-5)  triggers backspace.
+    KEYCODE_DONE        (-6)  / 10 triggers Enter/Done action.
+-->
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyWidth="10%p"
+    android:keyHeight="52dp"
+    android:horizontalGap="0px"
+    android:verticalGap="0px">
+
+    <!-- ── Row 1 ── -->
+    <Row>
+        <Key android:codes="1508" android:keyLabel="פ" android:keyEdgeFlags="left"/>
+        <Key android:codes="1501" android:keyLabel="ם"/>
+        <Key android:codes="1503" android:keyLabel="ן"/>
+        <Key android:codes="1493" android:keyLabel="ו"/>
+        <Key android:codes="1496" android:keyLabel="ט"/>
+        <Key android:codes="1488" android:keyLabel="א"/>
+        <Key android:codes="1512" android:keyLabel="ר"/>
+        <Key android:codes="1511" android:keyLabel="ק"/>
+        <Key android:codes="39"   android:keyLabel="'"/>
+        <Key android:codes="47"   android:keyLabel="/" android:keyEdgeFlags="right"/>
+    </Row>
+
+    <!-- ── Row 2 ── -->
+    <Row>
+        <Key android:codes="1507" android:keyLabel="ף" android:keyEdgeFlags="left" android:horizontalGap="5%p" android:keyWidth="9%p"/>
+        <Key android:codes="1498" android:keyLabel="ך" android:keyWidth="9%p"/>
+        <Key android:codes="1500" android:keyLabel="ל" android:keyWidth="9%p"/>
+        <Key android:codes="1495" android:keyLabel="ח" android:keyWidth="9%p"/>
+        <Key android:codes="1497" android:keyLabel="י" android:keyWidth="9%p"/>
+        <Key android:codes="1506" android:keyLabel="ע" android:keyWidth="9%p"/>
+        <Key android:codes="1499" android:keyLabel="כ" android:keyWidth="9%p"/>
+        <Key android:codes="1490" android:keyLabel="ג" android:keyWidth="9%p"/>
+        <Key android:codes="1491" android:keyLabel="ד" android:keyWidth="9%p"/>
+        <Key android:codes="1513" android:keyLabel="ש" android:keyWidth="9%p" android:keyEdgeFlags="right"/>
+    </Row>
+
+    <!-- ── Row 3: ⌫  +  7 letter keys  ── -->
+    <Row>
+        <Key android:codes="-5"
+             android:keyLabel="⌫"
+             android:keyWidth="15%p"
+             android:keyEdgeFlags="left"
+             android:isRepeatable="true"/>
+        <Key android:codes="1509" android:keyLabel="ץ" android:keyWidth="9.3%p"/>
+        <Key android:codes="1514" android:keyLabel="ת" android:keyWidth="9.3%p"/>
+        <Key android:codes="1510" android:keyLabel="צ" android:keyWidth="9.3%p"/>
+        <Key android:codes="1502" android:keyLabel="מ" android:keyWidth="9.3%p"/>
+        <Key android:codes="1504" android:keyLabel="נ" android:keyWidth="9.3%p"/>
+        <Key android:codes="1492" android:keyLabel="ה" android:keyWidth="9.3%p"/>
+        <Key android:codes="1489" android:keyLabel="ב" android:keyWidth="9.3%p"/>
+        <Key android:codes="1505" android:keyLabel="ס" android:keyWidth="9.3%p"/>
+        <Key android:codes="1494" android:keyLabel="ז" android:keyWidth="7.1%p" android:keyEdgeFlags="right"/>
+    </Row>
+
+    <!-- ── Row 4: action row ── -->
+    <Row android:rowEdgeFlags="bottom">
+        <!-- Language toggle: switch back to English -->
+        <Key android:codes="-100"
+             android:keyLabel="EN"
+             android:keyWidth="18%p"
+             android:keyEdgeFlags="left"/>
+        <Key android:codes="44"  android:keyLabel="," android:keyWidth="12%p"/>
+        <Key android:codes="32"  android:keyLabel=" " android:keyWidth="38%p" android:isRepeatable="false"/>
+        <Key android:codes="46"  android:keyLabel="." android:keyWidth="12%p"/>
+        <Key android:codes="10"  android:keyLabel="↵" android:keyWidth="20%p" android:keyEdgeFlags="right"/>
+    </Row>
+
+</Keyboard>

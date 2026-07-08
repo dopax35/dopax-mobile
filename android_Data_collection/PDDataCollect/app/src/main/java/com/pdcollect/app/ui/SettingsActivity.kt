@@ -212,21 +212,21 @@ class SettingsActivity : AppCompatActivity() {
     private fun bindFeatureToggles() {
         switchKeyLogging.setOnCheckedChangeListener { _, isChecked ->
             profile.keyloggingEnabled = isChecked
-            if (isChecked && !PermissionUtils.isAccessibilityServiceEnabled(this)) {
-                showAccessibilityGuide(
-                    title = "Allow interaction logging?",
-                    featureSummary =
-                        "This records typing rhythm without storing the actual letters you type."
-                ) {
-                    switchKeyLogging.isChecked = false
-                }
-            } else if (!isChecked &&
-                PermissionUtils.isAccessibilityServiceEnabled(this) &&
-                profile.faceDistanceMode != Constants.FACE_DISTANCE_MODE_ALWAYS
-            ) {
-                showRevokeDialog("Interaction access (Accessibility)", "Interaction Logging") {
-                    PermissionUtils.openAccessibilitySettings(this)
-                }
+            if (isChecked && !PermissionUtils.isKeyboardEnabled(this)) {
+                // Keyboard not yet enabled — guide user to enable it
+                AlertDialog.Builder(this)
+                    .setTitle("Enable PDCollect Keyboard")
+                    .setMessage(
+                        "To measure your typing rhythm, please enable the PDCollect Keyboard.\n\n" +
+                            "Tap \"Open Settings\", then:\n" +
+                            "General Management → Keyboard → On-screen keyboards → PDCollect Keyboard\n\n" +
+                            "The keyboard logs only typing speed and word length — never the text you type."
+                    )
+                    .setPositiveButton("Open Settings") { _, _ ->
+                        PermissionUtils.openKeyboardSettings(this)
+                    }
+                    .setNegativeButton("Not now", null)
+                    .show()
             }
             syncFaceDistanceService()
             updatePermissionStatus()
@@ -572,10 +572,18 @@ class SettingsActivity : AppCompatActivity() {
 
         val entries = mutableListOf(
             PermissionEntry(
+                name = "PDCollect Keyboard",
+                purpose = "Enables typing-rhythm measurement (word length, backspace rate). Bilingual Hebrew/English. Never logs what you type.",
+                isGranted = PermissionUtils.isKeyboardEnabled(this),
+                requiredNow = profile.keyloggingEnabled,
+                openSettings = { PermissionUtils.openKeyboardSettings(this) }
+            ),
+
+            PermissionEntry(
                 name = "Interaction access",
-                purpose = "Needed for interaction logging, and for face distance if you choose background tracking across other apps.",
+                purpose = "Required for face distance background tracking across all apps.",
                 isGranted = PermissionUtils.isAccessibilityServiceEnabled(this),
-                requiredNow = profile.keyloggingEnabled || profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS,
+                requiredNow = profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS,
                 openSettings = {
                     showAccessibilityGuide(
                         title = "Manage interaction access",
