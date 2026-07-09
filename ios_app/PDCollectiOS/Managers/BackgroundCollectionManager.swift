@@ -1,5 +1,6 @@
 import BackgroundTasks
 import Foundation
+import Network
 
 /// Schedules and handles BGAppRefreshTask and BGProcessingTask wakeups so the app
 /// can continue harvesting HealthKit data and flushing sensor buffers even when
@@ -94,7 +95,7 @@ class BackgroundCollectionManager {
             // Every opportunistic wake is a chance to backfill step history
             // for hours the app wasn't open — see PedometerHistoryService.
             if let dm = dataManager {
-                PedometerHistoryService.shared.syncHistory(dataManager: dm)
+                await PedometerHistoryService.shared.syncHistory(dataManager: dm)
             }
             task.setTaskCompleted(success: true)
         }
@@ -118,13 +119,17 @@ class BackgroundCollectionManager {
                 }
             }
             if let dm = dataManager {
-                PedometerHistoryService.shared.syncHistory(dataManager: dm)
+                await PedometerHistoryService.shared.syncHistory(dataManager: dm)
             }
 
-            // Auto-upload pending data if enabled
+            // Auto-upload pending data if enabled. Wi-Fi-preferred, matching
+            // Android's existing DataUploadWorker design (UNMETERED attempt
+            // first, CONNECTED/cellular fallback only once data has been
+            // waiting a while) — see shouldUploadNow(). The manual "Upload
+            // Now" button in Settings deliberately does NOT use this gate.
             if UserDefaults.standard.bool(forKey: "autoUploadEnabled"),
                let dm = dataManager {
-                await Self.uploadPendingDates(dataManager: dm)
+                await Self.uploadPendingDates(dataManager: dm, requireWifiUnlessStale: true)
             }
 
             task.setTaskCompleted(success: true)
@@ -138,12 +143,29 @@ class BackgroundCollectionManager {
 
     // MARK: - Auto Upload
 
-    /// Upload all un-uploaded past dates. Called from the processing handler
-    /// and from the "Upload Now" button in Settings.
-    static func uploadPendingDates(dataManager dm: DataManager) async {
+    /// Upload all un-uploaded past dates. Called from the processing handler,
+    /// the foreground-triggered check in AppState, and the "Upload Now"
+    /// button in Settings.
+    ///
+    /// - Parameter requireWifiUnlessStale: When true, skips the run entirely
+    ///   on an expensive/constrained (cellular) connection unless it's been
+    ///   at least 24h since the last successful upload — mirrors Android's
+    ///   DataUploadWorker, which tries Wi-Fi (UNMETERED) immediately and only
+    ///   falls back to any connection after a delay, rather than spending a
+    ///   participant's cellular data on every single automatic backup. Left
+    ///   `false` (upload immediately, any network) for the manual button,
+    ///   since a participant explicitly tapping "Upload Now" has made a
+    ///   deliberate choice that shouldn't be second-guessed.
+    static func uploadPendingDates(dataManager dm: DataManager, requireWifiUnlessStale: Bool = false) async {
+        if requireWifiUnlessStale, !(await shouldUploadNow()) {
+            print("[AutoUpload] Skipped — on cellular and last upload was recent; waiting for Wi-Fi.")
+            return
+        }
+
         let todayKey = Date().dateKey
         let dates = dm.listDates()
         let uploader = CloudUploader()
+        var uploadedAny = false
 
         for dateStr in dates {
             // The BGProcessingTask expirationHandler calls op.cancel(), but
@@ -164,10 +186,45 @@ class BackgroundCollectionManager {
                 )
                 try? FileManager.default.removeItem(at: zipURL)
                 dm.markUploaded(dateStr)
+                uploadedAny = true
                 print("[AutoUpload] Uploaded \(dateStr) ✅")
             } catch {
                 print("[AutoUpload] Failed \(dateStr): \(error.localizedDescription)")
             }
         }
+
+        if uploadedAny {
+            UserDefaults.standard.set(Date().timeIntervalSince1970 * 1000, forKey: "lastSuccessfulUploadMs")
+        }
+    }
+
+    /// True if on Wi-Fi (or otherwise unmetered/unrestricted), or if on
+    /// cellular but data has already been waiting 24h+ for a successful
+    /// upload (better to spend some cellular data than let research data
+    /// sit indefinitely on a phone that rarely sees Wi-Fi).
+    private static func shouldUploadNow() async -> Bool {
+        let monitor = NWPathMonitor()
+        let lock = NSLock()
+        var didResume = false
+        let path = await withCheckedContinuation { (continuation: CheckedContinuation<NWPath, Never>) in
+            monitor.pathUpdateHandler = { path in
+                lock.lock()
+                let alreadyDone = didResume
+                didResume = true
+                lock.unlock()
+                guard !alreadyDone else { return }
+                continuation.resume(returning: path)
+            }
+            monitor.start(queue: DispatchQueue.global(qos: .utility))
+        }
+        monitor.cancel()
+
+        if !path.isExpensive && !path.isConstrained { return true }
+
+        guard let lastMs = UserDefaults.standard.object(forKey: "lastSuccessfulUploadMs") as? Double else {
+            return true // never uploaded before — don't block indefinitely waiting for Wi-Fi
+        }
+        let hoursSinceLastUpload = (Date().timeIntervalSince1970 * 1000 - lastMs) / 3_600_000
+        return hoursSinceLastUpload >= 24
     }
 }

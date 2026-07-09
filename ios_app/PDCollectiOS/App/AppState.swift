@@ -96,7 +96,11 @@ class AppState: ObservableObject {
             .receive(on: DispatchQueue.global(qos: .utility))
             .sink { [weak self] _ in
                 guard let self else { return }
-                Task { await BackgroundCollectionManager.uploadPendingDates(dataManager: self.dataManager) }
+                Task {
+                    await BackgroundCollectionManager.uploadPendingDates(
+                        dataManager: self.dataManager, requireWifiUnlessStale: true
+                    )
+                }
             }
             .store(in: &cancellables)
 
@@ -107,7 +111,7 @@ class AppState: ObservableObject {
             .receive(on: DispatchQueue.global(qos: .utility))
             .sink { [weak self] _ in
                 guard let self else { return }
-                PedometerHistoryService.shared.syncHistory(dataManager: self.dataManager)
+                Task { await PedometerHistoryService.shared.syncHistory(dataManager: self.dataManager) }
             }
             .store(in: &cancellables)
 
@@ -131,7 +135,7 @@ class AppState: ObservableObject {
         keystrokeSync.importBufferedKeystrokes(dataManager: dataManager)
         // Backfill step/walking history from CMPedometer (covers hours the
         // app wasn't open — see PedometerHistoryService)
-        PedometerHistoryService.shared.syncHistory(dataManager: dataManager)
+        Task { await PedometerHistoryService.shared.syncHistory(dataManager: dataManager) }
         // FaceDistanceManager is started separately after camera permission is granted
     }
 
