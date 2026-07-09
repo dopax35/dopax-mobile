@@ -19,7 +19,16 @@ class HealthKitManager: ObservableObject {
             .heartRateVariabilitySDNN,
             .restingHeartRate
         ]
-        var types = Set(identifiers.compactMap { HKQuantityType.quantityType(forIdentifier: $0) })
+        // Explicitly typed as Set<HKObjectType>: without this annotation Swift
+        // infers Set<HKQuantityType> from the initializer below, and then the
+        // workoutType() insert a few lines down (HKWorkoutType, a sibling
+        // HKObjectType subclass, not a HKQuantityType) fails to compile.
+        var types: Set<HKObjectType> = []
+        for identifier in identifiers {
+            if let quantityType = HKQuantityType.quantityType(forIdentifier: identifier) {
+                types.insert(quantityType)
+            }
+        }
         // Workout imports (Running/Bike/Swimming/Weight Training/Pilates logs)
         // — a separate read scope from the passive gait metrics above.
         types.insert(HKObjectType.workoutType())

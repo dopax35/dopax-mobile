@@ -92,7 +92,7 @@ enum PDAlgorithms {
         }
 
         // Gyro magnitude
-        var mag = (0..<n).map { i in
+        let mag = (0..<n).map { i in
             let gx = gyroX[i]
             let gy = gyroY[i]
             let gz = gyroZ[i]

@@ -34,7 +34,6 @@ class GamificationManager: ObservableObject {
     // MARK: - Record a completed test
     /// Call this immediately after saving a test result.
     func recordCompletion(testType: String, score: Double, higherIsBetter: Bool = true) {
-        let todayKey = dateKey(Date())
         let typeCompletionKey = Keys.lastCompletedKey(testType)
 
         // Update last-completed timestamp
