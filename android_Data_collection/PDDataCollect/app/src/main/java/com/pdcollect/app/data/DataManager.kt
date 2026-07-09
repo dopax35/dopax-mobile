@@ -439,7 +439,7 @@ class DataManager(private val context: Context, private val userProfile: UserPro
     fun cleanupOldData(daysToKeep: Int = 365) {
         val base = baseDir()
         if (!base.exists()) return
-        
+
         val datePattern = Regex("\\d{4}-\\d{2}-\\d{2}")
         val cutoff = LocalDate.now().minusDays(daysToKeep.toLong())
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -452,7 +452,7 @@ class DataManager(private val context: Context, private val userProfile: UserPro
                 }
             } catch (_: Exception) {}
         }
-        
+
         // Storage Optimization: Cleanup old crash logs (> 30 days)
         runCatching {
             val crashDir = File(context.getExternalFilesDir(null), "crash_logs")
@@ -701,4 +701,3 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         }
     }
 }
-                                                                                                                                                                                                                                                                                                                                                                                         

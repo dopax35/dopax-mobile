@@ -207,9 +207,12 @@ dependencies {
     // Mandatory In-app Updates
     implementation("com.google.android.play:app-update-ktx:2.1.0")
 
-    // Health Connect — read exercise sessions logged by the user's fitness
-    // apps (Google Fit, Samsung Health, etc.), latest stable as of July 2026.
-    implementation("androidx.health.connect:connect-client:1.1.0")
+    // TensorFlow Lite
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
+    // Health Connect
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
 
     // LocalBroadcastManager — used for intra-process service communication
     // (DataAccessibilityService → FaceDistanceService foreground-app events)

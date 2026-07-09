@@ -10,5 +10,4 @@
     android:keyTextColor="@color/on_surface"
     android:keyTextSize="20sp"
     android:labelTextSize="14sp"
-    android:padding="4dp"
-    android:isScrollingCache="false" />
+    android:padding="4dp" />

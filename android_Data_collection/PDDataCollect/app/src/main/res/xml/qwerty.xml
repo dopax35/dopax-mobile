@@ -76,7 +76,7 @@
              android:keyEdgeFlags="left"/>
         <!-- Numbers / symbols page -->
         <Key android:codes="-101"
-             android:keyLabel="?123"
+             android:keyLabel="\?123"
              android:keyWidth="14%p"/>
         <!-- Globe: show IME picker -->
         <Key android:codes="-2"

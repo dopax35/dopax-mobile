@@ -101,10 +101,12 @@ class MainActivityStartupTest {
                 Boolean::class.javaPrimitiveType,
                 Double::class.javaPrimitiveType,
                 Double::class.javaPrimitiveType,
-                Boolean::class.javaPrimitiveType
+                Boolean::class.javaPrimitiveType,
+                String::class.java,
+                java.lang.Double::class.java
             ).apply { isAccessible = true }
 
-            render.invoke(activity, false, 26.24, 1.63, true)
+            render.invoke(activity, false, 26.24, 1.63, true, null, null)
 
             assertEquals(View.VISIBLE, activity.findViewById<View>(R.id.cardBeanieVitals).visibility)
         } finally {
