@@ -232,8 +232,8 @@ struct TrailMakingTestView: View {
                     Spacer()
                 }
             }
+            .onAppear { layoutTargets(in: geo.size) }
         }
-        .onAppear { layoutTargets() }
         .ignoresSafeArea(edges: .bottom)
     }
 
@@ -396,13 +396,26 @@ struct TrailMakingTestView: View {
 
     // MARK: - Logic
 
-    private func layoutTargets() {
-        let screenBounds = UIScreen.main.bounds
-        let w = screenBounds.width
-        let h = screenBounds.height - 160
+    /// `size` is the GeometryReader-measured size of the canvas itself — NOT
+    /// UIScreen.main.bounds (the full device screen), which is what this used
+    /// before. UIScreen.main.bounds is larger than the visible canvas because
+    /// it doesn't account for the nav bar eating space at the top, so a
+    /// target's random Y could land beyond the canvas's true bottom edge and
+    /// render off-screen: unreachable, and indistinguishable from having
+    /// vanished (this is what "number 3 disappeared" was).
+    private func layoutTargets(in size: CGSize) {
+        let w = size.width
+        let h = size.height
         let r = Constants.TMT.targetRadius
         let pad: CGFloat = r + 16
         let minDist = Constants.TMT.minSpacing
+        // Keep clear of the HUD row pinned to the top of the canvas, and of
+        // the tab bar beneath the area ignoresSafeArea(.bottom) reclaims.
+        let topReserve: CGFloat = 70
+        let bottomReserve: CGFloat = 160
+
+        let xRange = pad...max(pad, w - pad)
+        let yRange = (topReserve + pad)...max(topReserve + pad, h - bottomReserve - pad)
 
         var positions: [CGPoint] = []
         for _ in sequence {
@@ -410,8 +423,8 @@ struct TrailMakingTestView: View {
             var attempts = 0
             var tooClose = false
             repeat {
-                let x = CGFloat.random(in: pad...(w - pad))
-                let y = CGFloat.random(in: pad...(h - pad))
+                let x = CGFloat.random(in: xRange)
+                let y = CGFloat.random(in: yRange)
                 p = CGPoint(x: x, y: y)
                 tooClose = positions.contains { hypot($0.x - p.x, $0.y - p.y) < minDist }
                 attempts += 1
