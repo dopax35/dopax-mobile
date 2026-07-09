@@ -18,6 +18,7 @@ object Constants {
     const val TEST_LEG_AGILITY_FILE = "leg_agility.csv"
     const val MEDICATION_FILE = "medication.csv"
     const val PHYSICAL_ACTIVITY_FILE = "physical_activity.csv"
+    const val SLEEP_FILE = "sleep.csv"
     const val HR_FILE = "heart_rate.csv"
     const val BLINK_FILE = "blink_log.csv"
     const val VOICE_LOG_FILE = "voice_log.csv"
@@ -64,6 +65,13 @@ object Constants {
     // from Health Connect / Strava carry richer data than a manual log entry.
     // Manual entries fill the new columns with "Manual,,,"
     const val PHYSICAL_ACTIVITY_HEADER = "timestamp_ms,activity_type,time_of_day_ms,source,duration_min,calories,avg_heart_rate"
+    // Imported sleep sessions (Health Connect — which in turn surfaces
+    // Garmin Connect, Samsung Health, Fitbit, etc., whichever the user has
+    // syncing into Health Connect). "provider" is the specific app that
+    // recorded the night (e.g. "Garmin Connect"), blank if it can't be
+    // resolved. Stage columns are 0 (not blank) when a source has no stage
+    // detail at all — matches iOS exactly.
+    const val SLEEP_HEADER = "timestamp_ms,source,provider,sleep_start_ms,sleep_end_ms,time_in_bed_min,total_sleep_min,light_min,deep_min,rem_min,awake_min,unspecified_min"
     const val HR_HEADER = "timestamp_ms,bpm,rr_interval_ms,device_address,device_name"
     const val BLINK_HEADER = "timestamp_ms,context,left_trough_prob,right_trough_prob,blink_rate_per_min"
     const val VOICE_LOG_HEADER = "timestamp_ms,filename,story_headline,duration_ms"

@@ -39,7 +39,7 @@ struct PhysicalActivityLogView: View {
             Button {
                 importFromHealthKit()
             } label: {
-                Label("Import from Apple Health", systemImage: "heart.fill")
+                Label("Import Workouts from Apple Health", systemImage: "heart.fill")
             }
             .disabled(isImporting)
 
@@ -57,6 +57,13 @@ struct PhysicalActivityLogView: View {
             }
             .disabled(isImporting)
 
+            Button {
+                importSleepFromHealthKit()
+            } label: {
+                Label("Import Sleep from Apple Health", systemImage: "bed.double.fill")
+            }
+            .disabled(isImporting)
+
             if isImporting {
                 HStack {
                     ProgressView()
@@ -69,9 +76,9 @@ struct PhysicalActivityLogView: View {
                     .foregroundColor(.secondary)
             }
         } header: {
-            Text("Import Workouts")
+            Text("Import Health Data")
         } footer: {
-            Text("Pull in workouts you already logged elsewhere instead of re-entering them by hand.")
+            Text("Pull in workouts and sleep you already logged elsewhere — including Garmin, or any other app that syncs into Apple Health — instead of re-entering them by hand.")
         }
     }
 
@@ -270,6 +277,43 @@ struct PhysicalActivityLogView: View {
                     : (imported.isEmpty
                         ? "No new Strava activities to import (already imported)."
                         : "Imported \(imported.count) activit\(imported.count == 1 ? "y" : "ies") from Strava.")
+                isImporting = false
+            }
+        }
+    }
+
+    /// Imports recent Apple Health sleep sessions, skipping any night
+    /// already imported on a previous run (per ImportedActivityStore) so
+    /// re-importing an overlapping look-back window doesn't create
+    /// duplicate rows. Namespaced as "HealthKit-Sleep" in the dedup store —
+    /// distinct from the "HealthKit" workout-import keys — even though a
+    /// UUID collision between the two is not realistically possible, since
+    /// each source's IDs only make sense within their own ID space.
+    private func importSleepFromHealthKit() {
+        isImporting = true
+        importMessage = nil
+        Task {
+            if !appState.healthKitManager.isAuthorized {
+                await appState.healthKitManager.requestAuthorization()
+            }
+            let nights = await appState.healthKitManager.fetchRecentSleep(days: 14)
+            await MainActor.run {
+                var importedCount = 0
+                for night in nights {
+                    if let id = night.externalId, ImportedActivityStore.isAlreadyImported(source: "HealthKit-Sleep", externalId: id) {
+                        continue
+                    }
+                    appState.dataManager.writeSleepEvent(night)
+                    if let id = night.externalId {
+                        ImportedActivityStore.markImported(source: "HealthKit-Sleep", externalId: id)
+                    }
+                    importedCount += 1
+                }
+                importMessage = nights.isEmpty
+                    ? "No recent Apple Health sleep data found."
+                    : (importedCount == 0
+                        ? "No new sleep sessions to import (already imported)."
+                        : "Imported \(importedCount) night\(importedCount == 1 ? "" : "s") of sleep from Apple Health.")
                 isImporting = false
             }
         }

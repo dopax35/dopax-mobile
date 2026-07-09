@@ -58,6 +58,7 @@
 		CABE3DFE9C55F943324B523C /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CB18E99E2EED8D5C92402E8B /* ZIPFoundation */; };
 		CAD961BFA4B7982590B10FF2 /* PDAlgorithms.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21A7978B22683611141966E /* PDAlgorithms.swift */; };
 		CB53A3EE995A01804FF74470 /* PhysicalActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */; };
+		FFCCF83B8412B71D1ABE8170 /* SleepEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FE1B0CFABD710141D338E6 /* SleepEvent.swift */; };
 		CBB3ED519A7862EAC5AF9865 /* Rajdhani-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D8D557F15CDC697364C00987 /* Rajdhani-Medium.ttf */; };
 		D0F7DBA1666674CD6F484E9B /* DailyReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE1DE713251384FA69CF92E /* DailyReportView.swift */; };
 		D95BB2D0B9A8F755A9947A15 /* FingerTappingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1879D6C5CB7722462EF426A2 /* FingerTappingView.swift */; };
@@ -136,6 +137,7 @@
 		AE6D71D118D7706233B8123C /* BeanieRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieRegistry.swift; sourceTree = "<group>"; };
 		AED736E4394B92F29688FF60 /* BluetoothDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothDevicesView.swift; sourceTree = "<group>"; };
 		B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityEvent.swift; sourceTree = "<group>"; };
+		44FE1B0CFABD710141D338E6 /* SleepEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepEvent.swift; sourceTree = "<group>"; };
 		B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HRBluetoothService.swift; sourceTree = "<group>"; };
 		B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PDCollectKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B558683D2B3A2F9C59388E3C /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
@@ -196,6 +198,7 @@
 				5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */,
 				48F1ED50F27D20344A3C400B /* MedicationEvent.swift */,
 				B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */,
+				44FE1B0CFABD710141D338E6 /* SleepEvent.swift */,
 				BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */,
 				2F1116C47EADDC017996AE76 /* SensorReading.swift */,
 				0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */,
@@ -478,6 +481,7 @@
 				6CD47DFF56E46D29883DD19D /* PDCollectiOSApp.swift in Sources */,
 				E48F30702EE977047022B202 /* PassiveSensorService.swift in Sources */,
 				CB53A3EE995A01804FF74470 /* PhysicalActivityEvent.swift in Sources */,
+				FFCCF83B8412B71D1ABE8170 /* SleepEvent.swift in Sources */,
 				91A282AB1DFF442B0514A4D7 /* PhysicalActivityLogView.swift in Sources */,
 				C0AFD9FA75913E6044F1FF72 /* ProfileSetupView.swift in Sources */,
 				E2055B4C5E8567B0661EDD19 /* QuestionnaireResponse.swift in Sources */,

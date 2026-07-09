@@ -32,6 +32,13 @@ class HealthKitManager: ObservableObject {
         // Workout imports (Running/Bike/Swimming/Weight Training/Pilates logs)
         // — a separate read scope from the passive gait metrics above.
         types.insert(HKObjectType.workoutType())
+        // Sleep imports — see fetchRecentSleep() below. Requested in the same
+        // authorization call as everything else so there's one system
+        // prompt, not a separate one the first time the user taps
+        // "Import Sleep".
+        if let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
+            types.insert(sleepType)
+        }
         return types
     }
 
@@ -94,6 +101,101 @@ class HealthKitManager: ObservableObject {
             ))
         }
         return events
+    }
+
+    // MARK: - Sleep Import
+
+    /// Fetches sleep sessions logged in the last [days] days — Apple Health,
+    /// Apple Watch, or any third-party app that writes sleep-analysis
+    /// samples into Health (Garmin Connect, Oura, AutoSleep, etc.) — and
+    /// groups the raw per-stage samples HealthKit returns into whole-night
+    /// sessions.
+    ///
+    /// Unlike workouts, HealthKit has no single "sleep session" object — a
+    /// night's sleep comes back as many small HKCategorySamples, one per
+    /// stage segment (e.g. "asleepDeep 12:15–1:02am"). This groups samples
+    /// into one session per night by starting a new session whenever the
+    /// gap since the previous sample's end exceeds sessionGapMinutes, which
+    /// bridges brief overnight wake periods without merging two genuinely
+    /// separate nights together.
+    func fetchRecentSleep(days: Int = 14, sessionGapMinutes: Double = 60) async -> [SleepEvent] {
+        guard Self.isAvailable,
+              let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return [] }
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: end) ?? end
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+
+        let samples: [HKCategorySample] = await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: sleepType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)]
+            ) { _, samples, _ in
+                continuation.resume(returning: (samples as? [HKCategorySample]) ?? [])
+            }
+            store.execute(query)
+        }
+        guard !samples.isEmpty else { return [] }
+
+        var sessions: [[HKCategorySample]] = []
+        var current: [HKCategorySample] = []
+        var lastEnd: Date?
+        let gapSeconds = sessionGapMinutes * 60
+
+        for sample in samples {
+            if let prevEnd = lastEnd, sample.startDate.timeIntervalSince(prevEnd) > gapSeconds {
+                sessions.append(current)
+                current = []
+            }
+            current.append(sample)
+            lastEnd = max(lastEnd ?? sample.endDate, sample.endDate)
+        }
+        if !current.isEmpty { sessions.append(current) }
+
+        return sessions.compactMap { group -> SleepEvent? in
+            guard let firstStart = group.map(\.startDate).min(),
+                  let lastEndDate = group.map(\.endDate).max() else { return nil }
+
+            func minutes(_ value: HKCategoryValueSleepAnalysis) -> Double {
+                group.filter { $0.value == value.rawValue }
+                    .reduce(0.0) { $0 + $1.endDate.timeIntervalSince($1.startDate) / 60.0 }
+            }
+
+            let awakeMin = minutes(.awake)
+            let lightMin = minutes(.asleepCore)
+            let deepMin = minutes(.asleepDeep)
+            let remMin = minutes(.asleepREM)
+            let unspecifiedMin = minutes(.asleepUnspecified)
+            let inBedMin = minutes(.inBed)
+            let totalSleepMin = lightMin + deepMin + remMin + unspecifiedMin
+            // Some sources (e.g. simple trackers) only tag "in bed" spans,
+            // never granular stages — fall back to the full session span so
+            // time-in-bed isn't left at zero for those sources.
+            let timeInBedMin = inBedMin > 0 ? inBedMin : lastEndDate.timeIntervalSince(firstStart) / 60.0
+
+            return SleepEvent(
+                timestampMs: Int64(Date().timeIntervalSince1970 * 1000),
+                source: "HealthKit",
+                // HealthKit already gives us a human-friendly app name here
+                // (e.g. "Garmin Connect", "AutoSleep") — no mapping needed,
+                // unlike Health Connect on Android.
+                provider: group.first?.sourceRevision.source.name,
+                sleepStartMs: Int64(firstStart.timeIntervalSince1970 * 1000),
+                sleepEndMs: Int64(lastEndDate.timeIntervalSince1970 * 1000),
+                timeInBedMin: timeInBedMin,
+                totalSleepMin: totalSleepMin,
+                lightMin: lightMin,
+                deepMin: deepMin,
+                remMin: remMin,
+                awakeMin: awakeMin,
+                unspecifiedMin: unspecifiedMin,
+                // Every HKObject carries a stable UUID; the first sample's
+                // works fine as the session's dedup key as long as the
+                // source doesn't rewrite its samples on a later sync.
+                externalId: group.first?.uuid.uuidString
+            )
+        }
     }
 
     private func averageHeartRate(from start: Date, to end: Date) async -> Double? {

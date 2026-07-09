@@ -58,6 +58,7 @@ enum Constants {
         static let physicalActivityFile = "physical_activity.csv"
         static let profileFile          = "profile.csv"
         static let voiceLogFile         = "voice_log.csv"
+        static let sleepFile            = "sleep.csv"
 
         // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score\n"
@@ -79,6 +80,14 @@ enum Constants {
         static let profileHeader        = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json\n"
         /// timestamp_ms, filename, story_headline, duration_ms — matches Android exactly.
         static let voiceLogHeader       = "timestamp_ms,filename,story_headline,duration_ms\n"
+        // Imported sleep sessions (Apple Health / Health Connect — which in
+        // turn surface Garmin Connect, Oura, AutoSleep, etc., whichever the
+        // user has syncing into the platform's health store). "provider" is
+        // the specific app that recorded the night (e.g. "Garmin Connect"),
+        // blank if the source doesn't expose one. Stage columns are 0 (not
+        // blank) when a source has no stage detail at all — matches Android
+        // exactly.
+        static let sleepHeader = "timestamp_ms,source,provider,sleep_start_ms,sleep_end_ms,time_in_bed_min,total_sleep_min,light_min,deep_min,rem_min,awake_min,unspecified_min\n"
     }
 
     // MARK: - Test Durations

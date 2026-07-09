@@ -238,6 +238,14 @@ class DataManager(private val context: Context, private val userProfile: UserPro
     }
 
     @Synchronized
+    fun writeSleepData(row: String) {
+        val writer = getWriter(Constants.SLEEP_FILE, Constants.SLEEP_HEADER)
+        writer.write(row)
+        writer.newLine()
+        writer.flush()
+    }
+
+    @Synchronized
     fun writeVoiceLogData(row: String) {
         val writer = getWriter(Constants.VOICE_LOG_FILE, Constants.VOICE_LOG_HEADER)
         writer.write(row)

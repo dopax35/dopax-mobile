@@ -43,6 +43,10 @@
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+    <!-- Health Connect — sleep import (Garmin Connect, Samsung Health,
+         Fitbit, etc. all write here if the user has them syncing). Requested
+         and granted independently of the exercise permissions above. -->
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
 
     <application
         android:name=".PDCollectApp"

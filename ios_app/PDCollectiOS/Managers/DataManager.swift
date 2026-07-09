@@ -201,6 +201,13 @@ class DataManager: ObservableObject {
                header: Constants.CSV.physicalActivityHeader)
     }
 
+    // MARK: - Sleep Writes
+
+    func writeSleepEvent(_ event: SleepEvent) {
+        append(event.csvRow, to: todayDir, filename: Constants.CSV.sleepFile,
+               header: Constants.CSV.sleepHeader)
+    }
+
     // MARK: - Profile Snapshot
 
     /// Writes a daily profile snapshot to profile.csv.

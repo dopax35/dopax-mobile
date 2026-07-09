@@ -78,6 +78,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Separate from healthConnectPermissionLauncher above: sleep is
+    // requested and granted independently, so denying one doesn't block the
+    // other (see HealthConnectManager.SLEEP_PERMISSIONS).
+    private val healthConnectSleepPermissionLauncher = registerForActivityResult(
+        androidx.health.connect.client.PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        if (granted.containsAll(HealthConnectManager.SLEEP_PERMISSIONS)) {
+            lifecycleScope.launch { doImportSleepFromHealthConnect() }
+        } else {
+            Toast.makeText(this, "Health Connect permission was not granted.", Toast.LENGTH_LONG).show()
+        }
+    }
+
     private lateinit var cardVitalSigns: com.google.android.material.card.MaterialCardView
     private lateinit var tvLiveBpm: TextView
     private lateinit var tvLiveHrv: TextView
@@ -668,6 +681,18 @@ class MainActivity : AppCompatActivity() {
         }
         container.addView(stravaBtn)
 
+        // Sleep import — separate from the activity-type spinner above, but
+        // lives in this same dialog for convenience/discoverability, same as
+        // the two workout-import buttons already here.
+        val sleepBtn = android.widget.Button(this).apply {
+            text = "Import Sleep from Health Connect"
+            setOnClickListener {
+                dialogHolder?.dismiss()
+                importSleepFromHealthConnect()
+            }
+        }
+        container.addView(sleepBtn)
+
         dialogHolder = androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Record Physical Activity")
             .setView(container)
@@ -772,6 +797,58 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
             if (importedCount > 0) populateDashboardCharts()
         }
+    }
+
+    /// Entry point from the "Import Sleep from Health Connect" button:
+    /// checks availability/permissions first, requesting permission via the
+    /// dedicated sleep launcher if needed, then hands off to
+    /// doImportSleepFromHealthConnect() once permission is confirmed.
+    private fun importSleepFromHealthConnect() {
+        lifecycleScope.launch {
+            if (!HealthConnectManager.isAvailable(this@MainActivity)) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Health Connect isn't installed on this device.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+            if (HealthConnectManager.hasSleepPermissions(this@MainActivity)) {
+                doImportSleepFromHealthConnect()
+            } else {
+                healthConnectSleepPermissionLauncher.launch(HealthConnectManager.SLEEP_PERMISSIONS)
+            }
+        }
+    }
+
+    /// Fetches recent Health Connect sleep sessions and logs each new one
+    /// (skipping any night already imported on a previous run, per
+    /// ImportedActivityStore, namespaced "HealthConnect-Sleep" so it can't
+    /// collide with the "HealthConnect" workout-import keys). Only call once
+    /// sleep permissions are confirmed granted.
+    private suspend fun doImportSleepFromHealthConnect() {
+        val nights = HealthConnectManager.fetchRecentSleepSessions(this@MainActivity, days = 14)
+        var importedCount = 0
+        nights.forEach { s ->
+            val alreadySeen = ImportedActivityStore.isAlreadyImported(this@MainActivity, "HealthConnect-Sleep", s.externalId)
+            if (alreadySeen) return@forEach
+            // provider is free text (an arbitrary app's display name) unlike
+            // the other fields here, which all come from a fixed list or a
+            // number — guard against a stray comma shifting the CSV row.
+            val safeProvider = s.provider.replace(",", ";")
+            dataManager.writeSleepData(
+                "${s.timestampMs},HealthConnect,$safeProvider,${s.sleepStartMs},${s.sleepEndMs}," +
+                    "${s.timeInBedMin},${s.totalSleepMin},${s.lightMin},${s.deepMin},${s.remMin},${s.awakeMin},${s.unspecifiedMin}"
+            )
+            ImportedActivityStore.markImported(this@MainActivity, "HealthConnect-Sleep", s.externalId)
+            importedCount++
+        }
+        val message = when {
+            nights.isEmpty() -> "No recent Health Connect sleep data found."
+            importedCount == 0 -> "No new sleep sessions to import (already imported)."
+            else -> "Imported $importedCount night${if (importedCount == 1) "" else "s"} of sleep from Health Connect."
+        }
+        Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
     }
 
     private fun showMedicationTimePicker() {
