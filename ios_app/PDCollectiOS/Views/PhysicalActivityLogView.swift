@@ -75,6 +75,11 @@ struct PhysicalActivityLogView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            if let connectionError = stravaManager.connectionError {
+                Text(connectionError)
+                    .font(.caption)
+                    .foregroundColor(.dopaxStatusError)
+            }
         } header: {
             Text("Import Health Data")
         } footer: {

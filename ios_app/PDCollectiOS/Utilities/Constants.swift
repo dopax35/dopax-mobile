@@ -59,6 +59,7 @@ enum Constants {
         static let profileFile          = "profile.csv"
         static let voiceLogFile         = "voice_log.csv"
         static let sleepFile            = "sleep.csv"
+        static let pedometerFile        = "pedometer.csv"
 
         // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score\n"
@@ -88,6 +89,14 @@ enum Constants {
         // blank) when a source has no stage detail at all — matches Android
         // exactly.
         static let sleepHeader = "timestamp_ms,source,provider,sleep_start_ms,sleep_end_ms,time_in_bed_min,total_sleep_min,light_min,deep_min,rem_min,awake_min,unspecified_min\n"
+        // iOS-only: hourly step/walking backfill from CMPedometer (the M-series
+        // co-processor iOS tracks around the clock, independent of whether this
+        // app is open). Supplements passive_sensors.csv, which on iOS only
+        // covers the hours the app was actually in the foreground — unlike
+        // Android, which collects passive_sensors.csv all day via a foreground
+        // Service. One row per hour that had any steps; empty hours are
+        // skipped rather than written as zero rows.
+        static let pedometerHeader = "timestamp_ms,period_start_ms,period_end_ms,steps,distance_m,floors_ascended,floors_descended,current_pace_s_per_m,current_cadence_steps_per_s\n"
     }
 
     // MARK: - Test Durations

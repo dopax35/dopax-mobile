@@ -208,6 +208,17 @@ class DataManager: ObservableObject {
                header: Constants.CSV.sleepHeader)
     }
 
+    // MARK: - Pedometer History Writes (iOS-only backfill, see PedometerHistoryService)
+
+    /// Backfilled rows land in the CSV for the date they actually happened on
+    /// (periodStartMs), not "today" — otherwise a sync that runs after
+    /// midnight would misfile yesterday evening's steps into today's folder.
+    func writePedometerSample(_ sample: PedometerSample) {
+        let dateKey = Date(timeIntervalSince1970: Double(sample.periodStartMs) / 1000).dateKey
+        append(sample.csvRow, to: dateDirectory(for: dateKey), filename: Constants.CSV.pedometerFile,
+               header: Constants.CSV.pedometerHeader)
+    }
+
     // MARK: - Profile Snapshot
 
     /// Writes a daily profile snapshot to profile.csv.

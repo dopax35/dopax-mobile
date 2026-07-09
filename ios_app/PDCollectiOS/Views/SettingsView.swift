@@ -7,7 +7,11 @@ import AVFoundation
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
 
-    @AppStorage("autoUploadEnabled") private var autoUploadEnabled = false
+    // Default true to match Android's PREF_AUTO_UPLOAD_ENABLED default
+    // (UserProfile.kt: getBoolean(..., true)) — this was false here, so
+    // unlike Android, iOS never auto-backed-up anything unless the user
+    // happened to find and flip this toggle themselves.
+    @AppStorage("autoUploadEnabled") private var autoUploadEnabled = true
     @State private var showResetAlert    = false
     @State private var showDeleteAlert   = false
     @State private var cameraStatus      = ""

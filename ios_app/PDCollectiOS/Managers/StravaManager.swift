@@ -33,6 +33,13 @@ final class StravaManager: NSObject, ObservableObject, ASWebAuthenticationPresen
     /// update their "Connect Strava" / "Import from Strava" button label the
     /// moment the OAuth callback completes, with no polling needed.
     @Published private(set) var isConnected: Bool
+    /// User-facing reason the last connect attempt failed — nil while idle
+    /// or after a successful connect. Previously every failure path here
+    /// (bad credentials, network error, Strava denying the request) failed
+    /// completely silently: the button just sat there still saying "Connect
+    /// Strava" with no explanation, which is what a "Strava login error"
+    /// report with no specifics usually means in practice.
+    @Published private(set) var connectionError: String?
 
     private override init() {
         isConnected = UserDefaults.standard.string(forKey: "strava_refresh_token") != nil
@@ -41,6 +48,16 @@ final class StravaManager: NSObject, ObservableObject, ASWebAuthenticationPresen
 
     @MainActor
     func startAuth() {
+        connectionError = nil
+
+        // Fail fast with a clear message rather than round-tripping to
+        // Strava's servers and showing whatever cryptic page/JSON they
+        // return for an unregistered client_id.
+        guard clientId != "REPLACE_WITH_STRAVA_CLIENT_ID", !clientId.isEmpty else {
+            connectionError = "Strava isn't set up in this build yet (no API credentials configured). A developer needs to register the app at strava.com/settings/api first."
+            return
+        }
+
         var components = URLComponents(string: "https://www.strava.com/oauth/mobile/authorize")!
         components.queryItems = [
             URLQueryItem(name: "client_id", value: clientId),
@@ -52,9 +69,38 @@ final class StravaManager: NSObject, ObservableObject, ASWebAuthenticationPresen
         guard let url = components.url else { return }
 
         let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "pdcollect") { [weak self] callbackURL, error in
-            guard let self, let callbackURL, error == nil,
-                  let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-                      .queryItems?.first(where: { $0.name == "code" })?.value else { return }
+            guard let self else { return }
+
+            // The user tapping "Cancel" on the sign-in sheet is an
+            // intentional, expected action — not a failure to report.
+            if let authError = error as? ASWebAuthenticationSessionError,
+               authError.code == .canceledLogin {
+                return
+            }
+            guard error == nil else {
+                DispatchQueue.main.async { self.connectionError = "Strava sign-in didn't complete. Please try again." }
+                return
+            }
+            guard let callbackURL,
+                  let items = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems else {
+                DispatchQueue.main.async { self.connectionError = "Strava sign-in didn't complete. Please try again." }
+                return
+            }
+            // Strava redirects with "?error=access_denied" (among other
+            // values) when the user declines on Strava's own consent
+            // screen, rather than dismissing the sheet outright.
+            if let deniedReason = items.first(where: { $0.name == "error" })?.value {
+                DispatchQueue.main.async {
+                    self.connectionError = deniedReason == "access_denied"
+                        ? "Strava access wasn't granted."
+                        : "Strava sign-in failed (\(deniedReason))."
+                }
+                return
+            }
+            guard let code = items.first(where: { $0.name == "code" })?.value else {
+                DispatchQueue.main.async { self.connectionError = "Strava didn't return an authorization code. Please try again." }
+                return
+            }
             Task { await self.exchangeCodeForToken(code) }
         }
         session.presentationContextProvider = self
@@ -79,18 +125,40 @@ final class StravaManager: NSObject, ObservableObject, ASWebAuthenticationPresen
             let (data, _) = try await URLSession.shared.data(for: request)
             saveTokens(from: data)
         } catch {
-            // best-effort; user can retry Connect Strava
+            await MainActor.run { connectionError = "Couldn't reach Strava. Check your connection and try again." }
         }
     }
 
+    /// Parses Strava's token-exchange response. A successful exchange has
+    /// both access_token and refresh_token; anything else is an error, even
+    /// though the HTTP call itself "succeeded" — Strava returns its error
+    /// details as a 200-range-adjacent JSON body like
+    /// {"message":"Bad Request","errors":[{"resource":"Application","field":"client_id","code":"invalid"}]},
+    /// not a thrown exception, so this used to silently do nothing at all
+    /// (isConnected stayed false with zero explanation) whenever the
+    /// exchange failed for any reason, including the placeholder
+    /// clientId/clientSecret still being in place.
     private func saveTokens(from data: Data) {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            DispatchQueue.main.async { self.connectionError = "Strava returned an unexpected response. Please try again." }
+            return
+        }
+        guard json["access_token"] != nil, json["refresh_token"] != nil else {
+            let firstError = (json["errors"] as? [[String: Any]])?.first
+            let fieldDetail = [firstError?["field"] as? String, firstError?["code"] as? String]
+                .compactMap { $0 }.joined(separator: " ")
+            let message = (json["message"] as? String) ?? "Strava sign-in failed."
+            DispatchQueue.main.async {
+                self.connectionError = fieldDetail.isEmpty ? message : "\(message) (\(fieldDetail))"
+            }
+            return
+        }
         UserDefaults.standard.set(json["access_token"] as? String, forKey: "strava_access_token")
         UserDefaults.standard.set(json["refresh_token"] as? String, forKey: "strava_refresh_token")
         UserDefaults.standard.set(json["expires_at"] as? Int, forKey: "strava_expires_at")
-        let nowConnected = json["refresh_token"] != nil
         DispatchQueue.main.async { [weak self] in
-            self?.isConnected = nowConnected
+            self?.isConnected = true
+            self?.connectionError = nil
         }
     }
 

@@ -85,6 +85,32 @@ class AppState: ObservableObject {
             }
             .store(in: &cancellables)
 
+        // Attempt any pending backup uploads whenever the app becomes
+        // active — BGProcessingTask (the background-only path) is best
+        // effort and iOS may not run it as often as requested, especially
+        // for an app that isn't opened daily. Since most participants do
+        // open the app at least once a day for tests, this makes "backs up
+        // automatically once a day" actually reliable in practice rather
+        // than dependent on an opportunistic OS wakeup that might not come.
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .receive(on: DispatchQueue.global(qos: .utility))
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await BackgroundCollectionManager.uploadPendingDates(dataManager: self.dataManager) }
+            }
+            .store(in: &cancellables)
+
+        // Backfill step/walking history every time the app comes to the
+        // foreground (see PedometerHistoryService) — fills in the hours
+        // since the last sync even if the app was never opened during them.
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .receive(on: DispatchQueue.global(qos: .utility))
+            .sink { [weak self] _ in
+                guard let self else { return }
+                PedometerHistoryService.shared.syncHistory(dataManager: self.dataManager)
+            }
+            .store(in: &cancellables)
+
         // Resume collection if it was active before the app was killed
         if isCollecting { startCollection() }
     }
@@ -103,6 +129,9 @@ class AppState: ObservableObject {
         dataManager.writeProfileSnapshot(profile: userProfile)
         // Import any buffered keystrokes from keyboard extension
         keystrokeSync.importBufferedKeystrokes(dataManager: dataManager)
+        // Backfill step/walking history from CMPedometer (covers hours the
+        // app wasn't open — see PedometerHistoryService)
+        PedometerHistoryService.shared.syncHistory(dataManager: dataManager)
         // FaceDistanceManager is started separately after camera permission is granted
     }
 

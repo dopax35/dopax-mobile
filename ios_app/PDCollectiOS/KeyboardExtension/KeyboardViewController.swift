@@ -582,7 +582,7 @@ class KeyboardViewController: UIInputViewController {
         } else if len > previousTextLength, let lastChar = current.last {
             let kClass = classify(lastChar)
             logKeystroke(kClass, isBackspace: false)
-            if kClass == "letter" || kClass == "digit" {
+            if kClass == "char" || kClass == "digit" {
                 currentWordCharCount += 1
             } else if kClass == "space" || kClass == "enter" {
                 flushWordLength()
@@ -600,12 +600,18 @@ class KeyboardViewController: UIInputViewController {
 
     // ── Classification ────────────────────────────────────────────────────────
 
+    // Values must match Android's vocabulary exactly (Constants.kt:
+    // key_class is one of "char","digit","space","punct","backspace",
+    // "enter","other") — this used to say "letter"/"punctuation", which
+    // would silently split the two platforms' data into different
+    // categories for the same key classes in any analysis that groups or
+    // filters by key_class.
     private func classify(_ char: Character) -> String {
-        if char.isLetter                       { return "letter" }
+        if char.isLetter                       { return "char" }
         if char.isNumber                       { return "digit" }
         if char == " "                         { return "space" }
         if char == "\n"                        { return "enter" }
-        if char.isPunctuation || char.isSymbol { return "punctuation" }
+        if char.isPunctuation || char.isSymbol { return "punct" }
         return "other"
     }
 

@@ -91,6 +91,11 @@ class BackgroundCollectionManager {
                     dm.appendGaitMetrics(csvString: csv)
                 }
             }
+            // Every opportunistic wake is a chance to backfill step history
+            // for hours the app wasn't open — see PedometerHistoryService.
+            if let dm = dataManager {
+                PedometerHistoryService.shared.syncHistory(dataManager: dm)
+            }
             task.setTaskCompleted(success: true)
         }
 
@@ -111,6 +116,9 @@ class BackgroundCollectionManager {
                     let csv = hk.csvString(for: metrics)
                     dm.appendGaitMetrics(csvString: csv)
                 }
+            }
+            if let dm = dataManager {
+                PedometerHistoryService.shared.syncHistory(dataManager: dm)
             }
 
             // Auto-upload pending data if enabled
