@@ -60,18 +60,30 @@ object Constants {
     const val SPIRAL_HEADER = "timestamp_ms,elapsed_ms,event,x,y,action,side,dominant_hand,affected_side"
     const val LEG_AGILITY_HEADER = "timestamp_ms,elapsed_ms,event,gx,gy,gz,ax,ay,az,side,dominant_hand,affected_side"
     const val MEDICATION_HEADER = "timestamp_ms,taken_ms,med_name,dosage"
-    const val PHYSICAL_ACTIVITY_HEADER = "timestamp_ms,activity_type,time_of_day_ms"
+    // v2 (July 2026): added source/duration/calories/avg_heart_rate so imports
+    // from Health Connect / Strava carry richer data than a manual log entry.
+    // Manual entries fill the new columns with "Manual,,,"
+    const val PHYSICAL_ACTIVITY_HEADER = "timestamp_ms,activity_type,time_of_day_ms,source,duration_min,calories,avg_heart_rate"
     const val HR_HEADER = "timestamp_ms,bpm,rr_interval_ms,device_address,device_name"
     const val BLINK_HEADER = "timestamp_ms,context,left_trough_prob,right_trough_prob,blink_rate_per_min"
     const val VOICE_LOG_HEADER = "timestamp_ms,filename,story_headline,duration_ms"
-    const val BEANIE_TEMP_HEADER = "timestamp_ms,device_name,device_address,profile_name,inner_c,outer_c,tskin_c,heat_flux_cal_per_sec,battery_pct"
+    const val BEANIE_TEMP_HEADER = "timestamp_ms,device_name,device_address,profile_name,inner_c,outer_c,tskin_c,heat_flux_cal_per_sec,battery_pct,ml_prediction,ml_confidence"
     const val BEANIE_IMU_HEADER = "timestamp_ms,device_name,device_address,ax_raw,ay_raw,az_raw,gx_raw,gy_raw,gz_raw,ax_g,ay_g,az_g,accel_mag_g,gx_dps,gy_dps,gz_dps,gyro_mag_dps"
 
     const val GRAPH_CACHE_FILE = "dashboard_graph_cache.json"
 
     const val LOOKBACK_DAYS = 365
 
-    val PHYSICAL_ACTIVITY_TYPES = listOf("Running", "Bike", "Other")
+    // Temporarily disabled (July 2026) — flip back to true to re-enable the
+    // Shelly pillbox-sensor BLE scanning/pairing feature. Checked at every
+    // entry point (ShellyBleScanner.startScanning() itself, PDCollectService's
+    // passive-scan lifecycle, and the "Pair Pillbox Sensor" button in
+    // Settings/Profile Setup) so flipping this one flag is sufficient to
+    // fully turn the feature back on or off. iOS has no Shelly integration
+    // at all, so there's nothing to gate on that platform.
+    const val SHELLY_BLE_ENABLED = false
+
+    val PHYSICAL_ACTIVITY_TYPES = listOf("Running", "Bike", "Swimming", "Weight Training", "Pilates", "Other")
     // Sensor collection
     const val SENSOR_BUFFER_FLUSH_INTERVAL_MS = 5000L
     const val SENSOR_BUFFER_MAX_SIZE = 500

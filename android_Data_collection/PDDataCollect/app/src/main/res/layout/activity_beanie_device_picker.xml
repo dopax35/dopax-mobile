@@ -128,6 +128,17 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCalibratePosture"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Calibrate Posture"
+                app:cornerRadius="16dp"
+                android:textColor="@color/secondary"
+                app:strokeColor="@color/secondary"
+                android:layout_marginBottom="16dp" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnScanBeanieDevices"
                 android:layout_width="match_parent"
                 android:layout_height="64dp"

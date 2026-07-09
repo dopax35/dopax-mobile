@@ -85,11 +85,16 @@ struct SettingsView: View {
                 // MARK: - PDCollect Keyboard Setup
                 Section {
                     KeyboardSetupRow()
+                    let todayKey = "keystroke_count_\(Date().dateKey)"
+                    let count = UserDefaults(suiteName: "group.com.oriw.pdcollect.ios1.shared")?.integer(forKey: todayKey) ?? 0
+                    LabeledContent("Keys logged today", value: "\(count)")
                 } header: {
                     Label("PDCollect Keyboard", systemImage: "keyboard")
                 } footer: {
-                    Text("The PDCollect Keyboard enables typing metrics (word length, backspace rate). " +
-                         "It is bilingual (Hebrew / English) and never stores what you type.")
+                    Text("Now with a numbers/symbols page, long-press for digits & accents, " +
+                         "and swipe left on ⌫ to delete a whole word. Enables typing metrics " +
+                         "(word length, backspace rate) — bilingual (Hebrew / English) and never " +
+                         "stores what you type.")
                         .font(.caption)
                 }
 
@@ -203,26 +208,6 @@ struct SettingsView: View {
                         .font(.caption)
                 }
                 
-                // MARK: - Keystroke Logging
-                Section {
-                    let todayKey = "keystroke_count_\(Date().dateKey)"
-                    let count = UserDefaults(suiteName: "group.com.oriw.pdcollect.ios1.shared")?.integer(forKey: todayKey) ?? 0
-                    
-                    LabeledContent("Keys logged today", value: "\(count)")
-                    
-                    Button("Keyboard Settings") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) {
-                            UIApplication.shared.open(url)
-                        }
-                    }
-                } header: {
-                    Label("Keystroke Keyboard", systemImage: "keyboard")
-                } footer: {
-                    Text("Ensure PDCollectKeyboard is enabled in Settings and selected when typing.")
-                }
-
-
-
                 // MARK: - Danger Zone (matches Android's SettingsActivity reset / stop)
                 Section {
                     Button(role: .destructive) {

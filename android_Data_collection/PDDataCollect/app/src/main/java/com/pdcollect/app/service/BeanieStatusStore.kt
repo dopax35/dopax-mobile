@@ -8,7 +8,11 @@ data class BeanieStatusSnapshot(
     val deviceName: String,
     val tskinC: Double,
     val heatFluxCalPerSec: Double,
-    val batteryPct: Int?
+    val batteryPct: Int?,
+    // Added for the Beanie ML activity-inference feature. Default values keep this
+    // change source-compatible with every pre-existing named-argument call site.
+    val activityLabel: String? = null,
+    val activityConfidence: Double? = null
 )
 
 object BeanieStatusStore {
@@ -20,6 +24,8 @@ object BeanieStatusStore {
     private const val KEY_TSKIN_C = "tskin_c"
     private const val KEY_HEAT_FLUX = "heat_flux"
     private const val KEY_BATTERY_PCT = "battery_pct"
+    private const val KEY_ACTIVITY_LABEL = "activity_label"
+    private const val KEY_ACTIVITY_CONFIDENCE = "activity_confidence"
 
     fun save(context: Context, snapshot: BeanieStatusSnapshot) {
         val normalized = snapshot.normalized()
@@ -36,6 +42,16 @@ object BeanieStatusStore {
             } else {
                 remove(KEY_BATTERY_PCT)
             }
+            if (!normalized.activityLabel.isNullOrEmpty()) {
+                putString(KEY_ACTIVITY_LABEL, normalized.activityLabel)
+            } else {
+                remove(KEY_ACTIVITY_LABEL)
+            }
+            if (normalized.activityConfidence != null) {
+                putFiniteDouble(KEY_ACTIVITY_CONFIDENCE, normalized.activityConfidence)
+            } else {
+                remove(KEY_ACTIVITY_CONFIDENCE)
+            }
         }.apply()
     }
 
@@ -48,7 +64,9 @@ object BeanieStatusStore {
             deviceName = prefs.getString(KEY_DEVICE_NAME, "").orEmpty(),
             tskinC = prefs.getString(KEY_TSKIN_C, null)?.toDoubleOrNull() ?: Double.NaN,
             heatFluxCalPerSec = prefs.getString(KEY_HEAT_FLUX, null)?.toDoubleOrNull() ?: Double.NaN,
-            batteryPct = if (prefs.contains(KEY_BATTERY_PCT)) prefs.getInt(KEY_BATTERY_PCT, 0) else null
+            batteryPct = if (prefs.contains(KEY_BATTERY_PCT)) prefs.getInt(KEY_BATTERY_PCT, 0) else null,
+            activityLabel = prefs.getString(KEY_ACTIVITY_LABEL, null),
+            activityConfidence = prefs.getString(KEY_ACTIVITY_CONFIDENCE, null)?.toDoubleOrNull()
         )
     }
 

@@ -446,6 +446,40 @@ android:textSize="20sp"
 android:textColor="@color/on_surface"
 android:textStyle="bold" />
 </LinearLayout>
+
+<View
+android:id="@+id/dividerBeanieActivity"
+android:layout_width="1dp"
+android:layout_height="32dp"
+android:background="@color/divider"
+android:layout_marginHorizontal="16dp"
+android:visibility="gone" />
+
+<LinearLayout
+android:id="@+id/layoutBeanieActivity"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_weight="1.2"
+android:orientation="vertical"
+android:visibility="gone">
+
+<TextView
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="Activity"
+android:textSize="12sp"
+android:textColor="@color/secondary"
+android:textStyle="bold" />
+
+<TextView
+android:id="@+id/tvBeanieActivity"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="--"
+android:textSize="18sp"
+android:textColor="@color/on_surface"
+android:textStyle="bold" />
+</LinearLayout>
 </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
 

@@ -13,16 +13,65 @@ struct PhysicalActivityLogView: View {
     @State private var recentLogs: [PhysicalActivityEvent] = []
     /// Drives the success state animation.
     @State private var showSuccess = false
+    @State private var isImporting = false
+    @State private var importMessage: String?
+    /// StravaManager publishes isConnected, so this button's label updates
+    /// automatically the moment the OAuth callback completes — no polling.
+    @ObservedObject private var stravaManager = StravaManager.shared
 
     // MARK: - Body
 
     var body: some View {
         NavigationStack {
             Form {
+                importSection
                 logActivitySection
                 recentLogsSection
             }
             .navigationTitle("Activity Log")
+        }
+    }
+
+    // MARK: - Import Section
+
+    private var importSection: some View {
+        Section {
+            Button {
+                importFromHealthKit()
+            } label: {
+                Label("Import from Apple Health", systemImage: "heart.fill")
+            }
+            .disabled(isImporting)
+
+            Button {
+                if stravaManager.isConnected {
+                    importFromStrava()
+                } else {
+                    stravaManager.startAuth()
+                }
+            } label: {
+                Label(
+                    stravaManager.isConnected ? "Import from Strava" : "Connect Strava",
+                    systemImage: "figure.run.circle.fill"
+                )
+            }
+            .disabled(isImporting)
+
+            if isImporting {
+                HStack {
+                    ProgressView()
+                    Text("Importing…").foregroundColor(.secondary)
+                }
+            }
+            if let importMessage {
+                Text(importMessage)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        } header: {
+            Text("Import Workouts")
+        } footer: {
+            Text("Pull in workouts you already logged elsewhere instead of re-entering them by hand.")
         }
     }
 
@@ -161,14 +210,95 @@ struct PhysicalActivityLogView: View {
         }
     }
 
+    /// Imports recent Apple Health workouts, skipping any already imported
+    /// on a previous run (per ImportedActivityStore) so re-importing an
+    /// overlapping look-back window doesn't create duplicate rows.
+    private func importFromHealthKit() {
+        isImporting = true
+        importMessage = nil
+        Task {
+            if !appState.healthKitManager.isAuthorized {
+                await appState.healthKitManager.requestAuthorization()
+            }
+            let workouts = await appState.healthKitManager.fetchRecentWorkouts(days: 7)
+            await MainActor.run {
+                var imported: [PhysicalActivityEvent] = []
+                for w in workouts {
+                    if let id = w.externalId, ImportedActivityStore.isAlreadyImported(source: "HealthKit", externalId: id) {
+                        continue
+                    }
+                    appState.dataManager.writePhysicalActivityEvent(w)
+                    if let id = w.externalId {
+                        ImportedActivityStore.markImported(source: "HealthKit", externalId: id)
+                    }
+                    imported.append(w)
+                }
+                recentLogs.append(contentsOf: imported.filter { isToday($0.timeOfDayMs) })
+                importMessage = workouts.isEmpty
+                    ? "No recent Apple Health workouts found."
+                    : (imported.isEmpty
+                        ? "No new Apple Health workouts to import (already imported)."
+                        : "Imported \(imported.count) workout(s) from Apple Health.")
+                isImporting = false
+            }
+        }
+    }
+
+    /// Imports recent Strava activities, skipping any already imported on a
+    /// previous run (per ImportedActivityStore) so re-importing an
+    /// overlapping look-back window doesn't create duplicate rows.
+    private func importFromStrava() {
+        isImporting = true
+        importMessage = nil
+        Task {
+            let activities = await stravaManager.fetchRecentActivities(days: 7)
+            await MainActor.run {
+                var imported: [PhysicalActivityEvent] = []
+                for a in activities {
+                    if let id = a.externalId, ImportedActivityStore.isAlreadyImported(source: "Strava", externalId: id) {
+                        continue
+                    }
+                    appState.dataManager.writePhysicalActivityEvent(a)
+                    if let id = a.externalId {
+                        ImportedActivityStore.markImported(source: "Strava", externalId: id)
+                    }
+                    imported.append(a)
+                }
+                recentLogs.append(contentsOf: imported.filter { isToday($0.timeOfDayMs) })
+                importMessage = activities.isEmpty
+                    ? "No recent Strava activities found."
+                    : (imported.isEmpty
+                        ? "No new Strava activities to import (already imported)."
+                        : "Imported \(imported.count) activit\(imported.count == 1 ? "y" : "ies") from Strava.")
+                isImporting = false
+            }
+        }
+    }
+
     // MARK: - Helpers
+
+    private func isToday(_ ms: Int64) -> Bool {
+        Calendar.current.isDateInToday(Date(timeIntervalSince1970: Double(ms) / 1000.0))
+    }
 
     private func iconForActivity(_ type: String) -> String {
         switch type {
-        case "Running": return "figure.run"
-        case "Bike":    return "bicycle"
-        case "Other":   return "figure.mixed.cardio"
-        default:        return "figure.run"
+        case "Running":         return "figure.run"
+        case "Bike":             return "bicycle"
+        // Swimming/Weight Training/Other are still best-guess SF Symbol
+        // names for the newly added activity types — Image(systemName:)
+        // fails silently (blank icon) on a bad name rather than a build
+        // error, so verify these against Xcode's SF Symbols picker during
+        // integration and swap if needed.
+        case "Swimming":         return "figure.pool.swim"
+        case "Weight Training":  return "dumbbell.fill"
+        // figure.pilates was added in SF Symbols 5 (iOS 17) — this app's
+        // deployment target is iOS 16.0 (project.pbxproj), so that symbol
+        // would render blank on any iOS 16 device. figure.mind.and.body has
+        // been available since iOS 14 and reads reasonably for Pilates.
+        case "Pilates":          return "figure.mind.and.body"
+        case "Other":            return "figure.mixed.cardio"
+        default:                 return "figure.run"
         }
     }
 

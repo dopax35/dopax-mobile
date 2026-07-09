@@ -31,8 +31,13 @@ import com.pdcollect.app.data.UserProfile
 import com.pdcollect.app.ui.MainActivity
 import com.pdcollect.app.util.Constants
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import com.pdcollect.app.logic.ActivityEngine
+import com.pdcollect.app.logic.PostureEngine
+import com.pdcollect.app.logic.MLPredictionStore
+import com.pdcollect.app.logic.TskinSynthesizer
 
 class BeanieService : Service() {
 
@@ -71,6 +76,8 @@ class BeanieService : Service() {
         const val EXTRA_INNER_C = "extra_inner_c"
         const val EXTRA_OUTER_C = "extra_outer_c"
         const val EXTRA_BATTERY_PCT = "extra_battery_pct"
+        const val EXTRA_ACTIVITY_LABEL = "extra_activity_label"
+        const val EXTRA_ACTIVITY_CONFIDENCE = "extra_activity_confidence"
 
         const val STATUS_IDLE = "IDLE"
         const val STATUS_SCANNING = "SCANNING"
@@ -80,14 +87,10 @@ class BeanieService : Service() {
         const val STATUS_DISCONNECTED = "DISCONNECTED"
 
         fun start(context: Context) {
-            // Feature disabled per request
-            return
-            /*
             ContextCompat.startForegroundService(
                 context,
                 Intent(context, BeanieService::class.java)
             )
-            */
         }
 
         fun stop(context: Context) {
@@ -162,6 +165,23 @@ class BeanieService : Service() {
     private var receivedFrameThisConnection = false
     private val incomingStreamBuffer = ArrayDeque<Byte>()
     private val commandWriteQueue = mutableListOf<ByteArray>()
+
+    // ── Inference engines (Beanie upstream integration) ───────────────────────
+    private lateinit var activityEngine: ActivityEngine
+    private lateinit var postureEngine: PostureEngine
+    // Smooths/denoises tSkin for the ML model only — CSV logging keeps the raw
+    // per-packet sample.tskinC unchanged. One instance per service lifetime so its
+    // warmup/worn-state tracking survives brief BLE reconnects (by design — see
+    // TskinSynthesizer's own not-worn/put-on heuristics rather than resetting on
+    // every disconnect).
+    private val tskinSynthesizer = TskinSynthesizer()
+    private var lastTskinUpdateAtMs: Long = 0L
+    // IMU ring buffer: up to 1001 rows of [ax_g, ay_g, az_g, accelMag_g, gx_dps, gy_dps, gz_dps]
+    private val imuRingBuffer = ArrayDeque<FloatArray>(1001)
+    // Parallel timestamp deque (one entry per imuRingBuffer row, same push/pop order) so we
+    // can report the true start time of whichever slice is actually fed to the model (the
+    // last 250 rows), instead of the time the buffer first started filling.
+    private val imuTimestamps = ArrayDeque<Long>(1001)
     private val reconnectRunnable = Runnable { connect() }
     private var scanFailCount = 0
     private val connectingStallRunnable = Runnable {
@@ -254,6 +274,8 @@ class BeanieService : Service() {
         refreshProfile()
         dataManager.initializeBeanieLogs()
         dataManager.startPeriodicFlush()
+        activityEngine = ActivityEngine.getInstance(applicationContext)
+        postureEngine = PostureEngine.getInstance(applicationContext)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -996,7 +1018,27 @@ class BeanieService : Service() {
         handler.removeCallbacks(streamWarmupRunnable)
         receivedFrameThisConnection = true
         lastTempSample = sample
-        val profileName = BeanieRegistry.profileForDevice(targetName).name
+        val beanieProfile = BeanieRegistry.profileForDevice(targetName)
+        val profileName = beanieProfile.name
+
+        // TskinSynthesizer: smoothed/denoised tSkin fed to the ML model only.
+        // dt measured from actual wall-clock gap between temperature packets so
+        // the filter's rate limiters/EMA behave correctly regardless of the
+        // firmware's exact packet cadence.
+        val dtSec = if (lastTskinUpdateAtMs > 0L) {
+            (timestampMs - lastTskinUpdateAtMs).coerceAtLeast(1L) / 1000.0
+        } else {
+            1.0
+        }
+        lastTskinUpdateAtMs = timestampMs
+        val tskinOut = tskinSynthesizer.update(
+            time = Date(timestampMs),
+            innerC = sample.innerC,
+            outerC = sample.outerC,
+            dt = dtSec,
+            c1 = beanieProfile.c1
+        )
+
         val row = buildString {
             append(sample.timestampMs).append(',')
             append(csvSafe(targetName)).append(',')
@@ -1006,9 +1048,36 @@ class BeanieService : Service() {
             append(formatDouble(sample.outerC)).append(',')
             append(formatDouble(sample.tskinC)).append(',')
             append(formatDouble(sample.heatFluxCalPerSec)).append(',')
-            append(batteryPct?.toString() ?: "")
+            append(batteryPct?.toString() ?: "").append(',')
+            if (activityEngine.isReady.value) {
+                append(activityEngine.currentActivity.value).append(',')
+                append(formatDouble(activityEngine.confidence.value))
+            } else {
+                append(',').append("")
+            }
         }
         dataManager.writeBeanieTemperatureData(row)
+
+        // Trigger activity inference with accumulated IMU + temperature data
+        if (imuRingBuffer.size >= 250) {
+            val imuMatrix = imuRingBuffer.toTypedArray()
+            val postureSeries = postureEngine.getPostureSeries(250)
+            val windowEndMs = timestampMs
+            // Timestamp of the oldest sample in the *last 250* rows actually fed to the
+            // model — not the oldest row in the full 1001-row ring buffer.
+            val windowStartMs = imuTimestamps.toList().takeLast(minOf(250, imuTimestamps.size))
+                .firstOrNull() ?: windowEndMs
+            activityEngine.startInference(
+                imuMatrix = imuMatrix,
+                tSkin = tskinOut.synthC,
+                outerC = sample.outerC,
+                heatFluxCalPerSec = sample.heatFluxCalPerSec,
+                postureSeries = postureSeries,
+                windowStartMs = windowStartMs,
+                windowEndMs = windowEndMs
+            )
+        }
+
         broadcastStatus(STATUS_READY)
         updateNotification(
             "Skin ${formatDouble(sample.tskinC)}C | In ${formatDouble(sample.innerC)} / Out ${formatDouble(sample.outerC)}",
@@ -1046,6 +1115,27 @@ class BeanieService : Service() {
             }
         }
         dataManager.writeBeanieImuData(rows)
+
+        // Feed samples to inference engines. PostureEngine.process() takes the whole
+        // batch (it does its own raw→scaled conversion internally, same as it does for
+        // every other Beanie packet) — there is no feedScaledImuSample() method on
+        // PostureEngine, so calling it per-sample here was a compile error.
+        postureEngine.process(samples)
+        for (sample in samples) {
+            val row = floatArrayOf(
+                sample.axG.toFloat(),
+                sample.ayG.toFloat(),
+                sample.azG.toFloat(),
+                sample.accelMagG.toFloat(),
+                sample.gxDps.toFloat(),
+                sample.gyDps.toFloat(),
+                sample.gzDps.toFloat()
+            )
+            if (imuRingBuffer.size >= 1001) imuRingBuffer.removeFirst()
+            imuRingBuffer.addLast(row)
+            if (imuTimestamps.size >= 1001) imuTimestamps.removeFirst()
+            imuTimestamps.addLast(sample.timestampMs)
+        }
     }
 
     private fun broadcastStatus(status: String) {
@@ -1069,6 +1159,10 @@ class BeanieService : Service() {
                 putExtra(EXTRA_HEAT_FLUX, snapshot.heatFluxCalPerSec)
             }
             snapshot.batteryPct?.let { putExtra(EXTRA_BATTERY_PCT, it) }
+            if (activityEngine.isReady.value) {
+                putExtra(EXTRA_ACTIVITY_LABEL, activityEngine.currentActivity.value)
+                putExtra(EXTRA_ACTIVITY_CONFIDENCE, activityEngine.confidence.value.toFloat())
+            }
         }
         sendBroadcast(intent)
     }
@@ -1095,7 +1189,13 @@ class BeanieService : Service() {
             deviceName = targetName.trim(),
             tskinC = roundForUi(temp?.tskinC ?: Double.NaN),
             heatFluxCalPerSec = roundForUi(temp?.heatFluxCalPerSec ?: Double.NaN),
-            batteryPct = batteryPct
+            batteryPct = batteryPct,
+            activityLabel = activityEngine.currentActivity.value.takeIf {
+                activityEngine.isReady.value && it.isNotEmpty()
+            },
+            activityConfidence = activityEngine.confidence.value.takeIf {
+                activityEngine.isReady.value && activityEngine.currentActivity.value.isNotEmpty()
+            }
         )
     }
 

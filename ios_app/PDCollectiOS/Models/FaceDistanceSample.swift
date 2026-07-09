@@ -12,12 +12,15 @@ struct FaceDistanceSample {
     let yaw: Float               // face yaw angle in degrees (positive = turning left)
 
     var csvRow: String {
-        "\(timestampMs),"
-        + "\(String(format: "%.4f", distanceRatio)),"
-        + "\(String(format: "%.4f", faceX)),"
-        + "\(String(format: "%.4f", faceY)),"
-        + "\(String(format: "%.3f", confidence)),"
-        + "\(String(format: "%.2f", roll)),"
-        + "\(String(format: "%.2f", yaw))\n"
+        // en_US_POSIX: force "." decimals regardless of device region — see
+        // the note in PhysicalActivityEvent.csvRow for why this matters.
+        let posix = Locale(identifier: "en_US_POSIX")
+        return "\(timestampMs),"
+        + "\(String(format: "%.4f", locale: posix, distanceRatio)),"
+        + "\(String(format: "%.4f", locale: posix, faceX)),"
+        + "\(String(format: "%.4f", locale: posix, faceY)),"
+        + "\(String(format: "%.3f", locale: posix, confidence)),"
+        + "\(String(format: "%.2f", locale: posix, roll)),"
+        + "\(String(format: "%.2f", locale: posix, yaw))\n"
     }
 }

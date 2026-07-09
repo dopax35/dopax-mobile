@@ -122,6 +122,14 @@ class BeanieDevicePickerActivity : AppCompatActivity() {
             refreshCurrentDeviceUi()
             Toast.makeText(this, "Beanie removed", Toast.LENGTH_SHORT).show()
         }
+
+        findViewById<MaterialButton>(R.id.btnCalibratePosture)?.setOnClickListener {
+            if (profile.beanieDeviceAddress.isBlank()) {
+                Toast.makeText(this, "Pair a Beanie device first", Toast.LENGTH_SHORT).show()
+            } else {
+                startActivity(Intent(this, PostureCalibrationActivity::class.java))
+            }
+        }
     }
 
     override fun onResume() {

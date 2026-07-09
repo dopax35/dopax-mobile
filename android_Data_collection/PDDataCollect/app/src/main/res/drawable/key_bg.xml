@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true" android:drawable="@color/secondary" />
-    <item android:drawable="@color/surface" />
-</selector>
+<!--
+    Key background for PDKeyboardService.
+    Rounded, outlined keys in the dopa-X palette with a clear pressed state
+    (filled + colored outline) — higher-contrast feedback than a flat color
+    swap, which matters for users with tremor or visual symptoms who need an
+    unambiguous "yes, that registered" signal.
+    2dp inset on all sides creates the visual gap between adjacent keys.
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="2dp"
+    android:insetRight="2dp"
+    android:insetTop="2dp"
+    android:insetBottom="2dp">
+    <selector>
+        <item android:state_pressed="true" android:drawable="@drawable/key_bg_shape_pressed" />
+        <item android:drawable="@drawable/key_bg_shape_normal" />
+    </selector>
+</inset>

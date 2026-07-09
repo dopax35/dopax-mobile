@@ -335,6 +335,7 @@ class DataManager(private val context: Context, private val userProfile: UserPro
                 }
                 zos.closeEntry()
             }
+            addMlPredictionsEntry(zos, dateStr)
         }
         return zipFile
     }
@@ -383,8 +384,24 @@ class DataManager(private val context: Context, private val userProfile: UserPro
                 }
                 zos.closeEntry()
             }
+            addMlPredictionsEntry(zos, dateStr)
         }
         return zipFile
+    }
+
+    /**
+     * ml_predictions.json (Beanie activity/ML inference log) lives at
+     * context.filesDir, not inside the per-date directory the zip walk above
+     * covers, so it's added as an explicit extra entry here — filtered to just
+     * this date, since the on-disk file spans every date in one flat array.
+     * No-ops if there are no ML predictions for this date (e.g. no Beanie used).
+     */
+    private fun addMlPredictionsEntry(zos: ZipOutputStream, dateStr: String) {
+        val json = com.pdcollect.app.logic.MLPredictionStore.getInstance(context)
+            .entriesForDateAsJSON(dateStr) ?: return
+        zos.putNextEntry(ZipEntry("$dateStr/ml_predictions.json"))
+        zos.write(json.toByteArray(Charsets.UTF_8))
+        zos.closeEntry()
     }
 
     fun dateHasRecordedData(dateStr: String): Boolean {
@@ -684,3 +701,4 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         }
     }
 }
+                                                                                                                                                                                                                                                                                                                                                                                         

@@ -405,14 +405,18 @@ struct TrailMakingTestView: View {
         let minDist = Constants.TMT.minSpacing
 
         var positions: [CGPoint] = []
-        var attempts = 0
-        while positions.count < sequence.count && attempts < 2000 {
-            let x = CGFloat.random(in: pad...(w - pad))
-            let y = CGFloat.random(in: pad...(h - pad))
-            let p = CGPoint(x: x, y: y)
-            let tooClose = positions.contains { hypot($0.x - p.x, $0.y - p.y) < minDist }
-            if !tooClose { positions.append(p) }
-            attempts += 1
+        for _ in sequence {
+            var p = CGPoint.zero
+            var attempts = 0
+            var tooClose = false
+            repeat {
+                let x = CGFloat.random(in: pad...(w - pad))
+                let y = CGFloat.random(in: pad...(h - pad))
+                p = CGPoint(x: x, y: y)
+                tooClose = positions.contains { hypot($0.x - p.x, $0.y - p.y) < minDist }
+                attempts += 1
+            } while tooClose && attempts < 200
+            positions.append(p)
         }
         targets = zip(sequence, positions).map { TMTTarget(label: $0, position: $1) }
         startTime = Date()

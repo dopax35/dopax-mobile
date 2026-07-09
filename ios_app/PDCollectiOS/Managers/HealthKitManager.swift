@@ -19,7 +19,11 @@ class HealthKitManager: ObservableObject {
             .heartRateVariabilitySDNN,
             .restingHeartRate
         ]
-        return Set(identifiers.compactMap { HKQuantityType.quantityType(forIdentifier: $0) })
+        var types = Set(identifiers.compactMap { HKQuantityType.quantityType(forIdentifier: $0) })
+        // Workout imports (Running/Bike/Swimming/Weight Training/Pilates logs)
+        // — a separate read scope from the passive gait metrics above.
+        types.insert(HKObjectType.workoutType())
+        return types
     }
 
     func requestAuthorization() async {
@@ -32,6 +36,78 @@ class HealthKitManager: ObservableObject {
             await MainActor.run { isAuthorized = true }
         } catch {
             await MainActor.run { authorizationError = error.localizedDescription }
+        }
+    }
+
+    // MARK: - Workout Import
+
+    /// Fetches workouts logged in the last [days] days (Apple Health / Apple
+    /// Fitness / any third-party app that writes HKWorkout, e.g. Strava if
+    /// the user has that integration enabled on their end) and maps them
+    /// onto this app's physical-activity schema.
+    func fetchRecentWorkouts(days: Int = 7) async -> [PhysicalActivityEvent] {
+        guard Self.isAvailable else { return [] }
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: end) ?? end
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+
+        let workouts: [HKWorkout] = await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: HKObjectType.workoutType(),
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)]
+            ) { _, samples, _ in
+                continuation.resume(returning: (samples as? [HKWorkout]) ?? [])
+            }
+            store.execute(query)
+        }
+
+        var events: [PhysicalActivityEvent] = []
+        for workout in workouts {
+            let durationMin = workout.duration / 60.0
+            // totalEnergyBurned is the long-established HKWorkout property —
+            // used over the newer per-statistic workout API for broader SDK
+            // compatibility.
+            let calories = workout.totalEnergyBurned?.doubleValue(for: .kilocalorie())
+            let avgHeartRate = await averageHeartRate(from: workout.startDate, to: workout.endDate)
+
+            events.append(PhysicalActivityEvent(
+                timestampMs: Int64(Date().timeIntervalSince1970 * 1000),
+                activityType: PhysicalActivityEvent.mapExternalType(Self.workoutTypeName(workout.workoutActivityType)),
+                timeOfDayMs: Int64(workout.startDate.timeIntervalSince1970 * 1000),
+                source: "HealthKit",
+                durationMin: durationMin,
+                calories: calories,
+                avgHeartRate: avgHeartRate,
+                // Every HKObject carries a stable UUID — used for import dedup.
+                externalId: workout.uuid.uuidString
+            ))
+        }
+        return events
+    }
+
+    private func averageHeartRate(from start: Date, to end: Date) async -> Double? {
+        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate) else { return nil }
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsQuery(quantityType: hrType, quantitySamplePredicate: predicate, options: .discreteAverage) { _, stats, _ in
+                let unit = HKUnit.count().unitDivided(by: .minute())
+                continuation.resume(returning: stats?.averageQuantity()?.doubleValue(for: unit))
+            }
+            store.execute(query)
+        }
+    }
+
+    private static func workoutTypeName(_ type: HKWorkoutActivityType) -> String {
+        switch type {
+        case .running:                      return "running"
+        case .cycling:                       return "cycling"
+        case .swimming:                      return "swimming"
+        case .traditionalStrengthTraining,
+             .functionalStrengthTraining:    return "weight training"
+        case .yoga, .pilates, .flexibility:  return "pilates"
+        default:                             return "other"
         }
     }
 
@@ -106,8 +182,12 @@ class HealthKitManager: ObservableObject {
     func csvString(for metrics: [GaitMetric]) -> String {
         let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
         var csv = Constants.CSV.gaitMetricsHeader
+        // en_US_POSIX: force "." decimals regardless of device region — a
+        // comma-decimal locale would otherwise split these CSV rows into
+        // extra columns. See the same note in PhysicalActivityEvent.csvRow.
+        let posix = Locale(identifier: "en_US_POSIX")
         for m in metrics {
-            func f(_ v: Double?) -> String { v.map { String(format: "%.4f", $0) } ?? "" }
+            func f(_ v: Double?) -> String { v.map { String(format: "%.4f", locale: posix, $0) } ?? "" }
             csv += "\(fmt.string(from: m.date)),\(f(m.walkingSpeed)),\(f(m.stepLength)),"
                  + "\(f(m.walkingSteadiness)),\(f(m.doubleSupportPercentage)),\(f(m.asymmetryPercentage)),"
                  + "\(f(m.heartRate)),\(f(m.hrvSDNN))\n"

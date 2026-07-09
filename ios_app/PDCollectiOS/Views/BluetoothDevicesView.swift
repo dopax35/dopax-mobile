@@ -6,6 +6,8 @@ struct BluetoothDevicesView: View {
     @ObservedObject var hr: HRBluetoothService
     @ObservedObject var beanie: BeanieBluetoothService
 
+    @State private var showPostureCalibration = false
+
     var body: some View {
         Form {
             // MARK: - Bluetooth Status
@@ -101,14 +103,104 @@ struct BluetoothDevicesView: View {
 
             // MARK: - Beanie Temperature Sensor
             Section {
-                Text("Beanie support has been disabled.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Current status
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if beanie.deviceName.isEmpty {
+                            Text("No device paired")
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text(beanie.deviceName)
+                                .fontWeight(.medium)
+                            Text(beanie.status.rawValue)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Spacer()
+                    statusDot(active: beanie.status == .ready)
+                }
+
+                // Live readings
+                if beanie.isConnected {
+                    HStack {
+                        Label("Skin Temperature", systemImage: "thermometer")
+                            .foregroundColor(.dopaxOrange)
+                        Spacer()
+                        Text(String(format: "%.1f\u{00B0}C", beanie.tskinC))
+                            .fontWeight(.semibold)
+                            .foregroundColor(.dopaxOrange)
+                    }
+
+                    LabeledContent("Heat Flux",
+                                   value: String(format: "%.2f cal/s", beanie.heatFlux))
+
+                    if !beanie.activityLabel.isEmpty {
+                        LabeledContent("Activity",
+                                       value: String(format: "%@ (%.0f%%)",
+                                                      beanie.activityLabel,
+                                                      beanie.activityConfidence * 100))
+                    }
+
+                    if let battery = beanie.batteryPct {
+                        LabeledContent("Battery", value: "\(battery)%")
+                    }
+                }
+
+                // Scan button
+                Button {
+                    btManager.scanForBeanieDevices()
+                } label: {
+                    Label(btManager.isScanning ? "Scanning..." : "Scan for Beanie Devices",
+                          systemImage: "antenna.radiowaves.left.and.right")
+                }
+                .disabled(btManager.isScanning || !btManager.isPoweredOn)
+
+                // Discovered devices
+                ForEach(btManager.discoveredBeanieDevices, id: \.id) { device in
+                    Button {
+                        btManager.connectBeanieDevice(id: device.id)
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(device.name)
+                                    .foregroundColor(.primary)
+                                Text(device.id.uuidString.prefix(8) + "...")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "link")
+                                .foregroundColor(.dopaxBlue)
+                        }
+                    }
+                }
+
+                // Calibrate posture — only meaningful once a Beanie is paired.
+                if !beanie.deviceName.isEmpty {
+                    Button {
+                        showPostureCalibration = true
+                    } label: {
+                        Label("Calibrate Posture", systemImage: "figure.stand")
+                    }
+                }
+
+                // Disconnect button
+                if !beanie.deviceName.isEmpty {
+                    Button(role: .destructive) {
+                        btManager.disconnectBeanie()
+                    } label: {
+                        Label("Disconnect", systemImage: "xmark.circle")
+                    }
+                }
             } header: {
                 Label("Beanie Temperature Sensor", systemImage: "thermometer")
             }
         }
         .navigationTitle("Bluetooth Devices")
+        .sheet(isPresented: $showPostureCalibration) {
+            PostureCalibrationView()
+        }
     }
 
     // MARK: - Helpers

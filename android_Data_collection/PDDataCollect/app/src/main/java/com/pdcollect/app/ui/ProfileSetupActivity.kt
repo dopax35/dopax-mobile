@@ -134,7 +134,15 @@ class ProfileSetupActivity : AppCompatActivity() {
         }
 
         addMedButton.setOnClickListener { addMedicationRow() }
-        pairShellyButton.setOnClickListener { startShellyPairing() }
+        // Shelly BLE is temporarily disabled (Constants.SHELLY_BLE_ENABLED) —
+        // hide the pairing entry point entirely rather than leaving a button
+        // that would tap through to a scanner that silently ignores the request.
+        if (com.pdcollect.app.util.Constants.SHELLY_BLE_ENABLED) {
+            pairShellyButton.visibility = View.VISIBLE
+            pairShellyButton.setOnClickListener { startShellyPairing() }
+        } else {
+            pairShellyButton.visibility = View.GONE
+        }
 
         // Pre-select the body-side radios from any saved value (so editing
         // an existing profile shows the previous answer). The save block

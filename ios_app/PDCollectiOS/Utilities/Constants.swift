@@ -72,7 +72,10 @@ enum Constants {
         static let beanieImuHeader      = "timestamp_ms,device_name,device_address,ax_raw,ay_raw,az_raw,gx_raw,gy_raw,gz_raw,ax_g,ay_g,az_g,accel_mag_g,gx_dps,gy_dps,gz_dps,gyro_mag_dps\n"
         static let keyEventsHeader      = "timestamp_ms,key_class,is_backspace,source_app\n"
         static let medicationHeader     = "timestamp_ms,taken_ms,med_name,dosage\n"
-        static let physicalActivityHeader = "timestamp_ms,activity_type,time_of_day_ms\n"
+        // v2 (July 2026): added source/duration/calories/avg_heart_rate — matches
+        // Android's PHYSICAL_ACTIVITY_HEADER exactly. Manual entries fill the new
+        // columns with "Manual,,,".
+        static let physicalActivityHeader = "timestamp_ms,activity_type,time_of_day_ms,source,duration_min,calories,avg_heart_rate\n"
         static let profileHeader        = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json\n"
         /// timestamp_ms, filename, story_headline, duration_ms — matches Android exactly.
         static let voiceLogHeader       = "timestamp_ms,filename,story_headline,duration_ms\n"

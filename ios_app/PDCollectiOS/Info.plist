@@ -31,6 +31,14 @@
 				<string>com.googleusercontent.apps.225458522869-ipigbhk8f1a3abgp3b4favs94g4f4hm5</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.oriw.pdcollect.ios1.strava</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>pdcollect</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app connects to heart rate monitors and temperature sensors to track health metrics</string>

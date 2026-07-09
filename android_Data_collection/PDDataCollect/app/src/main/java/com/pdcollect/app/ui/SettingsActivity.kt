@@ -354,8 +354,17 @@ class SettingsActivity : AppCompatActivity() {
             settingsDataManager.writeProfileSnapshot()
             Toast.makeText(this, "Medications saved", Toast.LENGTH_SHORT).show()
         }
-        findViewById<Button>(R.id.btnPairShelly).setOnClickListener {
-            startShellyPairing()
+        findViewById<Button>(R.id.btnPairShelly).apply {
+            // Shelly BLE is temporarily disabled (Constants.SHELLY_BLE_ENABLED) —
+            // hide the pairing entry point entirely rather than leaving a
+            // button that would tap through to a scanner that silently
+            // ignores the request.
+            if (Constants.SHELLY_BLE_ENABLED) {
+                visibility = View.VISIBLE
+                setOnClickListener { startShellyPairing() }
+            } else {
+                visibility = View.GONE
+            }
         }
     }
 
@@ -566,13 +575,25 @@ class SettingsActivity : AppCompatActivity() {
         tskinC: Double,
         heatFlux: Double
     ) {
-        tvBeanieDevice.text = "Beanie support disabled"
-        tvBeanieStatus.text = "Disabled"
+        tvBeanieDevice.text = deviceName.ifBlank { "Beanie" }
+        tvBeanieStatus.text = status
         viewBeanieStatusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(
-            ContextCompat.getColor(this, R.color.gray_50)
+            ContextCompat.getColor(this, if (connected) R.color.status_success else R.color.gray_50)
         )
-        tvBeanieTemp.text = "-- C"
-        tvBeanieHeatFlux.text = "-- cal/s"
+        tvBeanieTemp.text = if (tskinC.isFinite()) {
+            String.format(Locale.US, "%.2f C", tskinC)
+        } else if (connected) {
+            "Waiting..."
+        } else {
+            "-- C"
+        }
+        tvBeanieHeatFlux.text = if (heatFlux.isFinite()) {
+            String.format(Locale.US, "%.2f cal/s", heatFlux)
+        } else if (connected) {
+            "Waiting..."
+        } else {
+            "-- cal/s"
+        }
     }
 
     private data class PermissionEntry(

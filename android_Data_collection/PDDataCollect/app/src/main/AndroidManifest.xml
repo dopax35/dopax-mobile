@@ -38,6 +38,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
 
+    <!-- Health Connect — read-only, used to import logged workouts instead of
+         requiring manual re-entry. -->
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_TOTAL_CALORIES_BURNED" />
+
     <application
         android:name=".PDCollectApp"
         android:allowBackup="false"
@@ -92,6 +98,23 @@
 
         <activity android:name=".ui.MainActivity"
             android:exported="false" />
+
+        <!-- Catches the "pdcollect://strava-callback" redirect after the user
+             approves Strava access in their browser. Exported=true is required
+             for the browser (external app) to be able to launch it; it does
+             nothing but hand the auth code to StravaManager and re-open
+             MainActivity, so it carries no meaningful attack surface. -->
+        <activity android:name=".ui.StravaAuthCallbackActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="pdcollect" android:host="strava-callback" />
+            </intent-filter>
+        </activity>
 
         <activity android:name=".ui.TrailMakingTestActivity"
             android:exported="false" />
@@ -220,6 +243,8 @@
             android:exported="false" />
         <activity android:name=".ui.BeanieDevicePickerActivity"
             android:exported="false" />
+        <activity android:name=".ui.PostureCalibrationActivity"
+            android:exported="false" />
         <service
             android:name=".service.AntHRService"
             android:exported="false"
@@ -228,8 +253,6 @@
             android:name=".service.BeanieService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
-
-
 
     </application>
 </manifest>

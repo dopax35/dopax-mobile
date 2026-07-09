@@ -1,9 +1,39 @@
-import Foundation
 import CoreBluetooth
+import Combine
 
 /// Handles BLE communication with the Beanie temperature/IMU sensor.
 /// Acts as CBPeripheralDelegate for the Beanie peripheral.
 class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
+
+    private var cancellables = Set<AnyCancellable>()
+
+    override init() {
+        super.init()
+        setupInferenceMirroring()
+    }
+
+    private func setupInferenceMirroring() {
+        BeanieActivityEngine.shared.$currentActivity
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] val in
+                self?.activityLabel = val
+            }
+            .store(in: &cancellables)
+
+        BeanieActivityEngine.shared.$confidence
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] val in
+                self?.activityConfidence = val
+            }
+            .store(in: &cancellables)
+
+        BeanieActivityEngine.shared.$allProbabilities
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] val in
+                self?.activityProbabilities = val
+            }
+            .store(in: &cancellables)
+    }
 
     // MARK: - Published State
 
@@ -17,10 +47,33 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
     @Published var deviceAddress: String = ""
     @Published var status: BLEDeviceStatus = .idle
 
+    // MARK: - Inference outputs (Beanie upstream integration)
+    @Published var activityLabel: String = ""
+    @Published var activityConfidence: Double = 0.0
+    @Published var activityProbabilities: [Double] = []
+
     // MARK: - Internal
 
     var dataManager: DataManager?
     let parser = BeaniePacketParser(profile: BeanieRegistry.defaultProfile)
+    // Kept in sync with the parser's profile (set in didDiscoverCharacteristicsFor)
+    // so TskinSynthesizer.update() has access to this device's c1 coefficient.
+    private var currentProfile: BeanieProfile = BeanieRegistry.defaultProfile
+
+    // Smooths/denoises tSkin for the ML model only — CSV logging and the
+    // published tskinC still reflect the raw per-packet sample.tskinC
+    // unchanged. Survives brief disconnects by design (see TskinSynthesizer's
+    // own not-worn/put-on heuristics) rather than resetting on every
+    // reconnect — reset() below only clears it on an explicit full reset.
+    private let tskinSynthesizer = TskinSynthesizer()
+    private var lastTskinUpdateTime: Date?
+
+    // IMU ring buffer for inference: 250 rows of [ax_g, ay_g, az_g, accelMag_g, gx_dps, gy_dps, gz_dps]
+    private var imuRingBuffer: [[Float]] = []
+    // Parallel timestamp array (same push/pop order as imuRingBuffer) so we can report the
+    // true start time of whichever slice is actually fed to the model (the last 250 rows),
+    // instead of the time the buffer first started filling.
+    private var imuTimestamps: [Int64] = []
 
     // BLE UUIDs
     private static let beanieServiceUUID = CBUUID(string: "12345678-90AB-4CDE-8123-1234567890AB")
@@ -71,6 +124,19 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         dataWatchdogTimer?.invalidate()
         dataWatchdogTimer = nil
         parser.resetBuffer()
+        activityLabel = ""
+        activityConfidence = 0.0
+        activityProbabilities = []
+        imuRingBuffer.removeAll()
+        imuTimestamps.removeAll()
+        BeaniePostureEngine.shared.reset()
+        BeanieActivityEngine.shared.reset()
+        // tskinSynthesizer is deliberately NOT reset here — reset() runs on every
+        // reconnect attempt (see BluetoothManager.connectToSavedBeanie/didDiscover),
+        // and the synthesizer's own not-worn/put-on heuristics are what should
+        // decide when its warmup state restarts, not a brief BLE drop. Matches
+        // Android's BeanieService, which keeps one TskinSynthesizer for the whole
+        // service lifetime rather than recreating it per connection.
     }
 
     // MARK: - CBPeripheralDelegate
@@ -104,6 +170,7 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         // Update profile based on device name
         let profile = BeanieRegistry.profileForDevice(deviceName)
         parser.updateProfile(profile)
+        currentProfile = profile
 
         // Setup data stream
         setupDataStream(peripheral: peripheral)
@@ -217,9 +284,50 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
                     outerC: sample.outerC,
                     tskinC: sample.tskinC,
                     heatFluxCalPerSec: sample.heatFluxCalPerSec,
-                    batteryPct: batteryPct
+                    batteryPct: batteryPct,
+                    activityLabel: BeanieActivityEngine.shared.currentActivity.isEmpty ? nil : BeanieActivityEngine.shared.currentActivity,
+                    activityConfidence: BeanieActivityEngine.shared.currentActivity.isEmpty ? nil : BeanieActivityEngine.shared.confidence
                 )
                 dataManager?.writeBeanieTemperatureData(reading)
+
+                // TskinSynthesizer: smoothed/denoised tSkin fed to the ML model only.
+                // CSV logging above and the published tskinC keep the raw
+                // sample.tskinC unchanged. dt measured from the actual wall-clock
+                // gap between temperature packets, same approach as Android.
+                let tskinNow = Date()
+                let tskinDt: Double
+                if let last = lastTskinUpdateTime {
+                    tskinDt = max(0.001, tskinNow.timeIntervalSince(last))
+                } else {
+                    tskinDt = 1.0
+                }
+                lastTskinUpdateTime = tskinNow
+                let tskinOut = tskinSynthesizer.update(
+                    time: tskinNow,
+                    innerC: sample.innerC,
+                    outerC: sample.outerC,
+                    dt: tskinDt,
+                    c1: currentProfile.c1
+                )
+
+                // Trigger activity inference with accumulated IMU + temperature
+                let imuCopy = self.imuRingBuffer
+                let windowEnd = Int64(Date().timeIntervalSince1970 * 1000)
+                if imuCopy.count >= 250 {
+                    // Timestamp of the oldest sample in the *last 250* rows actually fed to
+                    // the model — not the oldest row in the full 1001-row ring buffer.
+                    let windowStart = self.imuTimestamps.suffix(min(250, self.imuTimestamps.count)).first ?? windowEnd
+                    let postureSeries = BeaniePostureEngine.shared.getPostureSeries(250)
+                    BeanieActivityEngine.shared.startInference(
+                        imuMatrix: imuCopy,
+                        tSkin: tskinOut.synthC,
+                        outerC: sample.outerC,
+                        heatFluxCalPerSec: sample.heatFluxCalPerSec,
+                        postureSeries: postureSeries,
+                        windowStartMs: windowStart,
+                        windowEndMs: windowEnd
+                    )
+                }
 
             case .imu(let samples):
                 let readings = samples.map { sample in
@@ -236,6 +344,26 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
                     )
                 }
                 dataManager?.writeBeanieImuData(readings)
+
+                // Feed the whole packet to the posture engine ONCE — it loops
+                // internally (mirrors Android's PostureEngine.process(), which
+                // BeanieService.kt also calls once per packet, not once per
+                // sample — a per-sample feedScaledImuSample()-style call isn't
+                // how either engine is shaped).
+                BeaniePostureEngine.shared.process(samples: samples)
+
+                // Feed IMU ring buffer for inference
+                for sample in samples {
+                    let row: [Float] = [
+                        Float(sample.axG), Float(sample.ayG), Float(sample.azG),
+                        Float(sample.accelMagG),
+                        Float(sample.gxDps), Float(sample.gyDps), Float(sample.gzDps)
+                    ]
+                    if imuRingBuffer.count >= 1001 { imuRingBuffer.removeFirst() }
+                    imuRingBuffer.append(row)
+                    if imuTimestamps.count >= 1001 { imuTimestamps.removeFirst() }
+                    imuTimestamps.append(sample.timestamp)
+                }
 
             case .battery(let pct):
                 DispatchQueue.main.async {

@@ -34,7 +34,10 @@ import com.pdcollect.app.service.AntHRService
 import com.pdcollect.app.service.BeanieStatusStore
 import com.pdcollect.app.service.BeanieService
 import com.pdcollect.app.service.FaceDistanceService
+import com.pdcollect.app.service.HealthConnectManager
+import com.pdcollect.app.service.ImportedActivityStore
 import com.pdcollect.app.service.PDCollectService
+import com.pdcollect.app.service.StravaManager
 import com.pdcollect.app.ui.view.DailyMetricChartView
 import com.pdcollect.app.ui.view.TrendSummaryChartView
 import com.pdcollect.app.util.Constants
@@ -61,6 +64,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appUpdateManager: AppUpdateManager
     private val immediateUpdateRequestCode = 9001
 
+    // Must be registered unconditionally at construction time (before the
+    // activity reaches STARTED) — cannot be registered lazily inside a
+    // button click handler, hence it lives here rather than inside
+    // importFromHealthConnect().
+    private val healthConnectPermissionLauncher = registerForActivityResult(
+        androidx.health.connect.client.PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        if (granted.containsAll(HealthConnectManager.PERMISSIONS)) {
+            lifecycleScope.launch { doImportFromHealthConnect() }
+        } else {
+            Toast.makeText(this, "Health Connect permission was not granted.", Toast.LENGTH_LONG).show()
+        }
+    }
+
     private lateinit var cardVitalSigns: com.google.android.material.card.MaterialCardView
     private lateinit var tvLiveBpm: TextView
     private lateinit var tvLiveHrv: TextView
@@ -68,6 +85,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cardBeanieVitals: com.google.android.material.card.MaterialCardView
     private lateinit var tvBeanieSkinTemp: TextView
     private lateinit var tvBeanieHeatFlux: TextView
+    private lateinit var dividerBeanieActivity: android.view.View
+    private lateinit var layoutBeanieActivity: android.widget.LinearLayout
+    private lateinit var tvBeanieActivity: TextView
     private var dashboardRefreshJob: Job? = null
 
     private val hrUpdateReceiver = object : BroadcastReceiver() {
@@ -99,11 +119,18 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Double.NaN
             }
+            val activityLabel = intent.getStringExtra(BeanieService.EXTRA_ACTIVITY_LABEL)
+            val activityConf = if (intent.hasExtra(BeanieService.EXTRA_ACTIVITY_CONFIDENCE)) {
+                intent.getFloatExtra(BeanieService.EXTRA_ACTIVITY_CONFIDENCE, 0f).toDouble()
+            } else null
+
             renderBeanieVitals(
                 connected = connected,
                 tskin = tskin,
                 heatFlux = heatFlux,
-                serviceRunning = true
+                serviceRunning = true,
+                activityLabel = activityLabel,
+                activityConfidence = activityConf
             )
         }
     }
@@ -138,6 +165,9 @@ class MainActivity : AppCompatActivity() {
         cardBeanieVitals = findViewById(R.id.cardBeanieVitals)
         tvBeanieSkinTemp = findViewById(R.id.tvBeanieSkinTemp)
         tvBeanieHeatFlux = findViewById(R.id.tvBeanieHeatFlux)
+        dividerBeanieActivity = findViewById(R.id.dividerBeanieActivity)
+        layoutBeanieActivity = findViewById(R.id.layoutBeanieActivity)
+        tvBeanieActivity = findViewById(R.id.tvBeanieActivity)
         setupChartDetailLaunchers()
 
         val drawerLayout = findViewById<androidx.drawerlayout.widget.DrawerLayout>(R.id.drawerLayout)
@@ -602,6 +632,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showPhysicalActivityDialog() {
         val types = Constants.PHYSICAL_ACTIVITY_TYPES.toTypedArray()
+        var dialogHolder: androidx.appcompat.app.AlertDialog? = null
 
         val container = android.widget.LinearLayout(this).apply {
             orientation = android.widget.LinearLayout.VERTICAL
@@ -616,14 +647,36 @@ class MainActivity : AppCompatActivity() {
         }
         container.addView(spinner)
 
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        // Import options — pull recent workouts from a connected fitness
+        // source instead of entering them by hand.
+        val importBtn = android.widget.Button(this).apply {
+            text = "Import from Health Connect"
+            setOnClickListener {
+                dialogHolder?.dismiss()
+                importFromHealthConnect()
+            }
+        }
+        container.addView(importBtn)
+
+        val stravaBtn = android.widget.Button(this).apply {
+            text = if (StravaManager.isConnected(this@MainActivity)) "Import from Strava" else "Connect Strava"
+            setOnClickListener {
+                dialogHolder?.dismiss()
+                if (StravaManager.isConnected(this@MainActivity)) importFromStrava()
+                else StravaManager.startAuth(this@MainActivity)
+            }
+        }
+        container.addView(stravaBtn)
+
+        dialogHolder = androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Record Physical Activity")
             .setView(container)
             .setPositiveButton("Set Time & Save") { _, _ ->
                 showPhysicalActivityTimePicker(spinner.selectedItem.toString())
             }
             .setNegativeButton("Cancel", null)
-            .show()
+            .create()
+        dialogHolder?.show()
     }
 
     private fun showPhysicalActivityTimePicker(type: String) {
@@ -638,7 +691,7 @@ class MainActivity : AppCompatActivity() {
             actCalendar.set(java.util.Calendar.MINUTE, m)
             val actTime = actCalendar.timeInMillis
 
-            dataManager.writePhysicalActivityData("$now,$type,$actTime")
+            dataManager.writePhysicalActivityData("$now,$type,$actTime,Manual,,,")
             Toast.makeText(
                 this,
                 "$type recorded at ${String.format(java.util.Locale.US, "%02d:%02d", h, m)}",
@@ -646,6 +699,79 @@ class MainActivity : AppCompatActivity() {
             ).show()
             populateDashboardCharts()
         }, hour, minute, true).show()
+    }
+
+    /// Entry point from the "Import from Health Connect" button: checks
+    /// availability/permissions first, requesting permission via the
+    /// pre-registered launcher if needed, then hands off to
+    /// doImportFromHealthConnect() once permission is confirmed.
+    private fun importFromHealthConnect() {
+        lifecycleScope.launch {
+            if (!HealthConnectManager.isAvailable(this@MainActivity)) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Health Connect isn't installed on this device.",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@launch
+            }
+            if (HealthConnectManager.hasAllPermissions(this@MainActivity)) {
+                doImportFromHealthConnect()
+            } else {
+                healthConnectPermissionLauncher.launch(HealthConnectManager.PERMISSIONS)
+            }
+        }
+    }
+
+    /// Fetches recent Health Connect exercise sessions and logs each new one
+    /// (skipping any already imported on a previous run, per
+    /// ImportedActivityStore) as a physical activity event
+    /// (source=HealthConnect). Only call once permissions are confirmed granted.
+    private suspend fun doImportFromHealthConnect() {
+        val sessions = HealthConnectManager.fetchRecentExerciseSessions(this@MainActivity, days = 7)
+        var importedCount = 0
+        sessions.forEach { s ->
+            val alreadySeen = ImportedActivityStore.isAlreadyImported(this@MainActivity, "HealthConnect", s.externalId)
+            if (alreadySeen) return@forEach
+            dataManager.writePhysicalActivityData(
+                "${s.timestampMs},${s.activityType},${s.timeOfDayMs},HealthConnect,${s.durationMin},${s.calories ?: ""},${s.avgHeartRate ?: ""}"
+            )
+            ImportedActivityStore.markImported(this@MainActivity, "HealthConnect", s.externalId)
+            importedCount++
+        }
+        val message = when {
+            sessions.isEmpty() -> "No recent Health Connect workouts found."
+            importedCount == 0 -> "No new Health Connect workouts to import (already imported)."
+            else -> "Imported $importedCount workout(s) from Health Connect."
+        }
+        Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
+        if (importedCount > 0) populateDashboardCharts()
+    }
+
+    /// Fetches recent Strava activities and logs each new one (skipping any
+    /// already imported on a previous run, per ImportedActivityStore) as a
+    /// physical activity event (source=Strava).
+    private fun importFromStrava() {
+        lifecycleScope.launch {
+            val activities = StravaManager.fetchRecentActivities(this@MainActivity, days = 7)
+            var importedCount = 0
+            activities.forEach { a ->
+                val alreadySeen = ImportedActivityStore.isAlreadyImported(this@MainActivity, "Strava", a.externalId)
+                if (alreadySeen) return@forEach
+                dataManager.writePhysicalActivityData(
+                    "${a.timestampMs},${a.activityType},${a.timeOfDayMs},Strava,${a.durationMin},${a.calories ?: ""},${a.avgHeartRate ?: ""}"
+                )
+                ImportedActivityStore.markImported(this@MainActivity, "Strava", a.externalId)
+                importedCount++
+            }
+            val message = when {
+                activities.isEmpty() -> "No recent Strava activities found."
+                importedCount == 0 -> "No new Strava activities to import (already imported)."
+                else -> "Imported $importedCount activit${if (importedCount == 1) "y" else "ies"} from Strava."
+            }
+            Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
+            if (importedCount > 0) populateDashboardCharts()
+        }
     }
 
     private fun showMedicationTimePicker() {
@@ -875,7 +1001,9 @@ class MainActivity : AppCompatActivity() {
             connected = snapshot?.connected == true,
             tskin = snapshot?.tskinC ?: Double.NaN,
             heatFlux = snapshot?.heatFluxCalPerSec ?: Double.NaN,
-            serviceRunning = isServiceRunning(BeanieService::class.java)
+            serviceRunning = isServiceRunning(BeanieService::class.java),
+            activityLabel = snapshot?.activityLabel,
+            activityConfidence = snapshot?.activityConfidence
         )
     }
 
@@ -892,7 +1020,9 @@ class MainActivity : AppCompatActivity() {
         connected: Boolean,
         tskin: Double,
         heatFlux: Double,
-        serviceRunning: Boolean
+        serviceRunning: Boolean,
+        activityLabel: String? = null,
+        activityConfidence: Double? = null
     ) {
         val hasLiveReading = tskin.isFinite() || heatFlux.isFinite()
         if (!serviceRunning && (!connected || !hasLiveReading)) {
@@ -910,6 +1040,19 @@ class MainActivity : AppCompatActivity() {
             heatFlux.isFinite() -> String.format(java.util.Locale.US, "%.2f cal/s", heatFlux)
             serviceRunning -> "Waiting..."
             else -> "-- cal/s"
+        }
+
+        if (!activityLabel.isNullOrEmpty()) {
+            dividerBeanieActivity.visibility = android.view.View.VISIBLE
+            layoutBeanieActivity.visibility = android.view.View.VISIBLE
+            tvBeanieActivity.text = if (activityConfidence != null) {
+                String.format(java.util.Locale.US, "%s (%.0f%%)", activityLabel, activityConfidence * 100)
+            } else {
+                activityLabel
+            }
+        } else {
+            dividerBeanieActivity.visibility = android.view.View.GONE
+            layoutBeanieActivity.visibility = android.view.View.GONE
         }
     }
 }

@@ -14,6 +14,7 @@ import android.os.ParcelUuid
 import android.util.Log
 import com.pdcollect.app.data.DataManager
 import com.pdcollect.app.data.UserProfile
+import com.pdcollect.app.util.Constants
 
 @SuppressLint("MissingPermission")
 class ShellyBleScanner(
@@ -111,6 +112,13 @@ class ShellyBleScanner(
     }
 
     private fun startScanning() {
+        // Checked here (not just by callers) so this feature is genuinely
+        // off no matter which entry point calls in — startPairing() and
+        // startPassive() both funnel through this one function.
+        if (!Constants.SHELLY_BLE_ENABLED) {
+            Log.d(TAG, "Shelly BLE is currently disabled; ignoring scan request.")
+            return
+        }
         if (isScanning || bleScanner == null) return
 
         if (bluetoothAdapter?.isEnabled != true) {
@@ -123,8 +131,21 @@ class ShellyBleScanner(
                 .setServiceData(BTHOME_SERVICE_UUID, byteArrayOf())
                 .build()
 
+            // Low latency only while the user is actively waiting to pair a
+            // device (short, foreground, user-initiated). Passive background
+            // monitoring — which runs continuously for as long as passive
+            // collection is on — uses low power instead; low latency there
+            // would keep the BLE radio in a high-duty-cycle scan mode
+            // indefinitely just to wait quietly for a pillbox to open,
+            // a real battery cost with no benefit to detection latency that
+            // matters for this use case.
+            val scanMode = if (pairingCallback != null) {
+                ScanSettings.SCAN_MODE_LOW_LATENCY
+            } else {
+                ScanSettings.SCAN_MODE_LOW_POWER
+            }
             val settings = ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .setScanMode(scanMode)
                 .build()
 
             bleScanner.startScan(listOf(filter), settings, scanCallback)

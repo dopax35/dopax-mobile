@@ -69,8 +69,10 @@ class PDCollectService : LifecycleService(), SensorEventListener {
         dataManager = DataManager(this, profile)
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         bootToEpochOffsetNs = System.currentTimeMillis() * 1_000_000L - SystemClock.elapsedRealtimeNanos()
-        
-        shellyBleScanner = ShellyBleScanner(this, profile, dataManager)
+
+        if (Constants.SHELLY_BLE_ENABLED) {
+            shellyBleScanner = ShellyBleScanner(this, profile, dataManager)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -83,10 +85,12 @@ class PDCollectService : LifecycleService(), SensorEventListener {
         handler.removeCallbacks(flushRunnable)
         handler.postDelayed(flushRunnable, Constants.SENSOR_BUFFER_FLUSH_INTERVAL_MS)
         dataManager.startPeriodicFlush()
-        
-        shellyBleScanner?.startPassive()
-        handler.removeCallbacks(shellyRestartRunnable)
-        handler.postDelayed(shellyRestartRunnable, 15 * 60 * 1000L) // 15 mins
+
+        if (Constants.SHELLY_BLE_ENABLED) {
+            shellyBleScanner?.startPassive()
+            handler.removeCallbacks(shellyRestartRunnable)
+            handler.postDelayed(shellyRestartRunnable, 15 * 60 * 1000L) // 15 mins
+        }
 
         return START_STICKY
     }

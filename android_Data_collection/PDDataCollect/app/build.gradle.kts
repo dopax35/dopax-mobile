@@ -109,8 +109,8 @@ android {
         // - Build: Updated google-services.json SHA-1 hashes and verified Firebase Auth flow.
         // v3.7.1 (vc 87): Firestore Sync Fixes
         // - Feat: Added email, signature, and graph metrics to Firebase uploads.
-        versionCode = 108
-        versionName = "3.7.22"
+        versionCode = 109
+        versionName = "3.7.23"
     }
 
     signingConfigs {
@@ -206,6 +206,10 @@ dependencies {
 
     // Mandatory In-app Updates
     implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+    // Health Connect — read exercise sessions logged by the user's fitness
+    // apps (Google Fit, Samsung Health, etc.), latest stable as of July 2026.
+    implementation("androidx.health.connect:connect-client:1.1.0")
 
     // LocalBroadcastManager — used for intra-process service communication
     // (DataAccessibilityService → FaceDistanceService foreground-app events)
