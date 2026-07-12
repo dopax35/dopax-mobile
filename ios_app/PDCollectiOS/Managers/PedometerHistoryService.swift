@@ -61,30 +61,45 @@ actor PedometerHistoryService {
         // reach, and a participant should be opening the app at least that
         // often anyway.
         if cursor < fallbackStart { cursor = fallbackStart }
+        guard cursor < now else { return } // already fully caught up
 
-        var hourStarts: [Date] = []
-        var hourCursor = calendar.dateInterval(of: .hour, for: cursor)?.start ?? cursor
-        while hourCursor < now {
-            hourStarts.append(hourCursor)
-            guard let next = calendar.date(byAdding: .hour, value: 1, to: hourCursor) else { break }
-            hourCursor = next
+        // Windows start exactly where the last sync left off — NOT rounded
+        // down to a clock-hour boundary via Calendar.dateInterval(of: .hour,
+        // for:). Rounding down was the original approach, and it caused a
+        // real, confirmed bug: whenever a sync catches up to "now" (the
+        // common case, since this runs on every foreground/BGTask), the
+        // final window is partial (e.g. 05:00–05:47), and its end time still
+        // falls inside the SAME clock-hour it started in — so the next sync
+        // would round back down to 05:00 and re-query/re-write that same
+        // partial hour again, producing duplicate, overlapping rows (seen in
+        // real participant data: two rows for "05:00→05:47" and "05:00→06:00"
+        // from consecutive syncs). Starting each window exactly at `cursor`
+        // guarantees windows never overlap, at the cost of windows no longer
+        // lining up with clean clock-hour boundaries — an acceptable trade,
+        // since nothing here actually depends on that alignment.
+        var windowStarts: [Date] = []
+        var windowCursor = cursor
+        while windowCursor < now {
+            windowStarts.append(windowCursor)
+            guard let next = calendar.date(byAdding: .hour, value: 1, to: windowCursor) else { break }
+            windowCursor = next
         }
-        guard !hourStarts.isEmpty else { return }
+        guard !windowStarts.isEmpty else { return }
 
         // Sequential, not a TaskGroup fan-out: gentler on the motion
         // co-processor than firing dozens of simultaneous queries, and lets
         // Task.isCancelled genuinely stop a BGTask-driven backfill partway
         // through (a TaskGroup would keep every already-started child
         // running regardless of cancellation).
-        var lastCompletedHourEnd: Date?
-        for hourStart in hourStarts {
+        var lastCompletedWindowEnd: Date?
+        for windowStart in windowStarts {
             if Task.isCancelled { break }
-            let hourEnd = min(calendar.date(byAdding: .hour, value: 1, to: hourStart) ?? now, now)
-            if let data = await queryOne(from: hourStart, to: hourEnd), data.numberOfSteps.intValue > 0 {
+            let windowEnd = min(calendar.date(byAdding: .hour, value: 1, to: windowStart) ?? now, now)
+            if let data = await queryOne(from: windowStart, to: windowEnd), data.numberOfSteps.intValue > 0 {
                 let sample = PedometerSample(
                     timestampMs: Int64(Date().timeIntervalSince1970 * 1000),
-                    periodStartMs: Int64(hourStart.timeIntervalSince1970 * 1000),
-                    periodEndMs: Int64(hourEnd.timeIntervalSince1970 * 1000),
+                    periodStartMs: Int64(windowStart.timeIntervalSince1970 * 1000),
+                    periodEndMs: Int64(windowEnd.timeIntervalSince1970 * 1000),
                     steps: data.numberOfSteps.intValue,
                     distanceM: data.distance?.doubleValue,
                     floorsAscended: data.floorsAscended?.intValue,
@@ -94,14 +109,14 @@ actor PedometerHistoryService {
                 )
                 dataManager.writePedometerSample(sample)
             }
-            lastCompletedHourEnd = hourEnd
+            lastCompletedWindowEnd = windowEnd
         }
 
-        // Advance the marker only to the last hour actually queried — if a
+        // Advance the marker only to the last window actually queried — if a
         // BGTask expired partway through, the next sync must resume exactly
         // there rather than silently skipping the un-synced remainder.
-        if let lastCompletedHourEnd {
-            defaults.set(lastCompletedHourEnd.timeIntervalSince1970 * 1000, forKey: lastSyncKey)
+        if let lastCompletedWindowEnd {
+            defaults.set(lastCompletedWindowEnd.timeIntervalSince1970 * 1000, forKey: lastSyncKey)
         }
     }
 

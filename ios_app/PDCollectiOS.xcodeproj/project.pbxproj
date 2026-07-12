@@ -62,6 +62,8 @@
 		A0B4761A6BBB53D4A35D800E /* PedometerSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBBDF974353EFE9F34BCD5F /* PedometerSample.swift */; };
 		14B53669B1616E4FB739D6D4 /* PedometerHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B440D08040066E0D21731 /* PedometerHistoryService.swift */; };
 		798B07D7DEA9E72DE37F8E06 /* StravaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */; };
+		F667F2D674EB5B5F1AA6CA8D /* MotionActivitySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51278D034C42F24620D0F7A3 /* MotionActivitySample.swift */; };
+		AFB4881DC55F17CBDACA37CB /* MotionActivityHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */; };
 		CBB3ED519A7862EAC5AF9865 /* Rajdhani-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D8D557F15CDC697364C00987 /* Rajdhani-Medium.ttf */; };
 		D0F7DBA1666674CD6F484E9B /* DailyReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE1DE713251384FA69CF92E /* DailyReportView.swift */; };
 		D95BB2D0B9A8F755A9947A15 /* FingerTappingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1879D6C5CB7722462EF426A2 /* FingerTappingView.swift */; };
@@ -168,6 +170,8 @@
 		DDBBDF974353EFE9F34BCD5F /* PedometerSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedometerSample.swift; sourceTree = "<group>"; };
 		1C6B440D08040066E0D21731 /* PedometerHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedometerHistoryService.swift; sourceTree = "<group>"; };
 		9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StravaManager.swift; sourceTree = "<group>"; };
+		51278D034C42F24620D0F7A3 /* MotionActivitySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivitySample.swift; sourceTree = "<group>"; };
+		382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivityHistoryService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -206,6 +210,7 @@
 				B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */,
 				44FE1B0CFABD710141D338E6 /* SleepEvent.swift */,
 				DDBBDF974353EFE9F34BCD5F /* PedometerSample.swift */,
+				51278D034C42F24620D0F7A3 /* MotionActivitySample.swift */,
 				BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */,
 				2F1116C47EADDC017996AE76 /* SensorReading.swift */,
 				0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */,
@@ -269,6 +274,7 @@
 				26219CFA974662F0772A8E8E /* KeystrokeSync.swift */,
 				6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */,
 				1C6B440D08040066E0D21731 /* PedometerHistoryService.swift */,
+				382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */,
 				9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */,
 				7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */,
 				CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */,
@@ -494,6 +500,8 @@
 				A0B4761A6BBB53D4A35D800E /* PedometerSample.swift in Sources */,
 				14B53669B1616E4FB739D6D4 /* PedometerHistoryService.swift in Sources */,
 				798B07D7DEA9E72DE37F8E06 /* StravaManager.swift in Sources */,
+				F667F2D674EB5B5F1AA6CA8D /* MotionActivitySample.swift in Sources */,
+				AFB4881DC55F17CBDACA37CB /* MotionActivityHistoryService.swift in Sources */,
 				91A282AB1DFF442B0514A4D7 /* PhysicalActivityLogView.swift in Sources */,
 				C0AFD9FA75913E6044F1FF72 /* ProfileSetupView.swift in Sources */,
 				E2055B4C5E8567B0661EDD19 /* QuestionnaireResponse.swift in Sources */,

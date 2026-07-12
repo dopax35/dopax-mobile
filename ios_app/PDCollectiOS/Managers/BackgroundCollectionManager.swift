@@ -93,9 +93,11 @@ class BackgroundCollectionManager {
                 }
             }
             // Every opportunistic wake is a chance to backfill step history
-            // for hours the app wasn't open — see PedometerHistoryService.
+            // and activity-type context for hours the app wasn't open — see
+            // PedometerHistoryService / MotionActivityHistoryService.
             if let dm = dataManager {
                 await PedometerHistoryService.shared.syncHistory(dataManager: dm)
+                await MotionActivityHistoryService.shared.syncHistory(dataManager: dm)
             }
             task.setTaskCompleted(success: true)
         }
@@ -120,6 +122,7 @@ class BackgroundCollectionManager {
             }
             if let dm = dataManager {
                 await PedometerHistoryService.shared.syncHistory(dataManager: dm)
+                await MotionActivityHistoryService.shared.syncHistory(dataManager: dm)
             }
 
             // Auto-upload pending data if enabled. Wi-Fi-preferred, matching

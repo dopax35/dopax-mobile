@@ -219,6 +219,14 @@ class DataManager: ObservableObject {
                header: Constants.CSV.pedometerHeader)
     }
 
+    // MARK: - Motion Activity History Writes (iOS-only backfill, see MotionActivityHistoryService)
+
+    func writeMotionActivitySample(_ sample: MotionActivitySample) {
+        let dateKey = Date(timeIntervalSince1970: Double(sample.activityStartMs) / 1000).dateKey
+        append(sample.csvRow, to: dateDirectory(for: dateKey), filename: Constants.CSV.motionActivityFile,
+               header: Constants.CSV.motionActivityHeader)
+    }
+
     // MARK: - Profile Snapshot
 
     /// Writes a daily profile snapshot to profile.csv.

@@ -3,6 +3,7 @@ package com.pdcollect.app.service
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.core.content.edit
 import com.pdcollect.app.data.model.ExternalActivitySample
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,17 @@ object StravaManager {
         prefs(context).getString("refresh_token", null) != null
 
     fun startAuth(context: Context) {
+        // Fail fast with a clear message rather than round-tripping to
+        // Strava's servers and showing whatever cryptic page/JSON they
+        // return for an unregistered client_id.
+        if (CLIENT_ID == "REPLACE_WITH_STRAVA_CLIENT_ID" || CLIENT_ID.isBlank()) {
+            Toast.makeText(
+                context,
+                "Strava isn't set up in this build yet (no API credentials configured).",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
         val url = "https://www.strava.com/oauth/mobile/authorize" +
             "?client_id=$CLIENT_ID" +
             "&redirect_uri=${Uri.encode(REDIRECT_URI)}" +
@@ -60,36 +72,80 @@ object StravaManager {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     }
 
-    /** Call from onNewIntent() of the activity that owns the pdcollect://strava-callback intent filter. */
-    fun handleAuthRedirect(context: Context, uri: Uri): Boolean {
-        if (uri.scheme != "pdcollect" || uri.host != "strava-callback") return false
-        val code = uri.getQueryParameter("code") ?: return false
-        exchangeCodeForToken(context, code)
-        return true
+    /**
+     * Call from the activity that owns the pdcollect://strava-callback
+     * intent filter. Returns null on success, or a human-readable reason on
+     * failure — previously this returned a bare Boolean that was `true` as
+     * soon as a "code" query param was present, regardless of whether the
+     * token exchange that followed actually succeeded, so
+     * StravaAuthCallbackActivity always toasted "Strava connected." even
+     * when it demonstrably hadn't (e.g. the placeholder credentials above,
+     * or any other exchange failure).
+     */
+    suspend fun handleAuthRedirect(context: Context, uri: Uri): String? {
+        if (uri.scheme != "pdcollect" || uri.host != "strava-callback") return "Unrecognized redirect."
+        val deniedReason = uri.getQueryParameter("error")
+        if (deniedReason != null) {
+            return if (deniedReason == "access_denied") "Strava access wasn't granted."
+                   else "Strava sign-in failed ($deniedReason)."
+        }
+        val code = uri.getQueryParameter("code") ?: return "Strava didn't return an authorization code."
+        return exchangeCodeForToken(context, code)
     }
 
-    private fun exchangeCodeForToken(context: Context, code: String) {
-        val body = FormBody.Builder()
-            .add("client_id", CLIENT_ID)
-            .add("client_secret", CLIENT_SECRET)
-            .add("code", code)
-            .add("grant_type", "authorization_code")
-            .build()
-        val request = Request.Builder().url("https://www.strava.com/oauth/token").post(body).build()
-        try {
-            httpClient.newCall(request).execute().use { resp ->
-                if (!resp.isSuccessful) return
-                saveTokens(context, JSONObject(resp.body?.string().orEmpty()))
+    /** Returns null on success, or a human-readable error message on failure. */
+    private suspend fun exchangeCodeForToken(context: Context, code: String): String? =
+        withContext(Dispatchers.IO) {
+            val body = FormBody.Builder()
+                .add("client_id", CLIENT_ID)
+                .add("client_secret", CLIENT_SECRET)
+                .add("code", code)
+                .add("grant_type", "authorization_code")
+                .build()
+            val request = Request.Builder().url("https://www.strava.com/oauth/token").post(body).build()
+            try {
+                httpClient.newCall(request).execute().use { resp ->
+                    val json = JSONObject(resp.body?.string().orEmpty())
+                    if (!resp.isSuccessful) return@withContext describeStravaError(json)
+                    saveTokens(context, json)
+                }
+            } catch (_: Exception) {
+                "Couldn't reach Strava. Check your connection and try again."
             }
-        } catch (_: Exception) { /* best-effort; user can retry Connect Strava */ }
-    }
+        }
 
-    private fun saveTokens(context: Context, json: JSONObject) {
+    /**
+     * Stores tokens from a successful exchange, or reports why it wasn't
+     * actually successful. Strava's error response is 400-range JSON like
+     * {"message":"Bad Request","errors":[{"resource":"Application","field":"client_id","code":"invalid"}]} —
+     * previously this was stored via optString(), which returns "" (not
+     * null) for a missing key, so a failed exchange silently wrote an empty
+     * access_token/refresh_token and isConnected() — which just checks
+     * "is refresh_token non-null" — would incorrectly flip to true forever
+     * after any failure, since SharedPreferences doesn't distinguish an
+     * empty string from a real one.
+     */
+    private fun saveTokens(context: Context, json: JSONObject): String? {
+        val accessToken = json.optString("access_token").takeIf { it.isNotBlank() }
+        val refreshToken = json.optString("refresh_token").takeIf { it.isNotBlank() }
+        if (accessToken == null || refreshToken == null) {
+            return describeStravaError(json)
+        }
         prefs(context).edit {
-            putString("access_token", json.optString("access_token"))
-            putString("refresh_token", json.optString("refresh_token"))
+            putString("access_token", accessToken)
+            putString("refresh_token", refreshToken)
             putLong("expires_at", json.optLong("expires_at"))
         }
+        return null
+    }
+
+    private fun describeStravaError(json: JSONObject): String {
+        val firstError = json.optJSONArray("errors")?.optJSONObject(0)
+        val field = firstError?.optString("field")?.takeIf { it.isNotBlank() }
+        val code = firstError?.optString("code")?.takeIf { it.isNotBlank() }
+        val message = json.optString("message").takeIf { it.isNotBlank() } ?: "Strava sign-in failed."
+        val detail = listOfNotNull(field, code).joinToString(" ")
+        return if (detail.isEmpty()) message else "$message ($detail)"
     }
 
     private suspend fun ensureFreshAccessToken(context: Context): String? = withContext(Dispatchers.IO) {

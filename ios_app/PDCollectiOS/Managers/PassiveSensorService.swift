@@ -20,7 +20,6 @@ class PassiveSensorService: ObservableObject {
     // MARK: - Private
 
     private let motion     = CMMotionManager()
-    private let altimeter  = CMAltimeter()
     private let queue      = OperationQueue()
     private var buffer: [SensorReading] = []
     private var flushTimer: Timer?
@@ -117,7 +116,22 @@ class PassiveSensorService: ObservableObject {
     // MARK: - Internal
 
     private func appendReading(_ data: CMDeviceMotion) {
-        let ts = Int64(Date().timeIntervalSince1970 * 1_000_000_000)
+        // CMDeviceMotion.timestamp is relative to device boot (systemUptime),
+        // not wall-clock — Date() was used here before, which stamps each
+        // sample at CALLBACK-DELIVERY time rather than true capture time.
+        // Those match closely when callbacks arrive smoothly, but whenever
+        // the OperationQueue falls behind and then drains a backlog in a
+        // tight loop (e.g. right after the app resumes, or under brief CPU
+        // contention), every queued sample fires its callback within a
+        // fraction of a millisecond of the others — confirmed in real
+        // participant data as bursts of hundreds to thousands of rows all
+        // landing within the same second, instead of their true ~20ms-apart
+        // capture times. Converting the boot-relative timestamp to
+        // wall-clock fixes this: every row keeps its real, evenly-spaced
+        // capture time no matter how bursty delivery was.
+        let bootDate = Date(timeIntervalSinceNow: -ProcessInfo.processInfo.systemUptime)
+        let sampleDate = bootDate.addingTimeInterval(data.timestamp)
+        let ts = Int64(sampleDate.timeIntervalSince1970 * 1_000_000_000)
         // magnetometer comes via CMDeviceMotion.magneticField (CMCalibratedMagneticField)
         let mag = data.magneticField.field
         let r = SensorReading(

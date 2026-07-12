@@ -60,6 +60,7 @@ enum Constants {
         static let voiceLogFile         = "voice_log.csv"
         static let sleepFile            = "sleep.csv"
         static let pedometerFile        = "pedometer.csv"
+        static let motionActivityFile   = "motion_activity.csv"
 
         // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score\n"
@@ -97,6 +98,13 @@ enum Constants {
         // Service. One row per hour that had any steps; empty hours are
         // skipped rather than written as zero rows.
         static let pedometerHeader = "timestamp_ms,period_start_ms,period_end_ms,steps,distance_m,floors_ascended,floors_descended,current_pace_s_per_m,current_cadence_steps_per_s\n"
+        // iOS-only: all-day activity-type context (walking/running/stationary/
+        // automotive/cycling + confidence) from CMMotionActivityManager — the
+        // same always-on co-processor CMPedometer taps, but classifying *what
+        // kind* of movement was happening rather than just counting steps.
+        // Multiple flags can be true on one row (Apple's own model allows
+        // ambiguous transitions, e.g. walking+automotive uncertainty).
+        static let motionActivityHeader = "timestamp_ms,activity_start_ms,confidence,stationary,walking,running,automotive,cycling,unknown\n"
     }
 
     // MARK: - Test Durations

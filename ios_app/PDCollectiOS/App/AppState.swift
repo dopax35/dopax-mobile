@@ -115,6 +115,17 @@ class AppState: ObservableObject {
             }
             .store(in: &cancellables)
 
+        // Same idea, for activity-type context (walking/running/stationary/
+        // etc. — see MotionActivityHistoryService), a second all-day,
+        // co-processor-backed signal independent of the app being open.
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .receive(on: DispatchQueue.global(qos: .utility))
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await MotionActivityHistoryService.shared.syncHistory(dataManager: self.dataManager) }
+            }
+            .store(in: &cancellables)
+
         // Resume collection if it was active before the app was killed
         if isCollecting { startCollection() }
     }
@@ -133,9 +144,11 @@ class AppState: ObservableObject {
         dataManager.writeProfileSnapshot(profile: userProfile)
         // Import any buffered keystrokes from keyboard extension
         keystrokeSync.importBufferedKeystrokes(dataManager: dataManager)
-        // Backfill step/walking history from CMPedometer (covers hours the
-        // app wasn't open — see PedometerHistoryService)
+        // Backfill step/walking history from CMPedometer, plus activity-type
+        // context from CMMotionActivityManager (both cover hours the app
+        // wasn't open — see PedometerHistoryService / MotionActivityHistoryService)
         Task { await PedometerHistoryService.shared.syncHistory(dataManager: dataManager) }
+        Task { await MotionActivityHistoryService.shared.syncHistory(dataManager: dataManager) }
         // FaceDistanceManager is started separately after camera permission is granted
     }
 
