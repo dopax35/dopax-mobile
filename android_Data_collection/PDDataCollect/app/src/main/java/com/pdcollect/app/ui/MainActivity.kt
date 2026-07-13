@@ -323,13 +323,33 @@ class MainActivity : AppCompatActivity() {
         )
 
         if (profile.consentGiven && profile.profileComplete) {
-            syncPassiveServices()
-            updateStatus()
-            populateDashboardCharts()
-            updateSetupHealth()
-            BatteryReminderReceiver.scheduleBatteryAlarms(this)
-            EveningReminderReceiver.scheduleEveningAlarm(this)
-            dataManager.writeProfileSnapshot()
+            // Each step is isolated so one failing subsystem can't silently
+            // suppress the rest — this previously ran as one unguarded
+            // sequence, so an exception thrown by any step (e.g. dashboard
+            // chart rendering choking on a bad cached value) aborted every
+            // step after it for that resume, INCLUDING writeProfileSnapshot()
+            // at the end. Since onResume() re-runs the same sequence on every
+            // single app open, a persistent bad state would silently starve
+            // profile.csv (and skip setup-health checks / reminder scheduling)
+            // on every future open too, while services outside this method
+            // (PDCollectService, DataAccessibilityService, PDKeyboardService)
+            // keep collecting normally — matching iOS's AppState, where every
+            // didBecomeActiveNotification handler is already its own
+            // independent subscription for the same reason.
+            runCatching { syncPassiveServices() }
+                .onFailure { android.util.Log.e("MainActivity", "syncPassiveServices failed", it) }
+            runCatching { updateStatus() }
+                .onFailure { android.util.Log.e("MainActivity", "updateStatus failed", it) }
+            runCatching { populateDashboardCharts() }
+                .onFailure { android.util.Log.e("MainActivity", "populateDashboardCharts failed", it) }
+            runCatching { updateSetupHealth() }
+                .onFailure { android.util.Log.e("MainActivity", "updateSetupHealth failed", it) }
+            runCatching { BatteryReminderReceiver.scheduleBatteryAlarms(this) }
+                .onFailure { android.util.Log.e("MainActivity", "scheduleBatteryAlarms failed", it) }
+            runCatching { EveningReminderReceiver.scheduleEveningAlarm(this) }
+                .onFailure { android.util.Log.e("MainActivity", "scheduleEveningAlarm failed", it) }
+            runCatching { dataManager.writeProfileSnapshot() }
+                .onFailure { android.util.Log.e("MainActivity", "writeProfileSnapshot failed", it) }
         }
 
         if (intent.getBooleanExtra(EXTRA_OPEN_REPORTING, false)) {

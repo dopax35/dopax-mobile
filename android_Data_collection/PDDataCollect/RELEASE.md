@@ -1,7 +1,43 @@
-# DopaX 3.4.18 (versionCode 81) - release checklist
+# DopaX 3.7.25 (versionCode 111) - release checklist
 
 End-to-end "from clean checkout to AAB uploaded to Play Console
 Internal Testing" steps. Tick items as you go.
+
+---
+
+## What's in 3.7.25 (vc 111)
+
+Fixes a regression where most CSV files (active-test results, medication,
+physical activity, profile, voice log, sleep, questionnaire, heart rate,
+Beanie temperature/IMU) stopped being written for some participants,
+while `apps.csv`/`key_events.csv`/`sensors.csv`/`touch_events.csv` — written
+by independent background services rather than `MainActivity` — kept
+working. Root cause: `MainActivity.onResume()` ran five independent steps
+(service sync, dashboard chart rendering, setup-health check, reminder
+scheduling, profile write) as one unguarded sequence; an exception in any
+one step silently skipped every step after it, including the profile
+write, on every single future app open. See
+`PD_App_Review_and_Fixes.md`, round 16, for the full investigation.
+
+Changes in this build:
+- `MainActivity.onResume()` and `SettingsActivity.onResume()`: each step
+  now runs independently, so one failing step can no longer block the rest.
+- Crash logs (`crash_logs/`) are now bundled into the daily export zip —
+  previously invisible in every export, so a crash loop like this one had
+  no way to be diagnosed without physically pulling the file off the
+  device. Check the next few participants' exports for a `crash_logs/`
+  folder — if one turns up, that's the smoking gun for the exact
+  exception, which the round-16 investigation could not pin down without
+  it.
+- The zip export itself is now resilient to one bad/unreadable file — it
+  used to abort the whole day's export if any single file failed to read.
+- One iOS-side hardening in the same spirit (force-unwrap removed from
+  `HealthKitManager.fetchGaitMetrics`) — see the iOS release notes.
+
+**Extra smoke-test step for this release** (in addition to section 4
+below): background the app and reopen it 5-10 times in a row. Each time,
+confirm the dashboard still updates and `profile.csv` gets a new row
+(Settings → "View Recent Data", or the debug data preview screen).
 
 ---
 
@@ -100,7 +136,7 @@ Walk through these on the device:
 - [ ] Upload `mapping.txt` in the same dialog (under "App bundles /
       mapping file"). Future crash stacks de-obfuscate automatically.
 - [ ] Paste the contents of
-      `fastlane/metadata/android/en-US/changelogs/81.txt` into the
+      `fastlane/metadata/android/en-US/changelogs/111.txt` into the
       "Release notes" box.
 
 ## 6. Fill in the Console listing fields
@@ -144,7 +180,7 @@ they are all green-ticked.
 
 ## 8. Post-release
 
-- [ ] Tag the release in git: `git tag v3.4.18 -m "DopaX 3.4.18 (vc 81)"`
+- [ ] Tag the release in git: `git tag v3.7.25 -m "DopaX 3.7.25 (vc 111)"`
       and push the tag.
 - [ ] Archive a copy of `app-release.aab` and `mapping.txt` outside
       the repo (e.g. encrypted shared drive). The mapping file is

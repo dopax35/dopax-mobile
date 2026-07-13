@@ -183,9 +183,15 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        refreshBeanieUiFromProfile()
-        updatePermissionStatus()
-        syncFaceDistanceService()
+        // Isolated the same way as MainActivity.onResume() (see round 16 notes) —
+        // one failing step here shouldn't be able to skip the receiver
+        // registration that follows it.
+        runCatching { refreshBeanieUiFromProfile() }
+            .onFailure { android.util.Log.e("SettingsActivity", "refreshBeanieUiFromProfile failed", it) }
+        runCatching { updatePermissionStatus() }
+            .onFailure { android.util.Log.e("SettingsActivity", "updatePermissionStatus failed", it) }
+        runCatching { syncFaceDistanceService() }
+            .onFailure { android.util.Log.e("SettingsActivity", "syncFaceDistanceService failed", it) }
         ContextCompat.registerReceiver(
             this,
             beanieReceiver,

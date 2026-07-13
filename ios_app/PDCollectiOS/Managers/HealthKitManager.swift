@@ -224,7 +224,15 @@ class HealthKitManager: ObservableObject {
 
     func fetchGaitMetrics(days: Int = 30) async -> [GaitMetric] {
         let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)!
+        // Calendar.date(byAdding:) returns an Optional and can, in principle,
+        // return nil for out-of-range date arithmetic — force-unwrapping it
+        // would trap the whole process (and, since this runs inside the same
+        // BGTask chain as PedometerHistoryService/MotionActivityHistoryService,
+        // take those down with it for that wake). Falls back to a plain
+        // 24h-per-day subtraction, which cannot fail, if the Calendar call
+        // ever does return nil.
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: end)
+            ?? end.addingTimeInterval(-Double(days) * 86_400)
         let unit = { (id: HKQuantityTypeIdentifier) -> HKUnit in
             switch id {
             case .walkingSpeed:              return HKUnit.meter().unitDivided(by: .second())

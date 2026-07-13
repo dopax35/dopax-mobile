@@ -109,8 +109,18 @@ android {
         // - Build: Updated google-services.json SHA-1 hashes and verified Firebase Auth flow.
         // v3.7.1 (vc 87): Firestore Sync Fixes
         // - Feat: Added email, signature, and graph metrics to Firebase uploads.
-        versionCode = 110
-        versionName = "3.7.24"
+        // v3.7.25 (vc 111): Fixed most-CSV-files-missing regression.
+        // - Fix: MainActivity.onResume() ran 5 independent steps (service sync,
+        //   dashboard charts, setup-health check, reminders, profile write) as one
+        //   unguarded sequence — a failure in any one silently skipped the rest,
+        //   including the profile.csv write, on every future app open. Each step
+        //   now runs in isolation.
+        // - Fix: crash logs (crash_logs/) are now bundled into the daily export
+        //   zip, so a crash loop like this is visible remotely next time.
+        // - Fix: same onResume isolation applied to SettingsActivity.
+        // - Fix: zip export no longer aborts entirely if one file/log is unreadable.
+        versionCode = 111
+        versionName = "3.7.25"
     }
 
     signingConfigs {

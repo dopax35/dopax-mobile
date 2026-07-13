@@ -336,14 +336,20 @@ class DataManager(private val context: Context, private val userProfile: UserPro
 
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             yesterdayDir.walkTopDown().filter { it.isFile && shouldIncludeInZip(it) }.forEach { file ->
-                val entryName = file.relativeTo(yesterdayDir).path
-                zos.putNextEntry(ZipEntry("$dateStr/$entryName"))
-                FileInputStream(file).use { fis ->
-                    fis.copyTo(zos)
+                try {
+                    val entryName = file.relativeTo(yesterdayDir).path
+                    zos.putNextEntry(ZipEntry("$dateStr/$entryName"))
+                    FileInputStream(file).use { fis ->
+                        fis.copyTo(zos)
+                    }
+                    zos.closeEntry()
+                } catch (e: Exception) {
+                    android.util.Log.e("DataManager", "Skipping unreadable file in zip: ${file.name}", e)
+                    runCatching { zos.closeEntry() }
                 }
-                zos.closeEntry()
             }
             addMlPredictionsEntry(zos, dateStr)
+            addCrashLogsEntry(zos, dateStr)
         }
         return zipFile
     }
@@ -385,14 +391,20 @@ class DataManager(private val context: Context, private val userProfile: UserPro
 
         ZipOutputStream(FileOutputStream(zipFile)).use { zos ->
             dateDir.walkTopDown().filter { it.isFile && shouldIncludeInZip(it) }.forEach { file ->
-                val entryName = file.relativeTo(dateDir).path
-                zos.putNextEntry(ZipEntry("$dateStr/$entryName"))
-                FileInputStream(file).use { fis ->
-                    fis.copyTo(zos)
+                try {
+                    val entryName = file.relativeTo(dateDir).path
+                    zos.putNextEntry(ZipEntry("$dateStr/$entryName"))
+                    FileInputStream(file).use { fis ->
+                        fis.copyTo(zos)
+                    }
+                    zos.closeEntry()
+                } catch (e: Exception) {
+                    android.util.Log.e("DataManager", "Skipping unreadable file in zip: ${file.name}", e)
+                    runCatching { zos.closeEntry() }
                 }
-                zos.closeEntry()
             }
             addMlPredictionsEntry(zos, dateStr)
+            addCrashLogsEntry(zos, dateStr)
         }
         return zipFile
     }
@@ -403,13 +415,50 @@ class DataManager(private val context: Context, private val userProfile: UserPro
      * covers, so it's added as an explicit extra entry here — filtered to just
      * this date, since the on-disk file spans every date in one flat array.
      * No-ops if there are no ML predictions for this date (e.g. no Beanie used).
+     * Wrapped defensively: a single malformed cache file should skip this
+     * entry, not take down the rest of that day's export.
      */
     private fun addMlPredictionsEntry(zos: ZipOutputStream, dateStr: String) {
-        val json = com.pdcollect.app.logic.MLPredictionStore.getInstance(context)
-            .entriesForDateAsJSON(dateStr) ?: return
-        zos.putNextEntry(ZipEntry("$dateStr/ml_predictions.json"))
-        zos.write(json.toByteArray(Charsets.UTF_8))
-        zos.closeEntry()
+        try {
+            val json = com.pdcollect.app.logic.MLPredictionStore.getInstance(context)
+                .entriesForDateAsJSON(dateStr) ?: return
+            zos.putNextEntry(ZipEntry("$dateStr/ml_predictions.json"))
+            zos.write(json.toByteArray(Charsets.UTF_8))
+            zos.closeEntry()
+        } catch (e: Exception) {
+            android.util.Log.e("DataManager", "Skipping ml_predictions.json in zip for $dateStr", e)
+            runCatching { zos.closeEntry() }
+        }
+    }
+
+    /**
+     * Crash logs (see CrashHandler) are written flat under
+     * getExternalFilesDir(null)/crash_logs/, named "crash_yyyy-MM-dd_HH-mm-ss.txt",
+     * so they're never part of the per-date directory the zip walk above covers
+     * and were previously invisible in every export/upload — meaning if the app
+     * were crash-looping on a participant's device there would be no way to
+     * find out remotely, only by physically pulling the file via a debugger.
+     * Matched here by date prefix and folded into this date's zip so a crash
+     * shows up the same way as any other collected file. Each file is wrapped
+     * defensively — CrashHandler could theoretically be writing a new crash
+     * log at the exact moment an export runs, and one unreadable/half-written
+     * log file must never be able to break the rest of that day's export.
+     */
+    private fun addCrashLogsEntry(zos: ZipOutputStream, dateStr: String) {
+        val crashDir = File(context.getExternalFilesDir(null), "crash_logs")
+        if (!crashDir.exists()) return
+        crashDir.listFiles()
+            ?.filter { it.isFile && it.name.startsWith("crash_$dateStr") }
+            ?.forEach { file ->
+                try {
+                    zos.putNextEntry(ZipEntry("$dateStr/crash_logs/${file.name}"))
+                    FileInputStream(file).use { fis -> fis.copyTo(zos) }
+                    zos.closeEntry()
+                } catch (e: Exception) {
+                    android.util.Log.e("DataManager", "Skipping unreadable crash log: ${file.name}", e)
+                    runCatching { zos.closeEntry() }
+                }
+            }
     }
 
     fun dateHasRecordedData(dateStr: String): Boolean {
