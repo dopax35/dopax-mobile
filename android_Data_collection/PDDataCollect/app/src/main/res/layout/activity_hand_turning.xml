@@ -66,7 +66,16 @@
                         android:text="1. Hold the phone flat in your palm.\n2. Start with your palm facing UP.\n3. Wait for the spoken &quot;Start&quot; cue.\n4. Rotate your wrist so your palm faces DOWN, then back UP, as fast and as large as you can.\n5. Stop when you hear &quot;Stop&quot; after 10 seconds."
                         android:textSize="14sp"
                         android:lineSpacingExtra="4dp"
-                        android:textColor="@color/on_surface" />
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="16dp" />
+
+                    <ImageView
+                        android:id="@+id/ivHandTurningGuide"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/guide_hand_turning"
+                        android:contentDescription="Hand turning test guide" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

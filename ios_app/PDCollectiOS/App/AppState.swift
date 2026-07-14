@@ -135,6 +135,10 @@ class AppState: ObservableObject {
     private let keystrokeSync = KeystrokeSync()
 
     func startCollection() {
+        // Pre-create ALL expected CSV files with their headers for today so no files are
+        // ever missing from a day's directory in the research data — matches Android's
+        // DataManager.initializeAllDailyLogs() called from PDCollectService.onStartCommand().
+        dataManager.initializeDailyFiles()
         passiveSensor.start(dataManager: dataManager)
         appEventLogger.start(dataManager: dataManager)
         bgCollection.scheduleAll()

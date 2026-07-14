@@ -674,7 +674,7 @@ class BeanieService : Service() {
             @Suppress("MissingPermission")
             bluetoothGatt = device.connectGatt(
                 applicationContext,
-                autoConnect,
+                false,
                 gattCallback,
                 BluetoothDevice.TRANSPORT_LE
             )
@@ -763,12 +763,14 @@ class BeanieService : Service() {
                     receivedFrameThisConnection = false
                     updateNotification("Connected to ${targetName.ifBlank { "Beanie" }} - discovering...", force = true)
                     broadcastStatus(STATUS_DISCOVERING)
-                    @Suppress("MissingPermission")
-                    val mtuStarted = gatt.requestMtu(517)
-                    if (!mtuStarted) {
+                    handler.postDelayed({
                         @Suppress("MissingPermission")
-                        gatt.discoverServices()
-                    }
+                        val mtuStarted = gatt.requestMtu(517)
+                        if (!mtuStarted) {
+                            @Suppress("MissingPermission")
+                            gatt.discoverServices()
+                        }
+                    }, 600L)
                 }
 
                 BluetoothProfile.STATE_DISCONNECTED -> {

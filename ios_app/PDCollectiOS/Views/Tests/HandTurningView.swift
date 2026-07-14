@@ -53,28 +53,37 @@ struct HandTurningView: View {
     // MARK: - Instructions
 
     private var instructionsView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "arrow.clockwise")
-                .font(.system(size: 64)).foregroundStyle(.dopaxBlue)
-                .modifier(PulseModifier())
+        ScrollView {
+            VStack(spacing: 24) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 64)).foregroundStyle(.dopaxBlue)
+                    .modifier(PulseModifier())
 
-            Text("Hand Turning Test")
-                .font(.title2).fontWeight(.bold)
+                Text("Hand Turning Test")
+                    .font(.title2).fontWeight(.bold)
 
-            VStack(alignment: .leading, spacing: 12) {
-                instructionRow(icon: "iphone", text: "Hold phone in your LEFT hand, screen facing up")
-                instructionRow(icon: "arrow.clockwise.circle", text: "Rotate palm UP then DOWN repeatedly")
-                instructionRow(icon: "clock", text: "Keep going for 10 seconds — as fast as possible")
+                VStack(alignment: .leading, spacing: 12) {
+                    instructionRow(icon: "iphone", text: "Hold phone in your LEFT hand, screen facing up")
+                    instructionRow(icon: "arrow.clockwise.circle", text: "Rotate palm UP then DOWN repeatedly")
+                    instructionRow(icon: "clock", text: "Keep going for 10 seconds — as fast as possible")
+                }
+                .padding().background(.dopaxBlue.opacity(0.08)).cornerRadius(14)
+
+                Image("guide_hand_turning")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxHeight: 180)
+                    .cornerRadius(12)
+                    .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+
+                streakBanner
+
+                Button("Start — Left Hand") { startHand(.left) }
+                    .buttonStyle(.borderedProminent).controlSize(.large)
+                    .tint(.dopaxBlue)
             }
-            .padding().background(.dopaxBlue.opacity(0.08)).cornerRadius(14)
-
-            streakBanner
-
-            Button("Start — Left Hand") { startHand(.left) }
-                .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.dopaxBlue)
+            .padding()
         }
-        .padding()
     }
 
     // MARK: - Between hands

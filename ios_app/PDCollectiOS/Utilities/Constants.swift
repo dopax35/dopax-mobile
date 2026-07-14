@@ -61,6 +61,7 @@ enum Constants {
         static let sleepFile            = "sleep.csv"
         static let pedometerFile        = "pedometer.csv"
         static let motionActivityFile   = "motion_activity.csv"
+        static let blinkLogFile         = "blink_log.csv"
 
         // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score\n"
@@ -71,7 +72,7 @@ enum Constants {
         static let appsHeader           = "timestamp_ms,event,bundle_id,duration_ms\n"
         static let faceDistanceHeader   = "timestamp_ms,distance_ratio,face_x,face_y,confidence,roll_deg,yaw_deg\n"
         static let heartRateHeader      = "timestamp_ms,bpm,rr_interval_ms,device_address,device_name\n"
-        static let beanieTemperatureHeader = "timestamp_ms,device_name,device_address,profile_name,inner_c,outer_c,tskin_c,heat_flux_cal_per_sec,battery_pct\n"
+        static let beanieTemperatureHeader = "timestamp_ms,device_name,device_address,profile_name,inner_c,outer_c,tskin_c,heat_flux_cal_per_sec,battery_pct,ml_prediction,ml_confidence\n"
         static let beanieImuHeader      = "timestamp_ms,device_name,device_address,ax_raw,ay_raw,az_raw,gx_raw,gy_raw,gz_raw,ax_g,ay_g,az_g,accel_mag_g,gx_dps,gy_dps,gz_dps,gyro_mag_dps\n"
         static let keyEventsHeader      = "timestamp_ms,key_class,is_backspace,source_app\n"
         static let medicationHeader     = "timestamp_ms,taken_ms,med_name,dosage\n"
@@ -82,6 +83,8 @@ enum Constants {
         static let profileHeader        = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json\n"
         /// timestamp_ms, filename, story_headline, duration_ms — matches Android exactly.
         static let voiceLogHeader       = "timestamp_ms,filename,story_headline,duration_ms\n"
+        /// timestamp_ms, context, left_trough_prob, right_trough_prob, blink_rate_per_min — matches Android exactly.
+        static let blinkLogHeader       = "timestamp_ms,context,left_trough_prob,right_trough_prob,blink_rate_per_min\n"
         // Imported sleep sessions (Apple Health / Health Connect — which in
         // turn surface Garmin Connect, Oura, AutoSleep, etc., whichever the
         // user has syncing into the platform's health store). "provider" is

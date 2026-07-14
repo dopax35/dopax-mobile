@@ -85,6 +85,9 @@ class PDCollectService : LifecycleService(), SensorEventListener {
         handler.removeCallbacks(flushRunnable)
         handler.postDelayed(flushRunnable, Constants.SENSOR_BUFFER_FLUSH_INTERVAL_MS)
         dataManager.startPeriodicFlush()
+        // Pre-create ALL expected CSV files with their headers for today's date so
+        // no files are ever missing from a day's directory in the research data.
+        dataManager.initializeAllDailyLogs()
 
         if (Constants.SHELLY_BLE_ENABLED) {
             shellyBleScanner?.startPassive()

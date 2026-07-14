@@ -311,13 +311,15 @@ class DataManagerTest {
     }
 
     @Test
-    fun initializePassiveLogs_doesNotCreateEmptyBeanieFiles() {
+    fun initializePassiveLogs_createsAllDailyFiles() {
         dataManager.initializePassiveLogs()
         dataManager.closeAll()
 
         val dayDir = dataManager.getDayDir()
-        assertFalse(File(dayDir, Constants.BEANIE_TEMP_FILE).exists())
-        assertFalse(File(dayDir, Constants.BEANIE_IMU_FILE).exists())
+        assertTrue(File(dayDir, Constants.BEANIE_TEMP_FILE).exists())
+        assertTrue(File(dayDir, Constants.BEANIE_IMU_FILE).exists())
+        assertTrue(File(dayDir, Constants.SENSORS_FILE).exists())
+        assertTrue(File(dayDir, Constants.TEST_FINGER_TAPPING_FILE).exists())
     }
 
     @Test

@@ -62,23 +62,51 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         return dir
     }
 
+    /**
+     * Pre-creates ALL expected CSV files for today's directory with their header rows.
+     * Called once at service start so every file always exists — even for sensor types
+     * that recorded nothing that day. This guarantees the nightly zip and research
+     * data pipeline always see a complete, consistent set of files.
+     */
     @Synchronized
-    fun initializePassiveLogs() {
-        android.util.Log.d("DataManager", "Initializing passive logs...")
+    fun initializeAllDailyLogs() {
+        android.util.Log.d("DataManager", "Initializing all daily logs for $currentDate...")
+        // Passive / sensor files
+        getWriter(Constants.SENSORS_FILE, Constants.SENSORS_HEADER)
+        getWriter(Constants.SCREEN_STATE_FILE, Constants.SCREEN_STATE_HEADER)
         getWriter(Constants.TOUCH_FILE, Constants.TOUCH_HEADER)
         getWriter(Constants.KEYS_FILE, Constants.KEYS_HEADER)
         getWriter(Constants.APPS_FILE, Constants.APPS_HEADER)
         getWriter(Constants.FACE_DISTANCE_FILE, Constants.FACE_DISTANCE_HEADER)
-        getWriter(Constants.SENSORS_FILE, Constants.SENSORS_HEADER)
         getWriter(Constants.MEDICATION_FILE, Constants.MEDICATION_HEADER)
         getWriter(Constants.PHYSICAL_ACTIVITY_FILE, Constants.PHYSICAL_ACTIVITY_HEADER)
+        getWriter(Constants.SLEEP_FILE, Constants.SLEEP_HEADER)
         getWriter(Constants.HR_FILE, Constants.HR_HEADER)
         getWriter(Constants.BLINK_FILE, Constants.BLINK_HEADER)
         getWriter(Constants.VOICE_LOG_FILE, Constants.VOICE_LOG_HEADER)
+        // Beanie files
+        getWriter(Constants.BEANIE_TEMP_FILE, Constants.BEANIE_TEMP_HEADER)
+        getWriter(Constants.BEANIE_IMU_FILE, Constants.BEANIE_IMU_HEADER)
+        // Active test files
+        getWriter(Constants.TEST_FINGER_TAPPING_FILE, Constants.FINGER_TAPPING_HEADER)
+        getWriter(Constants.TEST_HAND_TURNING_FILE, Constants.HAND_TURNING_HEADER)
+        getWriter(Constants.TEST_SPIRAL_FILE, Constants.SPIRAL_HEADER)
+        getWriter(Constants.TEST_LEG_AGILITY_FILE, Constants.LEG_AGILITY_HEADER)
+        getWriter(Constants.TMT_RESULTS_FILE, Constants.TMT_HEADER)
+        // Daily profile and questionnaire
+        getWriter(Constants.PROFILE_FILE, Constants.PROFILE_HEADER)
+        getWriter(Constants.QUESTIONNAIRE_FILE, Constants.QUESTIONNAIRE_HEADER)
     }
 
+    /** Backwards-compatible alias — still used by BeanieService. */
+    @Synchronized
+    fun initializePassiveLogs() = initializeAllDailyLogs()
+
+    /** Backwards-compatible alias — still used by BeanieService. */
     @Synchronized
     fun initializeBeanieLogs() {
+        // Beanie files are now included in initializeAllDailyLogs().
+        // This stub exists so BeanieService can still call it without changes.
         getWriter(Constants.BEANIE_TEMP_FILE, Constants.BEANIE_TEMP_HEADER)
         getWriter(Constants.BEANIE_IMU_FILE, Constants.BEANIE_IMU_HEADER)
     }
@@ -121,6 +149,14 @@ class DataManager(private val context: Context, private val userProfile: UserPro
                 writer.write(row)
                 writer.newLine()
             }
+        }
+    }
+
+    fun writeScreenStateData(row: String) {
+        ioHandler.post {
+            val writer = getWriter(Constants.SCREEN_STATE_FILE, Constants.SCREEN_STATE_HEADER)
+            writer.write(row)
+            writer.newLine()
         }
     }
 

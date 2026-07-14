@@ -57,29 +57,38 @@ struct LegAgilityView: View {
     // MARK: - Instructions
 
     private var instructionsView: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "figure.walk.motion")
-                .font(.system(size: 64)).foregroundStyle(.dopaxBlue)
-                .modifier(PulseModifier())
+        ScrollView {
+            VStack(spacing: 24) {
+                Image(systemName: "figure.walk.motion")
+                    .font(.system(size: 64)).foregroundStyle(.dopaxBlue)
+                    .modifier(PulseModifier())
 
-            Text("Leg Agility Test")
-                .font(.title2).fontWeight(.bold)
+                Text("Leg Agility Test")
+                    .font(.title2).fontWeight(.bold)
 
-            VStack(alignment: .leading, spacing: 12) {
-                instructionRow(icon: "iphone.and.arrow.forward", text: "Hold phone firmly against your RIGHT thigh")
-                instructionRow(icon: "figure.step.training", text: "Lift and stomp your foot as fast and as high as possible")
-                instructionRow(icon: "clock", text: "Keep going for 10 seconds")
-                instructionRow(icon: "arrow.left.and.right", text: "You will repeat for both legs")
+                VStack(alignment: .leading, spacing: 12) {
+                    instructionRow(icon: "iphone.and.arrow.forward", text: "Hold phone firmly against your RIGHT thigh")
+                    instructionRow(icon: "figure.step.training", text: "Lift and stomp your foot as fast and as high as possible")
+                    instructionRow(icon: "clock", text: "Keep going for 10 seconds")
+                    instructionRow(icon: "arrow.left.and.right", text: "You will repeat for both legs")
+                }
+                .padding().background(.dopaxBlue.opacity(0.08)).cornerRadius(14)
+
+                Image("guide_leg_agility")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxHeight: 180)
+                    .cornerRadius(12)
+                    .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+
+                streakBanner
+
+                Button("Start — Right Leg") { startLeg(.right) }
+                    .buttonStyle(.borderedProminent).controlSize(.large)
+                    .tint(.dopaxBlue)
             }
-            .padding().background(.dopaxBlue.opacity(0.08)).cornerRadius(14)
-
-            streakBanner
-
-            Button("Start — Right Leg") { startLeg(.right) }
-                .buttonStyle(.borderedProminent).controlSize(.large)
-                .tint(.dopaxBlue)
+            .padding()
         }
-        .padding()
     }
 
     // MARK: - Between Legs

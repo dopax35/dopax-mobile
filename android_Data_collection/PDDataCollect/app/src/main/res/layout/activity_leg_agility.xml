@@ -1,54 +1,104 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/surface"
-    android:padding="24dp">
+    android:background="@color/surface">
 
-    <TextView
-        android:id="@+id/tvTitle"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Leg Agility"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="48dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Hold the phone firmly against your thigh. Lift and stomp your foot as fast and as high as possible for 10 seconds."
-        android:textSize="16sp"
-        android:gravity="center"
-        android:layout_marginBottom="32dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="32dp">
 
-    <RadioGroup
-        android:id="@+id/rgSide"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginBottom="32dp">
-        <RadioButton android:id="@+id/rbLeft" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Left Leg" android:paddingEnd="24dp" />
-        <RadioButton android:id="@+id/rbRight" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Right Leg" android:checked="true" />
-    </RadioGroup>
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Leg Agility"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
 
-    <TextView
-        android:id="@+id/tvTimer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="10s"
-        android:textSize="64sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="32dp" />
+            <!-- Instruction Card with Image -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardInstructions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_low"
+                android:layout_marginBottom="24dp">
 
-    <Button
-        android:id="@+id/btnStartLeg"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Start Test" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-</LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="How to perform this test:"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
+                        android:textColor="@color/primary"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Hold the phone firmly against your thigh. Lift and stomp your foot as fast and as high as possible for 10 seconds."
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp"
+                        android:textColor="@color/on_surface"
+                        android:layout_marginBottom="16dp" />
+
+                    <ImageView
+                        android:id="@+id/ivLegAgilityGuide"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/guide_leg_agility"
+                        android:contentDescription="Leg agility test guide" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <RadioGroup
+                android:id="@+id/rgSide"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="24dp">
+                <RadioButton android:id="@+id/rbLeft" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Left Leg" android:paddingEnd="24dp" />
+                <RadioButton android:id="@+id/rbRight" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Right Leg" android:checked="true" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/tvTimer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="10s"
+                android:textSize="56sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <Button
+                android:id="@+id/btnStartLeg"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="Start Test" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

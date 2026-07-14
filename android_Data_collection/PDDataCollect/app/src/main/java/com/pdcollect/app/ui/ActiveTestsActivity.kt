@@ -57,28 +57,11 @@ class ActiveTestsActivity : AppCompatActivity() {
             
             Handler(Looper.getMainLooper()).postDelayed({
                 if (!isFinishing && !isDestroyed) {
-                    // Show the congratulatory nudge first, then the questionnaire
-                    // prompt only after the user dismisses it — showing both
-                    // AlertDialogs at once stacks two competing prompts right
-                    // after a demanding motor test, which is confusing.
                     com.pdcollect.app.util.NudgeGenerator.showNudgeAfterTest(this, testName) {
-                        if (!isFinishing && !isDestroyed) {
-                            promptQuestionnaire(testName)
-                        }
+                        // Removed questionnaire prompt to encourage continuous test flow
                     }
                 }
             }, 400)
         }
-    }
-
-    private fun promptQuestionnaire(testName: String) {
-        AlertDialog.Builder(this)
-            .setTitle("How are you feeling?")
-            .setMessage("Would you like to fill in the questionnaire now?")
-            .setPositiveButton("Yes") { _, _ ->
-                startActivity(Intent(this, QuestionnaireActivity::class.java))
-            }
-            .setNegativeButton("Later", null)
-            .show()
     }
 }

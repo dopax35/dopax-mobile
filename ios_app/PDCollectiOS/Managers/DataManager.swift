@@ -12,6 +12,58 @@ class DataManager: ObservableObject {
         self.userId = userId
     }
 
+    // MARK: - Daily Initialisation
+
+    /// Pre-creates ALL expected CSV files for today's directory with their header rows.
+    /// Call once at collection start so every file always exists — even for sensor types
+    /// that recorded nothing that day. This guarantees the nightly zip and the research
+    /// data pipeline always see a complete, consistent set of files, matching Android's
+    /// `DataManager.initializeAllDailyLogs()` behaviour exactly.
+    func initializeDailyFiles() {
+        writeQueue.async { [weak self] in
+            guard let self else { return }
+            let dir = todayDir
+            ensureDir(dir)
+            let files: [(String, String)] = [
+                // Passive / sensor files
+                (Constants.CSV.sensorsFile,          Constants.CSV.sensorsHeader),
+                (Constants.CSV.passiveSensorsFile,   Constants.CSV.passiveSensorsHeader),
+                (Constants.CSV.touchFile,            Constants.CSV.touchHeader),
+                (Constants.CSV.keyEventsFile,        Constants.CSV.keyEventsHeader),
+                (Constants.CSV.appsFile,             Constants.CSV.appsHeader),
+                (Constants.CSV.faceDistanceFile,     Constants.CSV.faceDistanceHeader),
+                (Constants.CSV.medicationFile,       Constants.CSV.medicationHeader),
+                (Constants.CSV.physicalActivityFile, Constants.CSV.physicalActivityHeader),
+                (Constants.CSV.sleepFile,            Constants.CSV.sleepHeader),
+                (Constants.CSV.heartRateFile,        Constants.CSV.heartRateHeader),
+                (Constants.CSV.blinkLogFile,         Constants.CSV.blinkLogHeader),
+                (Constants.CSV.voiceLogFile,         Constants.CSV.voiceLogHeader),
+                (Constants.CSV.gaitMetricsFile,      Constants.CSV.gaitMetricsHeader),
+                (Constants.CSV.pedometerFile,        Constants.CSV.pedometerHeader),
+                (Constants.CSV.motionActivityFile,   Constants.CSV.motionActivityHeader),
+                // Beanie files
+                (Constants.CSV.beanieTemperatureFile, Constants.CSV.beanieTemperatureHeader),
+                (Constants.CSV.beanieImuFile,         Constants.CSV.beanieImuHeader),
+                // Active test files
+                (Constants.CSV.fingerTappingFile,    Constants.CSV.fingerTappingHeader),
+                (Constants.CSV.handTurningFile,      Constants.CSV.handTurningHeader),
+                (Constants.CSV.legAgilityFile,       Constants.CSV.legAgilityHeader),
+                (Constants.CSV.spiralTracingFile,    Constants.CSV.spiralTracingHeader),
+                (Constants.CSV.tmtResultsFile,       Constants.CSV.tmtResultsHeader),
+                // Daily profile and questionnaire
+                (Constants.CSV.profileFile,          Constants.CSV.profileHeader),
+                (Constants.CSV.questionnaireFile,    Constants.CSV.questionnaireHeader),
+            ]
+            for (filename, header) in files {
+                let file = dir.appendingPathComponent(filename)
+                if !fm.fileExists(atPath: file.path) {
+                    // Write header only — do not overwrite existing data
+                    try? header.write(to: file, atomically: true, encoding: .utf8)
+                }
+            }
+        }
+    }
+
     // MARK: - Directories
 
     private var rootDir: URL {
@@ -83,13 +135,21 @@ class DataManager: ObservableObject {
 
     // MARK: TMT
     /// One summary row per completed TMT part, matching Android tmt_results.csv.
+    /// - Parameters:
+    ///   - fingerPathJSON: Array of {x,y,t} touch-point objects (index-referenced path)
+    ///   - pathDataJSON:   Same path in absolute-coordinate form for backward compat with Android schema.
+    ///                     Pass the same value as `fingerPathJSON` when no separate encoding is available.
     func writeTMTResult(startMs: Int64, endMs: Int64, testType: String,
                         totalMs: Int, wrongTargetErrors: Int, liftOffErrors: Int,
                         segmentTimingsJSON: String,
-                        fingerPathJSON: String) {
-        let escapedSegments = segmentTimingsJSON.replacingOccurrences(of: "\"", with: "\"\"")
+                        fingerPathJSON: String,
+                        pathDataJSON: String? = nil) {
+        let escapedSegments   = segmentTimingsJSON.replacingOccurrences(of: "\"", with: "\"\"")
         let escapedFingerPath = fingerPathJSON.replacingOccurrences(of: "\"", with: "\"\"")
-        let row = "\(startMs),\(endMs),\(testType),\(totalMs),\(wrongTargetErrors),\(liftOffErrors),\"\(escapedSegments)\",\"\(escapedFingerPath)\",\"\(escapedFingerPath)\"\n"
+        // path_data_json (9th column) defaults to the same as finger_path_json when no separate
+        // encoding is provided — matches the Android column schema while keeping the call site simple.
+        let escapedPathData   = (pathDataJSON ?? fingerPathJSON).replacingOccurrences(of: "\"", with: "\"\"")
+        let row = "\(startMs),\(endMs),\(testType),\(totalMs),\(wrongTargetErrors),\(liftOffErrors),\"\(escapedSegments)\",\"\(escapedFingerPath)\",\"\(escapedPathData)\"\n"
         append(row, to: todayDir, filename: Constants.CSV.tmtResultsFile,
                header: Constants.CSV.tmtResultsHeader)
     }
@@ -265,6 +325,17 @@ class DataManager: ObservableObject {
                header: Constants.CSV.voiceLogHeader)
     }
 
+    // MARK: - Blink Event Writes
+
+    /// Appends one row to blink_log.csv. Schema matches Android exactly:
+    /// timestamp_ms, context, left_trough_prob, right_trough_prob, blink_rate_per_min
+    func writeBlinkEvent(context: String, leftTroughProb: Double, rightTroughProb: Double, blinkRatePerMin: Double) {
+        let timestamp = Int64(Date().timeIntervalSince1970 * 1000)
+        let row = "\(timestamp),\(context),\(leftTroughProb),\(rightTroughProb),\(blinkRatePerMin)\n"
+        append(row, to: todayDir, filename: Constants.CSV.blinkLogFile,
+               header: Constants.CSV.blinkLogHeader)
+    }
+
     // MARK: - Internal append (thread-safe)
 
     private func append(_ content: String, to dir: URL, filename: String, header: String) {
@@ -333,6 +404,48 @@ class DataManager: ObservableObject {
         ensureDir(cacheDir)
         let zipURL = cacheDir.appendingPathComponent("\(dateKey)_\(userId).zip")
         if fm.fileExists(atPath: zipURL.path) { try? fm.removeItem(at: zipURL) }
+
+        // Ensure every expected file exists with at least its header row.
+        // This is a synchronous pass on the write queue so the files are created
+        // before ZIPFoundation reads the directory — preventing gaps in past-date
+        // zips for sensor types that were never triggered on a particular day.
+        writeQueue.sync { [weak self] in
+            guard let self else { return }
+            ensureDir(sourceDir)
+            let files: [(String, String)] = [
+                (Constants.CSV.sensorsFile,          Constants.CSV.sensorsHeader),
+                (Constants.CSV.passiveSensorsFile,   Constants.CSV.passiveSensorsHeader),
+                (Constants.CSV.touchFile,            Constants.CSV.touchHeader),
+                (Constants.CSV.keyEventsFile,        Constants.CSV.keyEventsHeader),
+                (Constants.CSV.appsFile,             Constants.CSV.appsHeader),
+                (Constants.CSV.faceDistanceFile,     Constants.CSV.faceDistanceHeader),
+                (Constants.CSV.medicationFile,       Constants.CSV.medicationHeader),
+                (Constants.CSV.physicalActivityFile, Constants.CSV.physicalActivityHeader),
+                (Constants.CSV.sleepFile,            Constants.CSV.sleepHeader),
+                (Constants.CSV.heartRateFile,        Constants.CSV.heartRateHeader),
+                (Constants.CSV.blinkLogFile,         Constants.CSV.blinkLogHeader),
+                (Constants.CSV.voiceLogFile,         Constants.CSV.voiceLogHeader),
+                (Constants.CSV.gaitMetricsFile,      Constants.CSV.gaitMetricsHeader),
+                (Constants.CSV.pedometerFile,        Constants.CSV.pedometerHeader),
+                (Constants.CSV.motionActivityFile,   Constants.CSV.motionActivityHeader),
+                (Constants.CSV.beanieTemperatureFile, Constants.CSV.beanieTemperatureHeader),
+                (Constants.CSV.beanieImuFile,         Constants.CSV.beanieImuHeader),
+                (Constants.CSV.fingerTappingFile,    Constants.CSV.fingerTappingHeader),
+                (Constants.CSV.handTurningFile,      Constants.CSV.handTurningHeader),
+                (Constants.CSV.legAgilityFile,       Constants.CSV.legAgilityHeader),
+                (Constants.CSV.spiralTracingFile,    Constants.CSV.spiralTracingHeader),
+                (Constants.CSV.tmtResultsFile,       Constants.CSV.tmtResultsHeader),
+                (Constants.CSV.profileFile,          Constants.CSV.profileHeader),
+                (Constants.CSV.questionnaireFile,    Constants.CSV.questionnaireHeader),
+            ]
+            for (filename, header) in files {
+                let file = sourceDir.appendingPathComponent(filename)
+                if !fm.fileExists(atPath: file.path) {
+                    try? header.write(to: file, atomically: true, encoding: .utf8)
+                }
+            }
+        }
+
         try fm.zipItem(at: sourceDir, to: zipURL)
         return zipURL
     }

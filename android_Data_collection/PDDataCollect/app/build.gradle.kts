@@ -119,8 +119,12 @@ android {
         //   zip, so a crash loop like this is visible remotely next time.
         // - Fix: same onResume isolation applied to SettingsActivity.
         // - Fix: zip export no longer aborts entirely if one file/log is unreadable.
-        versionCode = 111
-        versionName = "3.7.25"
+        // v3.7.26 (vc 112): CSV pre-creation, Beanie BLE fixes, and custom guides.
+        // - Fix: Pre-create all daily CSV files (passive & active) on startup.
+        // - Fix: Hardened Beanie GATT connect/autoConnect flow and added 600ms delay.
+        // - Fix: End-of-battery questionnaire logic and new custom guide images.
+        versionCode = 112
+        versionName = "3.7.26"
     }
 
     signingConfigs {

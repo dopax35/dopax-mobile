@@ -32,6 +32,7 @@ object Constants {
     // "enter","other" — never the literal character typed.
     const val KEYS_HEADER = "timestamp_ms,key_class,is_backspace,source_app"
     const val APPS_HEADER = "timestamp_ms,event_type,package_name,class_name"
+    const val SCREEN_STATE_HEADER = "timestamp_ms,state"
     // v3: "errors" (wrong-target touches only) split into two columns so both
     // clinically-relevant TMT error types are captured, matching iOS exactly
     // (previously iOS's single "errors" column counted lift-offs instead —
@@ -92,7 +93,8 @@ object Constants {
     const val SHELLY_BLE_ENABLED = false
 
     val PHYSICAL_ACTIVITY_TYPES = listOf("Running", "Bike", "Swimming", "Weight Training", "Pilates", "Other")
-    // Sensor collection
+
+    // Sensor collection
     const val SENSOR_BUFFER_FLUSH_INTERVAL_MS = 5000L
     const val SENSOR_BUFFER_MAX_SIZE = 500
     // Keep full-fidelity passive motion capture; use batching to reduce wakeups

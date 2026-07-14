@@ -49,43 +49,55 @@ class TestBatteryCoordinatorActivity : AppCompatActivity() {
             STAGE_LA_RIGHT -> Intent(this, LegAgilityActivity::class.java).apply { putExtra("EXTRA_LEG", "Right") }
             STAGE_LA_LEFT -> Intent(this, LegAgilityActivity::class.java).apply { putExtra("EXTRA_LEG", "Left") }
             STAGE_TMT -> Intent(this, TrailMakingTestActivity::class.java)
-            STAGE_QUESTIONNAIRE -> Intent(this, QuestionnaireActivity::class.java)
-            else -> {
+            STAGE_QUESTIONNAIRE -> {
                 (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
                     .cancel(Constants.NOTIFICATION_ID_BATTERY_REMINDER)
-                Toast.makeText(this, "Test Battery Complete! Great job!", Toast.LENGTH_LONG).show()
-                val mainIntent = Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(mainIntent)
-                finish()
+                promptQuestionnaire("Test Battery Complete! Great job!")
+                return
+            }
+            else -> {
+                finishBattery()
                 return
             }
         }
         intent.putExtra("IS_BATTERY_MODE", true)
-        // StartActivityForResult is deprecated but still works fine for the current target;
-        // The more modern way would be ActivityResultLauncher, but for a coordinator like this, 
-        // the simplicity of one request code is cleaner.
         startActivityForResult(intent, 1000)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1000) {
-            // Questionnaire advances regardless of result — motor data is already saved
-            // and the questionnaire is optional. All other stages require RESULT_OK.
-            if (resultCode == RESULT_OK || currentStage >= STAGE_QUESTIONNAIRE) {
+            if (resultCode == RESULT_OK) {
                 currentStage++
                 routeStage()
             } else {
                 // Cancelled or back button pressed during a motor test
-                Toast.makeText(this, "Battery Sequence Cancelled", Toast.LENGTH_SHORT).show()
-                val mainIntent = Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(mainIntent)
-                finish()
+                promptQuestionnaire("Battery Sequence Cancelled")
             }
         }
+    }
+
+    private fun promptQuestionnaire(message: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(message)
+            .setMessage("Would you like to fill in the daily questionnaire now?")
+            .setPositiveButton("Yes") { _, _ ->
+                val qIntent = Intent(this, QuestionnaireActivity::class.java)
+                startActivity(qIntent)
+                finishBattery()
+            }
+            .setNegativeButton("No") { _, _ ->
+                finishBattery()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun finishBattery() {
+        val mainIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(mainIntent)
+        finish()
     }
 }
