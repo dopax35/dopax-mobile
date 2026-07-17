@@ -1,0 +1,4 @@
+- Pre-creates all daily data files at startup so no data is lost if a test runs before the file is initialised.
+- Fixed Beanie sensor connection instability and improved reconnect reliability.
+- Added custom exercise guide images to Hand Turning and Leg Agility tests.
+- Added an end-of-battery questionnaire flow.

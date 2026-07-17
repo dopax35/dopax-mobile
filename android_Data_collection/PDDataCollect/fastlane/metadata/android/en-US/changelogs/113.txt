@@ -1,0 +1,4 @@
+- Prevented rare duplicate uploads where two simultaneous upload attempts could send the same day's data twice.
+- Triggers an immediate data upload every time the app opens, so data is not stuck waiting for the overnight scheduler.
+- Fixed face-distance recording so it works even when Accessibility Service is not enabled (10-second screen-on fallback).
+- Improved face-distance diagnostics visible in the debug view.

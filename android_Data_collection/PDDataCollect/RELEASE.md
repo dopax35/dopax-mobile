@@ -1,11 +1,11 @@
-# DopaX 3.7.25 (versionCode 111) - release checklist
+# DopaX 3.7.28 (versionCode 114) - release checklist
 
 End-to-end "from clean checkout to AAB uploaded to Play Console
 Internal Testing" steps. Tick items as you go.
 
 ---
 
-## What's in 3.7.25 (vc 111)
+## What's in 3.7.28 (vc 114)
 
 Fixes a regression where most CSV files (active-test results, medication,
 physical activity, profile, voice log, sleep, questionnaire, heart rate,
@@ -136,7 +136,7 @@ Walk through these on the device:
 - [ ] Upload `mapping.txt` in the same dialog (under "App bundles /
       mapping file"). Future crash stacks de-obfuscate automatically.
 - [ ] Paste the contents of
-      `fastlane/metadata/android/en-US/changelogs/111.txt` into the
+      `fastlane/metadata/android/en-US/changelogs/114.txt` into the
       "Release notes" box.
 
 ## 6. Fill in the Console listing fields
@@ -180,7 +180,7 @@ they are all green-ticked.
 
 ## 8. Post-release
 
-- [ ] Tag the release in git: `git tag v3.7.25 -m "DopaX 3.7.25 (vc 111)"`
+- [ ] Tag the release in git: `git tag v3.7.28 -m "DopaX 3.7.28 (vc 114)"`
       and push the tag.
 - [ ] Archive a copy of `app-release.aab` and `mapping.txt` outside
       the repo (e.g. encrypted shared drive). The mapping file is

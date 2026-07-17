@@ -133,8 +133,9 @@ android {
         // - Fix: FaceDistanceService.startRecorderIfNeeded() now logs the reason for every early-return;
         //   adds a 10 s screen-on fallback so ALWAYS mode records even when Accessibility Service is
         //   not enabled; stamps SharedPreferences with lastFaceDistanceSampleMs for UI diagnostics.
-        versionCode = 113
-        versionName = "3.7.27"
+        // v3.7.28 (vc 114): Version bump and release prep — expert review verified, changelogs backfilled.
+        versionCode = 114
+        versionName = "3.7.28"
     }
 
     signingConfigs {
