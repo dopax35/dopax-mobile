@@ -372,14 +372,33 @@ class DataManager: ObservableObject {
 
     func sizeString(for dateKey: String) -> String {
         let dir = dateDirectory(for: dateKey)
-        guard let items = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.fileSizeKey]) else { return "0 KB" }
-        let totalBytes = items.compactMap { try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize }.reduce(0, +)
+        // Walk recursively so voice/ subdirectory m4a files are included.
+        guard let enumerator = fm.enumerator(
+            at: dir,
+            includingPropertiesForKeys: [.fileSizeKey, .isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return "0 KB" }
+        var totalBytes = 0
+        for case let fileURL as URL in enumerator {
+            guard (try? fileURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else { continue }
+            totalBytes += (try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        }
         return ByteCountFormatter.string(fromByteCount: Int64(totalBytes), countStyle: .file)
     }
 
     func fileCount(for dateKey: String) -> Int {
         let dir = dateDirectory(for: dateKey)
-        return (try? fm.contentsOfDirectory(atPath: dir.path).count) ?? 0
+        // Walk recursively so voice/ subdirectory files are counted.
+        guard let enumerator = fm.enumerator(
+            at: dir,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else { return 0 }
+        var count = 0
+        for case let fileURL as URL in enumerator {
+            if (try? fileURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true { count += 1 }
+        }
+        return count
     }
 
     func fileList(for dateKey: String) -> [String] {
@@ -392,8 +411,46 @@ class DataManager: ObservableObject {
     }
 
     func markUploaded(_ dateKey: String) {
-        let marker = dateDirectory(for: dateKey).appendingPathComponent(".uploaded")
-        fm.createFile(atPath: marker.path, contents: nil)
+        let dir = dateDirectory(for: dateKey)
+        let marker = dir.appendingPathComponent(".uploaded")
+        // Write metadata so we can audit when/what was uploaded.
+        let body = "uploaded_at_ms=\(Int64(Date().timeIntervalSince1970 * 1000))\n"
+        try? body.write(to: marker, atomically: true, encoding: .utf8)
+        // Remove the in-progress claim marker now that upload is confirmed.
+        clearUploadClaim(dateKey)
+    }
+
+    // MARK: - Upload Claim Lock (mirrors Android's UploadState)
+
+    private static let staleUploadMs: TimeInterval = 6 * 60 * 60  // 6 hours
+
+    /// Atomically claims the upload slot for `dateKey`.
+    /// Returns `true` if this caller won the race and should proceed with uploading.
+    /// Returns `false` if another upload is already in progress or complete.
+    func tryClaimUpload(_ dateKey: String) -> Bool {
+        let dir = dateDirectory(for: dateKey)
+        if isUploaded(dateKey) { return false }
+        let claimFile = dir.appendingPathComponent(".uploading")
+        // If a stale claim exists, clear it so we can re-attempt.
+        if fm.fileExists(atPath: claimFile.path),
+           let attrs = try? fm.attributesOfItem(atPath: claimFile.path),
+           let modDate = attrs[.modificationDate] as? Date,
+           Date().timeIntervalSince(modDate) > Self.staleUploadMs {
+            try? fm.removeItem(at: claimFile)
+        }
+        // Bail if a non-stale claim exists from a concurrent upload.
+        if fm.fileExists(atPath: claimFile.path) { return false }
+        // Create the claim file — this is not atomic on all file systems, but
+        // iOS documents directory uses HFS+/APFS where creat() is atomic enough
+        // for this purpose (two simultaneous calls from different threads will
+        // race, but the worst outcome is one duplicate upload, not corruption).
+        let body = "started_at_ms=\(Int64(Date().timeIntervalSince1970 * 1000))\n"
+        return (try? body.write(to: claimFile, atomically: true, encoding: .utf8)) != nil
+    }
+
+    func clearUploadClaim(_ dateKey: String) {
+        let claimFile = dateDirectory(for: dateKey).appendingPathComponent(".uploading")
+        try? fm.removeItem(at: claimFile)
     }
 
     // MARK: - ZIP

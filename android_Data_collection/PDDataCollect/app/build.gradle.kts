@@ -119,12 +119,22 @@ android {
         //   zip, so a crash loop like this is visible remotely next time.
         // - Fix: same onResume isolation applied to SettingsActivity.
         // - Fix: zip export no longer aborts entirely if one file/log is unreadable.
-        // v3.7.26 (vc 112): CSV pre-creation, Beanie BLE fixes, and custom guides.
+        // v3.7.27 (vc 113): CSV pre-creation, Beanie BLE fixes, and custom guides.
         // - Fix: Pre-create all daily CSV files (passive & active) on startup.
         // - Fix: Hardened Beanie GATT connect/autoConnect flow and added 600ms delay.
         // - Fix: End-of-battery questionnaire logic and new custom guide images.
-        versionCode = 112
-        versionName = "3.7.26"
+        // v3.7.27 (vc 113): Duplicate-upload prevention, recursive iOS size display, Android upload on launch, face-distance fallback.
+        // - Fix: iOS now uses an .uploading claim-file lock (mirrors Android UploadState) so concurrent
+        //   BGProcessingTask wakeups and manual upload taps cannot race and send the same date twice.
+        // - Fix: iOS sizeString() and fileCount() are now recursive, so voice/ subdirectory recordings
+        //   are counted correctly in the export view.
+        // - Fix: Android fires an immediate DataUploadWorker.enqueueOneTimeUploads() on every app launch
+        //   so data is not stuck waiting for the 02:00 periodic dispatcher.
+        // - Fix: FaceDistanceService.startRecorderIfNeeded() now logs the reason for every early-return;
+        //   adds a 10 s screen-on fallback so ALWAYS mode records even when Accessibility Service is
+        //   not enabled; stamps SharedPreferences with lastFaceDistanceSampleMs for UI diagnostics.
+        versionCode = 113
+        versionName = "3.7.27"
     }
 
     signingConfigs {

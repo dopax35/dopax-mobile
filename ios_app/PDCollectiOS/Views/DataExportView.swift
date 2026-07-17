@@ -133,7 +133,16 @@ struct DataExportView: View {
     }
 
     private func uploadDate(_ date: String) {
-        guard let zipURL = try? appState.dataManager.zipDate(date) else { return }
+        // Claim the upload slot before starting — prevents a race with the
+        // background BGProcessingTask auto-upload that might fire at the same time.
+        guard appState.dataManager.tryClaimUpload(date) else {
+            uploadError = "An upload for \(date) is already in progress. Please wait and try again."
+            return
+        }
+        guard let zipURL = try? appState.dataManager.zipDate(date) else {
+            appState.dataManager.clearUploadClaim(date)
+            return
+        }
         uploadingDate = date
         uploadProgress = 0
 
@@ -150,18 +159,20 @@ struct DataExportView: View {
                 )
                 try? FileManager.default.removeItem(at: zipURL)
                 await MainActor.run {
-                    appState.dataManager.markUploaded(date)
+                    appState.dataManager.markUploaded(date)   // also clears claim
                     uploadingDate = nil
                     reload()
                 }
             } catch {
                 await MainActor.run {
+                    appState.dataManager.clearUploadClaim(date)
                     uploadingDate = nil
                     uploadError = error.localizedDescription
                 }
             }
         }
     }
+
 
     private func exportHealthKit() {
         Task {

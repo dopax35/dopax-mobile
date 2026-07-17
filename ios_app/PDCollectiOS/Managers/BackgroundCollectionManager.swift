@@ -179,6 +179,14 @@ class BackgroundCollectionManager {
             if Task.isCancelled { return }
             if dateStr == todayKey || dm.isUploaded(dateStr) { continue }
 
+            // Claim the upload slot so that a concurrent manual-upload tap or
+            // a second BGProcessingTask wakeup cannot race us and send the
+            // same date's data twice.  Mirrors Android's UploadState.tryClaimUpload().
+            guard dm.tryClaimUpload(dateStr) else {
+                print("[AutoUpload] Skipping \(dateStr) — another upload already in progress or complete.")
+                continue
+            }
+
             do {
                 let zipURL = try dm.zipDate(dateStr)
                 try await uploader.upload(
@@ -188,13 +196,15 @@ class BackgroundCollectionManager {
                     progressHandler: nil
                 )
                 try? FileManager.default.removeItem(at: zipURL)
-                dm.markUploaded(dateStr)
+                dm.markUploaded(dateStr)   // also clears the claim marker
                 uploadedAny = true
                 print("[AutoUpload] Uploaded \(dateStr) ✅")
             } catch {
+                dm.clearUploadClaim(dateStr)   // release the lock so a retry can re-claim
                 print("[AutoUpload] Failed \(dateStr): \(error.localizedDescription)")
             }
         }
+
 
         if uploadedAny {
             UserDefaults.standard.set(Date().timeIntervalSince1970 * 1000, forKey: "lastSuccessfulUploadMs")

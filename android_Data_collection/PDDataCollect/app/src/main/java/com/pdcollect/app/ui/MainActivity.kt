@@ -276,9 +276,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun scheduleDailyUploadWorker() {
+        // Register the 02:00 periodic dispatcher (idempotent — KEEP policy).
         DataUploadWorker.scheduleDaily(this)
         DashboardCacheWorker.schedulePeriodic(this)
+        // Also fire an immediate one-time upload on every launch so that data
+        // is not stuck waiting until 02:00 when the app is opened during the day.
+        // enqueueOneTimeUploads() uses ExistingWorkPolicy.REPLACE so re-queuing
+        // on repeat opens simply replaces any pending (not yet started) request —
+        // it does NOT restart a run that is already in-flight.
+        DataUploadWorker.enqueueOneTimeUploads(this)
     }
+
 
     override fun onResume() {
         super.onResume()

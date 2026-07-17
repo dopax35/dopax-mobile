@@ -32,6 +32,11 @@ class FaceDistanceService : LifecycleService() {
     private lateinit var profile: UserProfile
     private var recorder: FaceDistanceRecorder? = null
     private var foregroundServiceStarted = false
+    /** Wall-clock ms when onStartCommand ran — used for the screen-on fallback timer. */
+    private var serviceStartedAtMs = 0L
+    /** Handler used to schedule the ALWAYS-mode screen-on fallback retry. */
+    private val fallbackHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val fallbackRetryRunnable = Runnable { startRecorderIfNeeded() }
 
     // --- gate flags ---
     /** True while the display is on. */
@@ -152,8 +157,15 @@ class FaceDistanceService : LifecycleService() {
         }
 
         foregroundServiceStarted = true
+        serviceStartedAtMs = System.currentTimeMillis()
         stopRecorder()
         startRecorderIfNeeded()
+        // Schedule a deferred retry so that ALWAYS mode can fall back to
+        // screen_on_fallback if Accessibility Service never delivers a broadcast.
+        if (profile.faceDistanceMode == Constants.FACE_DISTANCE_MODE_ALWAYS) {
+            fallbackHandler.removeCallbacks(fallbackRetryRunnable)
+            fallbackHandler.postDelayed(fallbackRetryRunnable, FALLBACK_DELAY_MS)
+        }
         return START_STICKY
     }
 
@@ -163,30 +175,84 @@ class FaceDistanceService : LifecycleService() {
 
     /**
      * Starts the [FaceDistanceRecorder] only when the configured mode's gates are open.
+     *
+     * All early-returns now log the reason at WARN level so the logcat shows exactly
+     * why capture did not start — previously these were all completely silent.
+     *
+     * ALWAYS mode has a screen-on fallback: if the screen has been on for ≥
+     * [FALLBACK_DELAY_MS] but no foreground-package broadcast has arrived from
+     * [DataAccessibilityService] (e.g. Accessibility Service not enabled), we start
+     * the recorder anyway with context "screen_on_fallback" rather than recording
+     * nothing indefinitely.
      */
     private fun startRecorderIfNeeded() {
-        if (!foregroundServiceStarted) return
-        if (!screenOn) return
-        if (recorder != null) return
-        if (!PermissionUtils.hasCameraPermission(this)) return
+        if (!foregroundServiceStarted) {
+            android.util.Log.w(TAG, "startRecorderIfNeeded: foreground service not yet started — skipping")
+            return
+        }
+        if (!screenOn) {
+            android.util.Log.d(TAG, "startRecorderIfNeeded: screen off — skipping")
+            return
+        }
+        if (recorder != null) return   // already running
+        if (!PermissionUtils.hasCameraPermission(this)) {
+            android.util.Log.w(TAG, "startRecorderIfNeeded: camera permission not granted — cannot record")
+            return
+        }
 
         val captureContext = when (profile.faceDistanceMode) {
             Constants.FACE_DISTANCE_MODE_APP_FOREGROUND -> {
-                if (!dopaxInForeground) return
+                if (!dopaxInForeground) {
+                    android.util.Log.d(TAG, "startRecorderIfNeeded: mode=app_foreground but dopa-X not in foreground — skipping")
+                    return
+                }
                 Constants.FACE_DISTANCE_CONTEXT_APP_FOREGROUND
             }
             Constants.FACE_DISTANCE_MODE_ALWAYS -> {
-                if (foregroundPackage.isEmpty()) return
-                Constants.FACE_DISTANCE_CONTEXT_ALWAYS
+                if (foregroundPackage.isNotEmpty()) {
+                    Constants.FACE_DISTANCE_CONTEXT_ALWAYS
+                } else {
+                    // Accessibility Service hasn't reported a foreground package yet.
+                    // If the screen has been on long enough that a broadcast would
+                    // already have arrived had the service been enabled, fall back to
+                    // recording with a distinct context label.
+                    val msSinceStart = System.currentTimeMillis() - serviceStartedAtMs
+                    if (msSinceStart >= FALLBACK_DELAY_MS) {
+                        android.util.Log.w(
+                            TAG,
+                            "startRecorderIfNeeded: mode=always but no foreground-app broadcast after "
+                                + "${msSinceStart}ms — Accessibility Service likely not enabled. "
+                                + "Starting with screen_on_fallback context."
+                        )
+                        "screen_on_fallback"
+                    } else {
+                        android.util.Log.d(
+                            TAG,
+                            "startRecorderIfNeeded: mode=always, waiting for first foreground broadcast "
+                                + "(${msSinceStart}ms / ${FALLBACK_DELAY_MS}ms elapsed)"
+                        )
+                        return
+                    }
+                }
             }
-            else -> return
+            else -> {
+                android.util.Log.d(TAG, "startRecorderIfNeeded: mode=${profile.faceDistanceMode} — recorder not needed")
+                return
+            }
         }
 
+        android.util.Log.i(TAG, "Starting FaceDistanceRecorder (context=$captureContext)")
+        val prefs = getSharedPreferences(Constants.PREFS_NAME, android.content.Context.MODE_PRIVATE)
         recorder = FaceDistanceRecorder(
             context = this,
             lifecycleOwner = this,
             captureContext = captureContext,
-            onSample = { sample -> dataManager.writeFaceDistanceData(sample.toCsvRow()) },
+            onSample = { sample ->
+                dataManager.writeFaceDistanceData(sample.toCsvRow())
+                // Stamp last-captured timestamp so the Settings UI can detect
+                // a silently-stopped recorder and alert the participant.
+                prefs.edit().putLong(PREF_LAST_SAMPLE_MS, System.currentTimeMillis()).apply()
+            },
             onBlink  = { blink  -> dataManager.writeBlinkData(blink.toCsvRow()) },
             onError  = { android.util.Log.e(TAG, "Face distance capture failed", it) }
         ).also { it.start() }
@@ -201,6 +267,7 @@ class FaceDistanceService : LifecycleService() {
 
     override fun onDestroy() {
         foregroundServiceStarted = false
+        fallbackHandler.removeCallbacks(fallbackRetryRunnable)
         unregisterReceiver(screenReceiver)
         LocalBroadcastManager.getInstance(this).unregisterReceiver(foregroundAppReceiver)
         (application as? PDCollectApp)?.removeAppForegroundListener(appForegroundListener)
@@ -228,6 +295,17 @@ class FaceDistanceService : LifecycleService() {
 
     companion object {
         private const val TAG = "FaceDistanceService"
+        /** SharedPreferences key written on every successful face-distance sample. */
+        const val PREF_LAST_SAMPLE_MS = "face_distance_last_sample_ms"
+        /**
+         * How long to wait for the first foreground-app broadcast from
+         * [DataAccessibilityService] before giving up and using the screen-on
+         * fallback in ALWAYS mode.  10 seconds is enough for the accessibility
+         * service to deliver its initial broadcast after the device unlocks,
+         * while still being short enough that the first few minutes of a session
+         * are not lost.
+         */
+        private const val FALLBACK_DELAY_MS = 10_000L
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(
