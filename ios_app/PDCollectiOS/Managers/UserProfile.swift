@@ -1,10 +1,11 @@
 import Foundation
 import Combine
+import Security
 
 class UserProfile: ObservableObject {
     @Published var consentGiven: Bool      { didSet { save("consentGiven", consentGiven) } }
     @Published var profileComplete: Bool   { didSet { save("profileComplete", profileComplete) } }
-    @Published var userId: String          { didSet { save("userId", userId) } }
+    @Published var userId: String          { didSet { save("userId", userId); saveToKeychain(userId) } }
     @Published var age: String             { didSet { save("age", age) } }
     @Published var gender: String          { didSet { save("gender", gender) } }
     @Published var dominantHand: String    { didSet { save("dominantHand", dominantHand) } }
@@ -49,12 +50,23 @@ class UserProfile: ObservableObject {
             self.medications = []
         }
 
+        // userId resolution order:
+        //   1. UserDefaults   — written every session once set
+        //   2. Keychain       — survives app reinstall
+        //   3. Generate new   — first-ever launch
         if let uid = d.string(forKey: "userId"), !uid.isEmpty {
             self.userId = uid
+            // Keep Keychain in sync (may be missing after first update)
+            saveToKeychain(uid)
+        } else if let keychainId = getFromKeychain(), !keychainId.isEmpty {
+            // Survived reinstall — restore into UserDefaults
+            self.userId = keychainId
+            d.set(keychainId, forKey: "userId")
         } else {
             let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
             self.userId = newId
             d.set(newId, forKey: "userId")
+            saveToKeychain(newId)
         }
     }
 
@@ -62,6 +74,7 @@ class UserProfile: ObservableObject {
         ["consentGiven","profileComplete","userId","age","gender","dominantHand","affectedSide","medications",
          "hrDeviceIdentifier","hrDeviceName","beanieDeviceIdentifier","beanieDeviceName"]
             .forEach { UserDefaults.standard.removeObject(forKey: $0) }
+        deleteFromKeychain()
         consentGiven = false
         profileComplete = false
         let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
@@ -73,6 +86,26 @@ class UserProfile: ObservableObject {
 
     private func save(_ key: String, _ value: Any) {
         UserDefaults.standard.set(value, forKey: key)
+    }
+
+    // MARK: - Keychain
+    private func saveToKeychain(_ value: String) {
+        let data = Data(value.utf8)
+        let query = [kSecClass: kSecClassGenericPassword, kSecAttrAccount: "userId", kSecValueData: data] as [String: Any]
+        SecItemDelete(query as CFDictionary)
+        SecItemAdd(query as CFDictionary, nil)
+    }
+
+    private func getFromKeychain() -> String? {
+        let query = [kSecClass: kSecClassGenericPassword, kSecAttrAccount: "userId", kSecReturnData: true, kSecMatchLimit: kSecMatchLimitOne] as [String: Any]
+        var item: CFTypeRef?
+        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess, let data = item as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    private func deleteFromKeychain() {
+        let query = [kSecClass: kSecClassGenericPassword, kSecAttrAccount: "userId"] as [String: Any]
+        SecItemDelete(query as CFDictionary)
     }
 
     // MARK: - Firebase Sync
@@ -92,6 +125,23 @@ class UserProfile: ObservableObject {
         map["medications"] = medsList
         
         return map
+    }
+    
+    func mergeFromCloud(from map: [String: Any]) {
+        if !consentGiven, let consent = map["consentGiven"] as? Bool { self.consentGiven = consent }
+        if !profileComplete, let complete = map["profileComplete"] as? Bool { self.profileComplete = complete }
+        if age.isEmpty, let a = map["age"] as? String { self.age = a }
+        if gender.isEmpty, let g = map["gender"] as? String { self.gender = g }
+        if dominantHand == "Right", let hand = map["dominantHand"] as? String, !hand.isEmpty { self.dominantHand = hand }
+        if affectedSide == "Left", let side = map["affectedSide"] as? String, !side.isEmpty { self.affectedSide = side }
+        
+        if medications.isEmpty, let medsArray = map["medications"] as? [[String: Any]] {
+            self.medications = medsArray.compactMap { dict in
+                guard let name = dict["name"] as? String else { return nil }
+                let dosage = dict["dosage"] as? String ?? ""
+                return Medication(name: name, dosage: dosage)
+            }
+        }
     }
     
     func update(from map: [String: Any]) {

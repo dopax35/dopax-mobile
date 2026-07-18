@@ -215,8 +215,11 @@ struct SettingsView: View {
                 // MARK: - Danger Zone (matches Android's SettingsActivity reset / stop)
                 Section {
                     Button(role: .destructive) {
+                        // Sign out of Firebase only — local profile data is preserved.
+                        // The user will be shown LoginView again and can sign back in
+                        // to restore their cloud-backed data, or continue without signing in.
                         appState.authManager.signOut()
-                        resetConsent()
+                        appState.clearSkipSignIn()
                     } label: {
                         Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                     }
@@ -235,6 +238,7 @@ struct SettingsView: View {
                 } header: {
                     Label("Danger Zone", systemImage: "exclamationmark.triangle")
                 }
+
 
                 // MARK: - App Info
                 Section {

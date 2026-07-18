@@ -26,6 +26,11 @@ class AppState: ObservableObject {
     // MARK: - Auth
     let authManager = AuthManager()
 
+    /// True when the user tapped "Continue without signing in". Persisted so
+    /// it survives an app restart (they stay past LoginView until they sign in
+    /// or reset). Cleared on sign-out so the LoginView is shown again.
+    @Published var hasSkippedLogin: Bool
+
     /// Whether the user has enabled passive background collection from Settings.
     @Published var isCollecting: Bool {
         didSet {
@@ -54,6 +59,7 @@ class AppState: ObservableObject {
             self.isCollecting = true
             UserDefaults.standard.set(true, forKey: "isCollecting")
         }
+        self.hasSkippedLogin = UserDefaults.standard.bool(forKey: "hasSkippedLogin")
 
         profile.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
@@ -160,6 +166,22 @@ class AppState: ObservableObject {
         passiveSensor.stop()
         appEventLogger.stop()
         faceDistance.stop()
+    }
+
+    // MARK: - Auth Helpers
+
+    /// Called when the user taps "Continue without signing in" in LoginView.
+    /// Sets a persistent flag so the app routes past LoginView on next launch too.
+    func skipSignIn() {
+        hasSkippedLogin = true
+        UserDefaults.standard.set(true, forKey: "hasSkippedLogin")
+    }
+
+    /// Called on sign-out. Clears the skip flag so the LoginView is shown again
+    /// without erasing any local profile data.
+    func clearSkipSignIn() {
+        hasSkippedLogin = false
+        UserDefaults.standard.removeObject(forKey: "hasSkippedLogin")
     }
 
     /// Call after AVCaptureDevice.requestAccess returns .authorized

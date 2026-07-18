@@ -5,32 +5,33 @@ struct LoginView: View {
     @EnvironmentObject var appState: AppState
     @State private var isLoading = false
     @State private var errorMessage: String?
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 30) {
                 Spacer()
-                
+
                 Image(systemName: "waveform.path.ecg")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 100, height: 100)
                     .foregroundColor(.dopaxBlue)
-                
+
                 Text("Welcome to PDCollect")
                     .font(.largeTitle)
                     .fontWeight(.bold)
-                
-                Text("Sign in to sync your profile and contribute to Parkinson's research.")
+
+                Text("Sign in to back up your profile and sync across devices.")
                     .font(.body)
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
-                
+
                 Spacer()
-                
+
                 if isLoading {
-                    ProgressView("Signing in...")
+                    ProgressView("Signing in…")
+                        .padding()
                 } else {
                     VStack(spacing: 16) {
                         Button(action: handleAppleSignIn) {
@@ -66,19 +67,35 @@ struct LoginView: View {
                             .cornerRadius(8)
                         }
                         .padding(.horizontal)
+
+                        // Escape hatch for users who already have a local profile
+                        // (e.g. updated from a version that didn't require sign-in).
+                        // Tapping this skips Firebase Auth entirely — local UserDefaults
+                        // and Keychain data are fully preserved.
+                        Button("Continue without signing in") {
+                            // No-op: ContentView already shows the next screen
+                            // based on consentGiven / profileComplete state.
+                            // Marking the user as having acknowledged the login screen
+                            // is handled implicitly by setting a flag so ContentView
+                            // can route past LoginView without a Firebase user.
+                            appState.skipSignIn()
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 4)
                     }
                 }
-                
-                if let errorMessage = errorMessage {
+
+                if let errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.dopaxError)
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
-                
+
                 Spacer()
-                
+
                 Text("By signing in, you agree to our Privacy Policy and Terms of Service.")
                     .font(.footnote)
                     .foregroundColor(.secondary)
@@ -88,7 +105,9 @@ struct LoginView: View {
             .padding()
         }
     }
-    
+
+    // MARK: - Sign-in Handlers
+
     private func handleGoogleSignIn() {
         isLoading = true
         errorMessage = nil
@@ -96,7 +115,7 @@ struct LoginView: View {
             handleSignInResult(result)
         }
     }
-    
+
     private func handleAppleSignIn() {
         isLoading = true
         errorMessage = nil
@@ -104,22 +123,23 @@ struct LoginView: View {
             handleSignInResult(result)
         }
     }
-    
+
+    /// After Firebase auth succeeds, use syncProfileOnSignIn (local-wins merge)
+    /// instead of loadProfileFromCloud (which would overwrite local data with
+    /// whatever is in Firestore — potentially nothing for pre-auth users).
     private func handleSignInResult<T>(_ result: Result<T, Error>) {
         switch result {
         case .success:
-            // Sync profile
-            FirebaseSyncManager.shared.loadProfileFromCloud(profile: appState.userProfile) { success in
-                isLoading = false
-                if success {
-                    print("Profile loaded from cloud.")
-                } else {
-                    print("New user or failed to load profile.")
-                }
+            FirebaseSyncManager.shared.syncProfileOnSignIn(profile: appState.userProfile) { _ in
+                DispatchQueue.main.async { isLoading = false }
             }
         case .failure(let error):
             isLoading = false
+            // Don't show an error message when the user simply cancelled the sign-in sheet.
+            if let authError = error as? AuthError, case .userCancelled = authError { return }
             errorMessage = error.localizedDescription
         }
     }
 }
+
+
