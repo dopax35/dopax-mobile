@@ -74,7 +74,12 @@ class FirebaseSyncManager {
         }
 
         db.collection("users").document(user.uid).getDocument { [weak self] document, error in
-            guard let self = self else { return }
+            // If self was deallocated (e.g. app backgrounded before Firestore responded)
+            // still call completion so the caller (LoginView) isn't left in a loading state.
+            guard let self else {
+                DispatchQueue.main.async { completion(false) }
+                return
+            }
 
             if let document = document, document.exists, let data = document.data() {
                 // Cloud profile found — merge (local data wins).
@@ -96,4 +101,3 @@ class FirebaseSyncManager {
         }
     }
 }
-

@@ -1,10 +1,46 @@
-# DopaX iOS 3.7.13 (build 97) - release checklist
-
-There was no equivalent of the Android project's `RELEASE.md` for iOS
-before this round — this is a first pass modeled on it. Tick items as
-you go.
+# DopaX iOS Release Notes
 
 ---
+
+## 3.7.29 (build 115) — 2026-07-18
+
+### Fix: User profile erasure on app update
+
+Root cause: The Firebase authentication gate introduced in v3.7.x requires users
+to sign in. After an app update, Firebase sessions often expire, forcing re-auth.
+If no Firestore document existed for the user's account (all pre-auth users), the
+app silently blanked their profile and assigned a new random participant ID.
+
+**Changes:**
+
+- **`UserProfile`** — `userId` is now backed by the iOS Keychain (scoped to
+  bundle ID + `"participantUserId"`) in addition to UserDefaults. Resolution
+  order on init: UserDefaults → Keychain (survives reinstall) → generate new.
+  Keychain writes use update-then-add to avoid race conditions.
+- **`UserProfile.mergeFromCloud()`** — new local-wins merge. When called on
+  sign-in, only fills in fields that are blank locally *and* only if the profile
+  is not yet marked complete. Once complete, all local values are trusted
+  absolutely and never overwritten by the cloud.
+- **`FirebaseSyncManager.syncProfileOnSignIn()`** — new smart sign-in sync:
+  if a Firestore document exists for the Firebase UID it merges (local wins);
+  if no document exists it immediately uploads the local profile to cloud,
+  preserving the participant's original `userId` and all their data.
+  Completion is always called even if self is deallocated mid-request.
+- **`LoginView`** — uses `syncProfileOnSignIn` instead of `loadProfileFromCloud`
+  (which was a destructive full-overwrite). Added **"Continue without signing in"**
+  escape hatch so existing users who update are never blocked from their data.
+  Cancelling the sign-in sheet no longer shows an error.
+- **`AppState`** — `skipSignIn()` / `clearSkipSignIn()` persist the skip
+  decision across app restarts via `"hasSkippedLogin"` in UserDefaults.
+- **`ContentView`** — auth gate now checks `currentUser != nil || hasSkippedLogin`.
+  Added smooth animation for auth state transitions.
+- **`SettingsView`** — **Sign Out** now only drops the Firebase session and clears
+  `hasSkippedLogin`; it no longer calls `clearAll()`. Local profile data is
+  fully preserved on sign-out. `clearAll()` is only reachable from
+  **"Reset Consent & Start Over"**.
+
+---
+
 
 ## What's in 3.7.13 (build 97)
 
