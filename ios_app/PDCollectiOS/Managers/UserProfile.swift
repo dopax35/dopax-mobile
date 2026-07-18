@@ -5,7 +5,7 @@ import Security
 class UserProfile: ObservableObject {
     @Published var consentGiven: Bool      { didSet { save("consentGiven", consentGiven) } }
     @Published var profileComplete: Bool   { didSet { save("profileComplete", profileComplete) } }
-    @Published var userId: String          { didSet { save("userId", userId); saveToKeychain(userId) } }
+    @Published var userId: String          { didSet { save("userId", userId); UserProfile.saveToKeychain(userId) } }
     @Published var age: String             { didSet { save("age", age) } }
     @Published var gender: String          { didSet { save("gender", gender) } }
     @Published var dominantHand: String    { didSet { save("dominantHand", dominantHand) } }
@@ -57,8 +57,8 @@ class UserProfile: ObservableObject {
         if let uid = d.string(forKey: "userId"), !uid.isEmpty {
             self.userId = uid
             // Keep Keychain in sync (may be missing after first update)
-            saveToKeychain(uid)
-        } else if let keychainId = getFromKeychain(), !keychainId.isEmpty {
+            UserProfile.saveToKeychain(uid)
+        } else if let keychainId = UserProfile.getFromKeychain(), !keychainId.isEmpty {
             // Survived reinstall — restore into UserDefaults
             self.userId = keychainId
             d.set(keychainId, forKey: "userId")
@@ -66,7 +66,7 @@ class UserProfile: ObservableObject {
             let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
             self.userId = newId
             d.set(newId, forKey: "userId")
-            saveToKeychain(newId)
+            UserProfile.saveToKeychain(newId)
         }
     }
 
@@ -74,7 +74,7 @@ class UserProfile: ObservableObject {
         ["consentGiven","profileComplete","userId","age","gender","dominantHand","affectedSide","medications",
          "hrDeviceIdentifier","hrDeviceName","beanieDeviceIdentifier","beanieDeviceName"]
             .forEach { UserDefaults.standard.removeObject(forKey: $0) }
-        deleteFromKeychain()
+        UserProfile.deleteFromKeychain()
         consentGiven = false
         profileComplete = false
         let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
@@ -88,21 +88,19 @@ class UserProfile: ObservableObject {
         UserDefaults.standard.set(value, forKey: key)
     }
 
-    // MARK: - Keychain
+    // MARK: - Keychain (static — safe to call from init before self is fully initialized)
     // kSecAttrService scopes the item to this app's bundle so the generic
-    // account key "userId" cannot collide with any other app's Keychain entry.
+    // account key "participantUserId" cannot collide with any other app's Keychain entry.
     private static let keychainService = Bundle.main.bundleIdentifier ?? "com.oriw.pdcollect.ios1"
     private static let keychainAccount = "participantUserId"
 
-    private func saveToKeychain(_ value: String) {
+    static func saveToKeychain(_ value: String) {
         let data = Data(value.utf8)
-        // Build a query that uniquely identifies our item.
         let query: [CFString: Any] = [
             kSecClass:       kSecClassGenericPassword,
-            kSecAttrService: UserProfile.keychainService,
-            kSecAttrAccount: UserProfile.keychainAccount
+            kSecAttrService: keychainService,
+            kSecAttrAccount: keychainAccount
         ]
-        // Attempt update first; only add if the item doesn't exist yet.
         let update: [CFString: Any] = [kSecValueData: data]
         let status = SecItemUpdate(query as CFDictionary, update as CFDictionary)
         if status == errSecItemNotFound {
@@ -112,11 +110,11 @@ class UserProfile: ObservableObject {
         }
     }
 
-    private func getFromKeychain() -> String? {
+    static func getFromKeychain() -> String? {
         let query: [CFString: Any] = [
             kSecClass:            kSecClassGenericPassword,
-            kSecAttrService:      UserProfile.keychainService,
-            kSecAttrAccount:      UserProfile.keychainAccount,
+            kSecAttrService:      keychainService,
+            kSecAttrAccount:      keychainAccount,
             kSecReturnData:       true,
             kSecMatchLimit:       kSecMatchLimitOne
         ]
@@ -128,11 +126,11 @@ class UserProfile: ObservableObject {
         return uid
     }
 
-    private func deleteFromKeychain() {
+    static func deleteFromKeychain() {
         let query: [CFString: Any] = [
             kSecClass:       kSecClassGenericPassword,
-            kSecAttrService: UserProfile.keychainService,
-            kSecAttrAccount: UserProfile.keychainAccount
+            kSecAttrService: keychainService,
+            kSecAttrAccount: keychainAccount
         ]
         SecItemDelete(query as CFDictionary)
     }

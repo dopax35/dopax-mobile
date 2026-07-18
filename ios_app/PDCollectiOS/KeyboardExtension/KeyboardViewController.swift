@@ -444,7 +444,7 @@ class KeyboardViewController: UIInputViewController {
     /// observer below, so no separate logging call is needed here.
     @objc private func backspaceSwipeLeft() {
         guard let before = textDocumentProxy.documentContextBeforeInput, !before.isEmpty else { return }
-        var chars = Array(before)
+        let chars = Array(before)
         var idx = chars.count
         while idx > 0, chars[idx - 1].isWhitespace { idx -= 1 }
         while idx > 0, !chars[idx - 1].isWhitespace { idx -= 1 }
