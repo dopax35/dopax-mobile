@@ -62,6 +62,7 @@ enum Constants {
         static let pedometerFile        = "pedometer.csv"
         static let motionActivityFile   = "motion_activity.csv"
         static let blinkLogFile         = "blink_log.csv"
+        static let gazeFile             = "gaze_tracking.csv"
 
         // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score\n"
@@ -71,6 +72,7 @@ enum Constants {
         static let touchHeader          = "timestamp_ms,action,x,y,pressure,tap_interval_ms\n"
         static let appsHeader           = "timestamp_ms,event,bundle_id,duration_ms\n"
         static let faceDistanceHeader   = "timestamp_ms,distance_ratio,face_x,face_y,confidence,roll_deg,yaw_deg\n"
+        static let gazeHeader           = "timestamp_ms,left_gaze_x,left_gaze_y,right_gaze_x,right_gaze_y,left_blink,right_blink,look_at_x,look_at_y,look_at_z,method\n"
         static let heartRateHeader      = "timestamp_ms,bpm,rr_interval_ms,device_address,device_name\n"
         static let beanieTemperatureHeader = "timestamp_ms,device_name,device_address,profile_name,inner_c,outer_c,tskin_c,heat_flux_cal_per_sec,battery_pct,ml_prediction,ml_confidence\n"
         static let beanieImuHeader      = "timestamp_ms,device_name,device_address,ax_raw,ay_raw,az_raw,gx_raw,gy_raw,gz_raw,ax_g,ay_g,az_g,accel_mag_g,gx_dps,gy_dps,gz_dps,gyro_mag_dps\n"

@@ -40,19 +40,21 @@ class BluetoothManager: NSObject, ObservableObject {
     // Reconnection — exponential backoff then scan-based fallback
     private var hrReconnectTimer: Timer?
     private var beanieReconnectTimer: Timer?
+    private var hrReconnectScanTimer: Timer?        // scan-based fallback
     private var beanieReconnectScanTimer: Timer?   // scan-based fallback
     private var hrReconnectAttempts = 0
     private var beanieReconnectAttempts = 0
     private static let maxReconnectAttempts = 5    // after this, switch to scan fallback
     private static let baseReconnectDelay: TimeInterval = 3.0
-    
+
     // Scan timeout
     private var scanTimer: Timer?
     private static let scanDuration: TimeInterval = 15.0
-    
+
     // Track what we're scanning for
     private var scanningForHR = false
     private var scanningForBeanie = false
+    private var scanningForHRReconnect = false      // silent background reconnect scan
     private var scanningForBeanieReconnect = false  // silent background reconnect scan
     
     // Suppress reconnect when user explicitly disconnected
@@ -142,6 +144,7 @@ class BluetoothManager: NSObject, ObservableObject {
     
     func connectHRDevice(id: UUID) {
         stopScan()
+        stopHRReconnectScan()
         userInitiatedHRDisconnect = false
         guard let peripheral = centralManager.retrievePeripherals(withIdentifiers: [id]).first else { return }
         hrPeripheral = peripheral
@@ -158,6 +161,7 @@ class BluetoothManager: NSObject, ObservableObject {
     
     func disconnectHR() {
         userInitiatedHRDisconnect = true
+        stopHRReconnectScan()
         hrReconnectTimer?.invalidate()
         hrReconnectTimer = nil
         hrReconnectAttempts = 0
@@ -222,6 +226,10 @@ class BluetoothManager: NSObject, ObservableObject {
                     CBConnectPeripheralOptionNotifyOnConnectionKey: true
                 ])
                 hrService.status = .connecting
+            } else {
+                // Peripheral not in cache (e.g. first launch after reinstall) — start a scan,
+                // matching the Beanie fallback just below instead of silently doing nothing.
+                startHRReconnectScan()
             }
         }
         
@@ -242,30 +250,86 @@ class BluetoothManager: NSObject, ObservableObject {
         }
     }
     
-    // MARK: - HR Reconnect (exponential backoff)
-    
+    // MARK: - HR Reconnect (exponential backoff → scan-based fallback)
+    //
+    // Previously this stopped trying entirely after maxReconnectAttempts — an HR strap
+    // that goes out of range for longer than the ~3 minutes of total backoff (5 attempts,
+    // capped at 120s each) would never reconnect again until the user manually reopened
+    // Bluetooth settings, silently losing heart-rate/HRV data indefinitely. Beanie already
+    // had a scan-based fallback phase for exactly this reason; HR now mirrors it.
+
     private func scheduleHRReconnect() {
-        guard !userInitiatedHRDisconnect, hrReconnectAttempts < Self.maxReconnectAttempts else { return }
-        hrReconnectAttempts += 1
-        let delay = Self.baseReconnectDelay * pow(2.0, Double(min(hrReconnectAttempts - 1, 4)))
-        let clampedDelay = min(delay, 120.0)
-        
-        hrReconnectTimer?.invalidate()
-        hrReconnectTimer = Timer.scheduledTimer(withTimeInterval: clampedDelay, repeats: false) { [weak self] _ in
-            self?.connectToSavedHR()
+        guard !userInitiatedHRDisconnect else { return }
+
+        if hrReconnectAttempts < Self.maxReconnectAttempts {
+            // Phase 1: exponential backoff using cached peripheral handle
+            hrReconnectAttempts += 1
+            let delay = Self.baseReconnectDelay * pow(2.0, Double(min(hrReconnectAttempts - 1, 4)))
+            let clampedDelay = min(delay, 120.0)
+
+            hrReconnectTimer?.invalidate()
+            hrReconnectTimer = Timer.scheduledTimer(withTimeInterval: clampedDelay, repeats: false) { [weak self] _ in
+                self?.connectToSavedHR()
+            }
+        } else {
+            // Phase 2: scan-based fallback — runs indefinitely until the device reappears
+            // or the user explicitly disconnects.
+            startHRReconnectScan()
         }
     }
-    
+
     private func connectToSavedHR() {
-        guard let hrId = userProfile?.hrDeviceIdentifier, !hrId.isEmpty,
+        guard !userInitiatedHRDisconnect,
+              let hrId = userProfile?.hrDeviceIdentifier, !hrId.isEmpty,
               let uuid = UUID(uuidString: hrId) else { return }
         if let peripheral = centralManager.retrievePeripherals(withIdentifiers: [uuid]).first {
+            if let old = hrPeripheral, old !== peripheral {
+                centralManager.cancelPeripheralConnection(old)
+            }
             hrPeripheral = peripheral
             peripheral.delegate = hrService
             centralManager.connect(peripheral, options: [
                 CBConnectPeripheralOptionNotifyOnConnectionKey: true
             ])
             hrService.status = .connecting
+        } else {
+            // Not in cache — go straight to scan fallback
+            startHRReconnectScan()
+        }
+    }
+
+    // MARK: - Scan-Based HR Reconnect Fallback (mirrors Beanie's, below)
+
+    private func startHRReconnectScan() {
+        guard !userInitiatedHRDisconnect,
+              let hrId = userProfile?.hrDeviceIdentifier, !hrId.isEmpty else { return }
+        stopHRReconnectScan()
+        scanningForHRReconnect = true
+        hrService.status = .scanning
+
+        centralManager.scanForPeripherals(
+            withServices: [Self.hrServiceUUID],
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
+        )
+
+        // Stop scan after 20s and retry after 30s (same cadence as Beanie's fallback).
+        hrReconnectScanTimer = Timer.scheduledTimer(withTimeInterval: 20.0, repeats: false) { [weak self] timer in
+            guard let self else { return timer.invalidate() }
+            self.centralManager.stopScan()
+            self.scanningForHRReconnect = false
+            guard !self.userInitiatedHRDisconnect else { return }
+            self.hrReconnectScanTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { [weak self] _ in
+                self?.startHRReconnectScan()
+            }
+        }
+    }
+
+    private func stopHRReconnectScan() {
+        hrReconnectScanTimer?.invalidate()
+        hrReconnectScanTimer = nil
+        if scanningForHRReconnect {
+            centralManager.stopScan()
+            scanningForHRReconnect = false
         }
     }
     
@@ -370,14 +434,25 @@ extension BluetoothManager: CBCentralManagerDelegate {
     /// Re-attaches delegates to any peripherals that were connected at kill time.
     func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
         guard let peripherals = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] else { return }
-        
+
         let savedHRId     = UUID(uuidString: userProfile?.hrDeviceIdentifier ?? "")
-        
+        // Was previously missing entirely — only HR got reattached here. Without this,
+        // during a background-launch-via-BLE-restore window, a restored Beanie peripheral
+        // had no delegate attached until centralManagerDidUpdateState → connectToSavedDevices()
+        // fired shortly after, so any characteristic callbacks that arrived in between were
+        // silently dropped.
+        let savedBeanieId = UUID(uuidString: userProfile?.beanieDeviceIdentifier ?? "")
+
         for peripheral in peripherals {
             if peripheral.identifier == savedHRId {
                 hrPeripheral = peripheral
                 peripheral.delegate = hrService
                 hrService.deviceName = peripheral.name ?? userProfile?.hrDeviceName ?? "HR Device"
+            } else if peripheral.identifier == savedBeanieId {
+                beaniePeripheral = peripheral
+                peripheral.delegate = beanieService
+                beanieService.deviceName = peripheral.name ?? userProfile?.beanieDeviceName ?? "Beanie"
+                beanieService.deviceAddress = peripheral.identifier.uuidString
             }
         }
     }
@@ -388,7 +463,32 @@ extension BluetoothManager: CBCentralManagerDelegate {
         let name = rawName ?? "Unknown (\(peripheral.identifier.uuidString.prefix(8))…)"
         let id = peripheral.identifier
         let advServiceUUIDs = advertisementData[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? []
-        
+
+        // Silent background reconnect scan — check if this is our saved HR strap
+        if scanningForHRReconnect {
+            let savedHRId = UUID(uuidString: userProfile?.hrDeviceIdentifier ?? "")
+            let isOurHR = id == savedHRId || advServiceUUIDs.contains(Self.hrServiceUUID)
+
+            if isOurHR && (savedHRId == nil || id == savedHRId) {
+                stopHRReconnectScan()
+                hrReconnectAttempts = 0
+                let deviceToConnect: CBPeripheral
+                if let existing = centralManager.retrievePeripherals(withIdentifiers: [id]).first {
+                    deviceToConnect = existing
+                } else {
+                    deviceToConnect = peripheral
+                }
+                hrPeripheral = deviceToConnect
+                deviceToConnect.delegate = hrService
+                hrService.deviceName = name
+                centralManager.connect(deviceToConnect, options: [
+                    CBConnectPeripheralOptionNotifyOnConnectionKey: true
+                ])
+                hrService.status = .connecting
+            }
+            return
+        }
+
         // Silent background reconnect scan — check if this is our saved beanie
         if scanningForBeanieReconnect {
             let savedBeanieId = UUID(uuidString: userProfile?.beanieDeviceIdentifier ?? "")
@@ -442,6 +542,7 @@ extension BluetoothManager: CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         if peripheral === hrPeripheral {
             hrReconnectAttempts = 0
+            stopHRReconnectScan()
             hrService.status = .discovering
             hrService.deviceName = peripheral.name ?? userProfile?.hrDeviceName ?? "HR Device"
             peripheral.discoverServices([Self.hrServiceUUID])

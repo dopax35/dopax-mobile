@@ -16,6 +16,16 @@ extension Double {
     }
 }
 
+/// Formats a `Float` for a CSV row, guarding against NaN/Infinity. Sensor-derived values
+/// (ARKit blend shapes, `atan2` on a degenerate transform, division in distance estimates)
+/// can occasionally produce non-finite floats; `String(format:)` would otherwise emit the
+/// literal strings "nan"/"inf" straight into the CSV, silently breaking downstream numeric
+/// parsers. Mirrors Android's `FaceDistanceRecorder.formatFloat`/`DistanceSample.formatFloat`.
+func safeFormat(_ value: Float, _ format: String, _ locale: Locale) -> String {
+    guard value.isFinite else { return "0.0000" }
+    return String(format: format, locale: locale, value)
+}
+
 extension View {
     func cardStyle() -> some View {
         self

@@ -104,15 +104,22 @@ struct DataExportView: View {
 
                     Spacer()
 
-                    Button(role: .destructive, action: {
-                        dateToDelete = date
-                        showDeleteAlert = true
-                    }) {
-                        Image(systemName: "trash")
-                            .font(.caption)
+                    // Today's directory is still being actively appended to by passive
+                    // sensors/BLE/face-distance in this same process — deleting it
+                    // mid-collection would race those writers. DataManager.deleteDate()
+                    // also guards this server-side; disabling here just avoids showing
+                    // an action that would silently no-op.
+                    if date != Date().dateKey {
+                        Button(role: .destructive, action: {
+                            dateToDelete = date
+                            showDeleteAlert = true
+                        }) {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
                 }
                 .padding(.top, 4)
             }

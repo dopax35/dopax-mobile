@@ -64,7 +64,10 @@ class PassiveSensorService: ObservableObject {
 
     private func startMotionUpdates() {
         guard motion.isAccelerometerAvailable, motion.isGyroAvailable else { return }
-        buffer = []
+        // Routed through `queue` for the same reason as in `flush()` — avoids racing a
+        // still-in-flight `appendReading` call from a motion callback delivered just
+        // before this restart.
+        queue.addOperation { [weak self] in self?.buffer = [] }
 
         motion.deviceMotionUpdateInterval = 1.0 / hz
         motion.startDeviceMotionUpdates(using: .xMagneticNorthZVertical, to: queue) { [weak self] data, _ in
@@ -150,14 +153,22 @@ class PassiveSensorService: ObservableObject {
         if buffer.count >= flushThreshold { flush() }
     }
 
+    /// `appendReading` runs on `queue` (CoreMotion's delivery queue) while `flush` was
+    /// previously called from the main-thread timer and from background/foreground
+    /// notification handlers — mutating `buffer` from two threads with no synchronization
+    /// at sustained 50Hz is a data race that can corrupt the array and crash. Funnelling
+    /// the swap itself through `queue` serializes it with every `appendReading` call; the
+    /// actual (slower) disk write stays off `queue` so it doesn't stall motion delivery.
     private func flush() {
-        guard !buffer.isEmpty, let dm = dataManager else { return }
-        let toWrite = buffer
-        buffer = []
-        let count = toWrite.count
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            dm.writePassiveSensorReadings(toWrite)
-            DispatchQueue.main.async { self?.totalReadingsToday += count }
+        queue.addOperation { [weak self] in
+            guard let self, !self.buffer.isEmpty, let dm = self.dataManager else { return }
+            let toWrite = self.buffer
+            self.buffer = []
+            let count = toWrite.count
+            DispatchQueue.global(qos: .utility).async {
+                dm.writePassiveSensorReadings(toWrite)
+                DispatchQueue.main.async { self.totalReadingsToday += count }
+            }
         }
     }
 }

@@ -17,7 +17,9 @@ class CoreMotionManager: ObservableObject {
 
     func startRecording() {
         guard isAvailable, !motion.isDeviceMotionActive else { return }
-        readings = []
+        // Routed through `queue` (see stopRecording()'s comment) so this reset can't race
+        // an append still in flight from a callback delivered just before this restart.
+        queue.addOperation { [weak self] in self?.readings = [] }
         motion.deviceMotionUpdateInterval = 1.0 / hz
         motion.startDeviceMotionUpdates(to: queue) { [weak self] data, _ in
             guard let self, let data else { return }
@@ -45,7 +47,7 @@ class CoreMotionManager: ObservableObject {
     /// so callers can write CSV rows in real time (matches Android SENSOR_DELAY_FASTEST streaming).
     func startStreaming(onSample: @escaping (SensorReading) -> Void) {
         guard isAvailable, !motion.isDeviceMotionActive else { return }
-        readings = []
+        queue.addOperation { [weak self] in self?.readings = [] }
         motion.deviceMotionUpdateInterval = 1.0 / hz
         motion.startDeviceMotionUpdates(to: queue) { [weak self] data, _ in
             guard let self, let data else { return }
@@ -71,10 +73,20 @@ class CoreMotionManager: ObservableObject {
     }
 
 
+    /// `readings.append(r)` happens on `queue` (CoreMotion's delivery queue) at up to
+    /// 100Hz, while this used to be called straight from the main thread with no
+    /// synchronization — `motion.stopDeviceMotionUpdates()` stops *future* callbacks but
+    /// doesn't guarantee one already dispatched to `queue` isn't still about to run,
+    /// so reading `readings` directly here was a data race (crash risk / truncated data)
+    /// against an in-flight append. Waiting on a final no-op operation drains `queue` of
+    /// anything already enqueued before reading the final array.
     func stopRecording() -> [SensorReading] {
         motion.stopDeviceMotionUpdates()
         DispatchQueue.main.async { self.isRecording = false }
-        return readings
+        var result: [SensorReading] = []
+        let drain = BlockOperation { [weak self] in result = self?.readings ?? [] }
+        queue.addOperations([drain], waitUntilFinished: true)
+        return result
     }
 
     // Count zero-crossings in gyroZ to quantify pronation/supination cycles

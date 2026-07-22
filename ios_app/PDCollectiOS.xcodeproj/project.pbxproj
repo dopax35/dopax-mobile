@@ -71,6 +71,7 @@
 		E2055B4C5E8567B0661EDD19 /* QuestionnaireResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */; };
 		E48F30702EE977047022B202 /* PassiveSensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */; };
 		E49EA952DDC572D21A24DFC6 /* KeystrokeSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26219CFA974662F0772A8E8E /* KeystrokeSync.swift */; };
+		A211B4AA5513779D444BABB1 /* SetupVerificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF795633272B2FDF584A3458 /* SetupVerificationManager.swift */; };
 		E4B3BF4A0BE0793E44E70560 /* CoreMotionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC60822020660C887787231 /* CoreMotionManager.swift */; };
 		EEBD77617A868B377DCEF3C5 /* BeanieBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */; };
 		EFEE8EAE03ACD5794FDC82EF /* BackgroundCollectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9D8E88266B96CA5FC25AD5 /* BackgroundCollectionManager.swift */; };
@@ -112,6 +113,7 @@
 		1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailMakingTestView.swift; sourceTree = "<group>"; };
 		2291E97313FB912D275C98D8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		26219CFA974662F0772A8E8E /* KeystrokeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeystrokeSync.swift; sourceTree = "<group>"; };
+		BF795633272B2FDF584A3458 /* SetupVerificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupVerificationManager.swift; sourceTree = "<group>"; };
 		262FA521A0E402933B29D470 /* PhysicalActivityLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityLogView.swift; sourceTree = "<group>"; };
 		269FF147A286D9ED721528EB /* AppEventLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEventLogger.swift; sourceTree = "<group>"; };
 		29122AECD96E65493B8A5E3D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -272,6 +274,7 @@
 				07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */,
 				B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */,
 				26219CFA974662F0772A8E8E /* KeystrokeSync.swift */,
+				BF795633272B2FDF584A3458 /* SetupVerificationManager.swift */,
 				6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */,
 				1C6B440D08040066E0D21731 /* PedometerHistoryService.swift */,
 				382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */,
@@ -488,6 +491,7 @@
 				2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */,
 				A7A7001026D9B57CE4E514AC /* KeystrokeEvent.swift in Sources */,
 				E49EA952DDC572D21A24DFC6 /* KeystrokeSync.swift in Sources */,
+				A211B4AA5513779D444BABB1 /* SetupVerificationManager.swift in Sources */,
 				79887FC9735E243684B1EC33 /* LegAgilityView.swift in Sources */,
 				0A20ADB4C86A2846C097B5CD /* MainTabView.swift in Sources */,
 				57FE276D18C46A7CA9AD2C31 /* MedicationEvent.swift in Sources */,
@@ -535,7 +539,7 @@
 				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 98;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = YD2UPLT5JG;
 				INFOPLIST_FILE = PDCollectiOS/Info.plist;
@@ -544,7 +548,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.7.13;
+				MARKETING_VERSION = 3.7.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -644,7 +648,7 @@
 				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 98;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = YD2UPLT5JG;
 				INFOPLIST_FILE = PDCollectiOS/Info.plist;
@@ -653,7 +657,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.7.13;
+				MARKETING_VERSION = 3.7.14;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";

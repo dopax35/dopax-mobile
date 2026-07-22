@@ -166,6 +166,11 @@ class AppState: ObservableObject {
         passiveSensor.stop()
         appEventLogger.stop()
         faceDistance.stop()
+        // Was previously missing — startCollection() wires up bluetoothManager, but
+        // stopCollection() never tore it down, so toggling "Data Collection" off in
+        // Settings left HR/Beanie BLE data being written indefinitely, contradicting
+        // what the toggle told the participant was happening.
+        bluetoothManager.stop()
     }
 
     // MARK: - Auth Helpers

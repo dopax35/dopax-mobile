@@ -463,6 +463,39 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
                 print("[Beanie] Falling back to read polling after watchdog timeout")
                 self.useReadPolling = true
                 self.startReadPolling(peripheral: peripheral)
+            } else {
+                // Dead end otherwise: live-start retries exhausted (or no command
+                // characteristic to retry with) AND the data characteristic doesn't
+                // support .read, so read-polling isn't an option either. Previously
+                // this just stopped — the device stayed "connected"/ready but silently
+                // never streamed again until a manual disconnect/reconnect. Instead,
+                // keep the watchdog alive at a slower cadence: cheap, and covers the
+                // case where the peripheral eventually starts notifying on its own
+                // (e.g. after firmware-side buffering) or characteristics get
+                // rediscovered with different properties on a later service change.
+                print("[Beanie] Watchdog exhausted recovery options — retrying at reduced frequency")
+                self.liveStartRetryCount = 0
+                self.scheduleDataWatchdogSlow(peripheral: peripheral)
+            }
+        }
+    }
+
+    private func scheduleDataWatchdogSlow(peripheral: CBPeripheral) {
+        dataWatchdogTimer?.invalidate()
+        dataWatchdogTimer = Timer.scheduledTimer(
+            withTimeInterval: Self.dataWatchdogTimeout * 4, repeats: false
+        ) { [weak self] _ in
+            guard let self, !self.receivedFrame else { return }
+            if self.cmdCharacteristic != nil {
+                print("[Beanie] Slow-cadence watchdog: retrying live-start")
+                self.sendLiveStartSequence()
+                self.scheduleDataWatchdog(peripheral: peripheral)
+            } else if let dataChar = self.dataCharacteristic, dataChar.properties.contains(.read) {
+                print("[Beanie] Slow-cadence watchdog: falling back to read polling")
+                self.useReadPolling = true
+                self.startReadPolling(peripheral: peripheral)
+            } else {
+                self.scheduleDataWatchdogSlow(peripheral: peripheral)
             }
         }
     }

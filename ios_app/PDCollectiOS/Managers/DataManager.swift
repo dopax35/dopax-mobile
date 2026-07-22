@@ -32,6 +32,7 @@ class DataManager: ObservableObject {
                 (Constants.CSV.keyEventsFile,        Constants.CSV.keyEventsHeader),
                 (Constants.CSV.appsFile,             Constants.CSV.appsHeader),
                 (Constants.CSV.faceDistanceFile,     Constants.CSV.faceDistanceHeader),
+                (Constants.CSV.gazeFile,             Constants.CSV.gazeHeader),
                 (Constants.CSV.medicationFile,       Constants.CSV.medicationHeader),
                 (Constants.CSV.physicalActivityFile, Constants.CSV.physicalActivityHeader),
                 (Constants.CSV.sleepFile,            Constants.CSV.sleepHeader),
@@ -166,9 +167,15 @@ class DataManager: ObservableObject {
                header: Constants.CSV.sensorsHeader)
     }
 
+    /// Routed through `writeQueue` like every other write here — unlike `appendGaitMetrics`
+    /// just below, this one used to write straight from the caller's thread with no
+    /// synchronization against concurrent file operations.
     func writeGaitMetrics(csvString: String) {
-        let file = rootDir.appendingPathComponent("gait_metrics_export.csv")
-        try? csvString.write(to: file, atomically: true, encoding: .utf8)
+        writeQueue.async { [weak self] in
+            guard let self else { return }
+            let file = rootDir.appendingPathComponent("gait_metrics_export.csv")
+            try? csvString.write(to: file, atomically: true, encoding: .utf8)
+        }
     }
 
     /// Append a HealthKit gait-metrics CSV block (used by BackgroundCollectionManager).
@@ -216,6 +223,13 @@ class DataManager: ObservableObject {
     func writeFaceSample(_ sample: FaceDistanceSample) {
         append(sample.csvRow, to: todayDir, filename: Constants.CSV.faceDistanceFile,
                header: Constants.CSV.faceDistanceHeader)
+    }
+
+    // MARK: - Gaze & Pupil Tracking Writes
+
+    func writeGazeSample(_ sample: GazeSample) {
+        append(sample.csvRow, to: todayDir, filename: Constants.CSV.gazeFile,
+               header: Constants.CSV.gazeHeader)
     }
 
     // MARK: - Bluetooth Heart Rate Writes
@@ -476,6 +490,7 @@ class DataManager: ObservableObject {
                 (Constants.CSV.keyEventsFile,        Constants.CSV.keyEventsHeader),
                 (Constants.CSV.appsFile,             Constants.CSV.appsHeader),
                 (Constants.CSV.faceDistanceFile,     Constants.CSV.faceDistanceHeader),
+                (Constants.CSV.gazeFile,             Constants.CSV.gazeHeader),
                 (Constants.CSV.medicationFile,       Constants.CSV.medicationHeader),
                 (Constants.CSV.physicalActivityFile, Constants.CSV.physicalActivityHeader),
                 (Constants.CSV.sleepFile,            Constants.CSV.sleepHeader),
@@ -509,11 +524,25 @@ class DataManager: ObservableObject {
 
     // MARK: - Deletion
 
+    /// Routed through `writeQueue.sync` (same serial queue every `append()` call uses) so
+    /// this can't race an in-flight write — without it, deleting a date while a background
+    /// sensor write is still queued could unlink the directory out from under `append()`,
+    /// which would silently recreate it with a single stray file rather than actually
+    /// blocking the delete, or write via a now-invalid `FileHandle`.
     func deleteDate(_ dateKey: String) {
-        try? fm.removeItem(at: dateDirectory(for: dateKey))
+        // Today's directory is actively being appended to (passive sensors, BLE, face
+        // distance) — deleting it mid-collection isn't safe even serialized through
+        // writeQueue, since a `FileHandle` already open via `appendRaw` would still be
+        // writing into an unlinked file. Mirrors the same guard on Android.
+        guard dateKey != Date().dateKey else { return }
+        writeQueue.sync {
+            try? self.fm.removeItem(at: self.dateDirectory(for: dateKey))
+        }
     }
 
     func deleteAllData() {
-        try? fm.removeItem(at: userDir())
+        writeQueue.sync {
+            try? self.fm.removeItem(at: self.userDir())
+        }
     }
 }

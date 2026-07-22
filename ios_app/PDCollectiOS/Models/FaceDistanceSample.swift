@@ -16,11 +16,11 @@ struct FaceDistanceSample {
         // the note in PhysicalActivityEvent.csvRow for why this matters.
         let posix = Locale(identifier: "en_US_POSIX")
         return "\(timestampMs),"
-        + "\(String(format: "%.4f", locale: posix, distanceRatio)),"
-        + "\(String(format: "%.4f", locale: posix, faceX)),"
-        + "\(String(format: "%.4f", locale: posix, faceY)),"
-        + "\(String(format: "%.3f", locale: posix, confidence)),"
-        + "\(String(format: "%.2f", locale: posix, roll)),"
-        + "\(String(format: "%.2f", locale: posix, yaw))\n"
+        + "\(safeFormat(distanceRatio, "%.4f", posix)),"
+        + "\(safeFormat(faceX, "%.4f", posix)),"
+        + "\(safeFormat(faceY, "%.4f", posix)),"
+        + "\(safeFormat(confidence, "%.3f", posix)),"
+        + "\(safeFormat(roll, "%.2f", posix)),"
+        + "\(safeFormat(yaw, "%.2f", posix))\n"
     }
 }

@@ -17,6 +17,13 @@ final class KeystrokeSync {
     private let appGroupID = "group.com.oriw.pdcollect.ios1.shared"
     private let bufferFileName = "keystroke_buffer.csv"
 
+    // Called from both AppState.startCollection() and a didBecomeActive observer, which
+    // can fire close together (e.g. app launch). Without serializing them, both calls can
+    // read the same buffer file before either deletes it, double-importing every row into
+    // the permanent CSV. A dedicated serial queue makes the second call see the buffer
+    // already cleared by the first instead of racing it.
+    private let importQueue = DispatchQueue(label: "com.pdcollect.keystroke-sync-import")
+
     // MARK: - Import
 
     /// Reads every row from the shared CSV buffer, converts each to a
@@ -26,6 +33,12 @@ final class KeystrokeSync {
     /// - Parameter dataManager: The app's `DataManager` instance that
     ///   will persist the events into the appropriate daily CSV.
     func importBufferedKeystrokes(dataManager: DataManager) {
+        importQueue.sync {
+            importBufferedKeystrokesLocked(dataManager: dataManager)
+        }
+    }
+
+    private func importBufferedKeystrokesLocked(dataManager: DataManager) {
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupID
         ) else {
