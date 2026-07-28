@@ -1,0 +1,2 @@
+- Beanie hat: fixed the connection dropping ~10-30 seconds after connecting, with temperature and heat-flux readings freezing beforehand. Sensor processing was running on the Bluetooth system's own callback thread, starving the connection until the link timed out; it now runs on its own background thread, matching the manufacturer's app.
+- More reliable initial connection and recovery after a dropped link.

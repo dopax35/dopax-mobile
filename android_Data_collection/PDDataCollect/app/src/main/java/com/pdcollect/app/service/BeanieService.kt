@@ -20,6 +20,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
@@ -54,6 +55,12 @@ class BeanieService : Service() {
         private const val AUTO_RECONNECT_SCAN_RETRY_MS = 30_000L
         private const val SCAN_WINDOW_MS = 20_000L
         private const val CONNECTING_STALL_TIMEOUT_MS = 8_000L
+        // Let a freshly-established link settle before requestMtu/discoverServices —
+        // see the comment at the call site (Samsung callback-never-fires issue).
+        private const val POST_CONNECT_SETTLE_MS = 600L
+        // Hard deadline on an outstanding connect attempt that produced no callback at
+        // all, so a wedged GATT client can never pin the service in CONNECTING forever.
+        private const val PENDING_CONNECT_MAX_AGE_MS = 25_000L
         private const val LIVE_NOTIFICATION_MIN_INTERVAL_MS = 2_000L
         private const val STREAM_WARMUP_TIMEOUT_MS = 10_000L
         private const val READ_POLL_INTERVAL_MS = 1_500L
@@ -161,6 +168,27 @@ class BeanieService : Service() {
     private lateinit var dataManager: DataManager
     private val handler = Handler(Looper.getMainLooper())
 
+    /**
+     * Dedicated thread for parsing/inference on incoming BLE packets.
+     *
+     * BluetoothGattCallback fires on a Binder thread owned by the BLE stack. Everything
+     * PDCollect did in response to a packet — frame splitting, PostureEngine.process(),
+     * and ActivityEngine.startInference() (TensorFlow Lite over a 250x7 IMU matrix), plus
+     * sendBroadcast and notification updates — ran synchronously *inside* that callback.
+     * At the Beanie's IMU packet rate that saturates the callback thread: the stack can't
+     * service the link, the peripheral's supervision timeout expires, and the connection
+     * drops ~10-30s after connecting, with temperatures/heat-flux appearing to freeze
+     * partway through because later packets are never processed.
+     *
+     * Both reference implementations avoid this by construction — BleViewModel's callback
+     * body is literally `incoming.trySend(value.copyOf())`, with a
+     * `launch(Dispatchers.Default) { for (pkt in incoming) processIncoming(pkt) }`
+     * consumer doing the heavy work. This HandlerThread is the same pattern: the callback
+     * copies the bytes and returns immediately.
+     */
+    private val packetThread = HandlerThread("Beanie-Packets").apply { start() }
+    private val packetHandler = Handler(packetThread.looper)
+
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bleScanner: BluetoothLeScanner? = null
     private var bluetoothGatt: BluetoothGatt? = null
@@ -168,9 +196,9 @@ class BeanieService : Service() {
     private var targetAddress: String = ""
     private var targetName: String = ""
     private var isScanning = false
-    private var isConnected = false
-    private var batteryPct: Int? = null
-    private var lastTempSample: BeaniePacketParser.TemperatureSample? = null
+    @Volatile private var isConnected = false
+    @Volatile private var batteryPct: Int? = null
+    @Volatile private var lastTempSample: BeaniePacketParser.TemperatureSample? = null
     private var lastBroadcastSnapshot: BeanieStatusSnapshot? = null
     private var lastNotificationText: String = ""
     private var lastNotificationAtMs: Long = 0L
@@ -189,19 +217,21 @@ class BeanieService : Service() {
     private var lastCommandWritePayload: ByteArray? = null
     private var liveStartRetryCount = 0
     private var lastStreamSetupAtMs: Long = 0L
-    private var receivedFrameThisConnection = false
+    @Volatile private var receivedFrameThisConnection = false
     // Wall-clock time of the last *accepted* frame (temp/IMU/battery) — drives the
     // live-stream stall watchdog in heartbeatRunnable. 0 = nothing yet this connection.
-    private var lastAcceptedFrameAtMs: Long = 0L
+    @Volatile private var lastAcceptedFrameAtMs: Long = 0L
     // After a STOP_ALL/barcode command echo (1-byte 0xB0), firmware sends 7 × 4-byte
     // barcode chunks that must be suppressed, not parsed (reference-app parity).
     private var barcodePacketsRemaining = 0
     // ── NVS storage management state (see companion constants) ────────────────
-    private var storagePercent: Int? = null
-    private var connectedAtMs: Long = 0L
-    private var nvsEraseInProgress = false
-    private var nvsEraseStartedAtMs = 0L
+    @Volatile private var storagePercent: Int? = null
+    @Volatile private var connectedAtMs: Long = 0L
+    @Volatile private var nvsEraseInProgress = false
+    @Volatile private var nvsEraseStartedAtMs = 0L
     private var lastNvsEraseAtMs = 0L
+    // When the currently-outstanding connectGatt attempt was issued (0 = none pending).
+    private var pendingConnectStartedAtMs = 0L
     private val incomingStreamBuffer = ArrayDeque<Byte>()
     private val commandWriteQueue = mutableListOf<ByteArray>()
 
@@ -244,7 +274,14 @@ class BeanieService : Service() {
         @Suppress("MissingPermission")
         gatt.close()
         updateNotification("Beanie connect stalled - rescanning...", force = true)
-        connect()
+        // Escalate to a scan rather than immediately retrying the identical direct
+        // connect: if the cached address won't connect (stale GATT cache, hat not
+        // advertising yet), hammering connectGatt every 8s never changes the outcome.
+        // The scan's own timeout falls through to the backoff reconnect, which comes
+        // back here as a fresh direct connect — so the two strategies alternate.
+        if (!startScan()) {
+            scheduleReconnect(FAILURE_RECONNECT_DELAY_MS)
+        }
     }
     private val autoReconnectScanFallbackRunnable = Runnable {
         if (isConnected || isScanning || !autoConnectPending || bluetoothGatt == null) return@Runnable
@@ -400,6 +437,8 @@ class BeanieService : Service() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        packetHandler.removeCallbacksAndMessages(null)
+        packetThread.quitSafely()
         stopScan()
         disconnectGatt()
         publishStoppedSnapshot()
@@ -416,16 +455,24 @@ class BeanieService : Service() {
 
     private fun connect() {
         if (targetAddress.isBlank()) {
+            Log.w(TAG, "connect(): no Beanie paired (targetAddress blank) — nothing to do")
             updateNotification("No Beanie paired", force = true)
             broadcastStatus(STATUS_IDLE)
             return
         }
 
-        val adapter = bluetoothAdapter ?: return
+        val adapter = bluetoothAdapter
+        if (adapter == null) {
+            Log.e(TAG, "connect(): no BluetoothAdapter on this device")
+            return
+        }
         if (!adapter.isEnabled) {
+            Log.w(TAG, "connect(): Bluetooth is OFF — retrying in ${RECONNECT_DELAY_MS / 1000}s")
+            updateNotification("Bluetooth is off - turn it on to connect the Beanie", force = true)
             scheduleReconnect()
             return
         }
+        Log.i(TAG, "connect(): target=$targetAddress isConnected=$isConnected gatt=${bluetoothGatt != null} scanning=$isScanning")
 
         if (isConnected && bluetoothGatt != null) {
             updateNotification("Ready: Recording ${targetName.ifBlank { "Beanie" }}", force = true)
@@ -434,18 +481,41 @@ class BeanieService : Service() {
         }
 
         if (!isConnected && bluetoothGatt != null) {
-            broadcastStatus(STATUS_CONNECTING)
-            if (autoConnectPending) {
-                scheduleAutoReconnectScanFallback()
+            // A connect attempt is already outstanding. Previously this returned
+            // unconditionally, so a GATT attempt that never completes (common with
+            // autoConnect, or after the BT stack drops a callback) wedged the service
+            // in CONNECTING forever — it holds one of Android's ~7 GATT client slots
+            // and nothing ever tears it down. Give it a hard deadline instead.
+            val pendingAgeMs = System.currentTimeMillis() - pendingConnectStartedAtMs
+            if (pendingConnectStartedAtMs > 0L && pendingAgeMs > PENDING_CONNECT_MAX_AGE_MS) {
+                Log.w(TAG, "Beanie connect attempt outstanding ${pendingAgeMs / 1000}s with no result; tearing down and retrying")
+                disconnectGatt()
+            } else {
+                broadcastStatus(STATUS_CONNECTING)
+                if (autoConnectPending) {
+                    scheduleAutoReconnectScanFallback()
+                }
+                return
             }
-            return
         }
 
         // CRITICAL: Clean up existing connection before starting a new one to prevent leaks
         disconnectGatt()
 
         if (targetAddress.isNotBlank()) {
-            directConnectToSavedDevice(autoConnect = true)
+            // autoConnect=false: a DIRECT connect. This is the fast path and it is what
+            // actually establishes links reliably when the hat is in range and
+            // advertising. v3.7.30 switched this to autoConnect=true (Android's
+            // low-duty-cycle background connect) to survive out-of-range periods, but
+            // that made the *primary* path slow-to-never on a device whose GATT cache
+            // is stale — the app sat in CONNECTING and never came up.
+            //
+            // Out-of-range recovery does not need autoConnect here: the stall watchdog
+            // escalates to a scan, and the scan-timeout backoff retries indefinitely.
+            // The reference app likewise uses autoConnect=false whenever it connects to
+            // a device it can actually see (scanCallback), reserving autoConnect=true
+            // for purely passive background waits.
+            directConnectToSavedDevice(autoConnect = false)
         } else {
             scheduleReconnect()
         }
@@ -492,6 +562,7 @@ class BeanieService : Service() {
         handler.removeCallbacks(streamWarmupRunnable)
         handler.removeCallbacks(readPollRunnable)
         autoConnectPending = false
+        pendingConnectStartedAtMs = 0L
         readRequestInFlight = false
         activeDataCharacteristic = null
         activeDataProperties = 0
@@ -506,8 +577,13 @@ class BeanieService : Service() {
         lastStreamSetupAtMs = 0L
         receivedFrameThisConnection = false
         lastAcceptedFrameAtMs = 0L
-        barcodePacketsRemaining = 0
-        incomingStreamBuffer.clear()
+        // incomingStreamBuffer/barcodePacketsRemaining belong to packetThread — an
+        // ArrayDeque cleared from the main thread while the packet thread is appending
+        // to it is a genuine data race. Clear them on their owning thread instead.
+        packetHandler.post {
+            barcodePacketsRemaining = 0
+            incomingStreamBuffer.clear()
+        }
         if (clearVitals) {
             lastTempSample = null
             batteryPct = null
@@ -796,14 +872,7 @@ class BeanieService : Service() {
                 "Direct GATT connect fallback to $targetAddress (${targetName.ifBlank { "Beanie" }}) autoConnect=$autoConnect"
             )
             autoConnectPending = autoConnect
-            // autoConnect must actually be passed through to connectGatt — it was
-            // previously hardcoded to false here, making every reconnect a one-shot
-            // ~30s attempt that race-fails whenever the hat is briefly out of range,
-            // even though the whole autoConnectPending state machine around this call
-            // assumes an OS-level background autoConnect. The reference Beanie app
-            // (BleViewModel.performReconnect) documents this exact failure mode:
-            // "autoConnect=false (old) was a one-shot attempt; if the beanie was out
-            // of range overnight the reconnect loop would race-fail and stop trying."
+            pendingConnectStartedAtMs = System.currentTimeMillis()
             @Suppress("MissingPermission")
             bluetoothGatt = device.connectGatt(
                 applicationContext,
@@ -853,6 +922,7 @@ class BeanieService : Service() {
             Log.i(TAG, "Connecting to scanned Beanie ${device.address} ($name) with autoConnect=false")
             try {
                 autoConnectPending = false
+                pendingConnectStartedAtMs = System.currentTimeMillis()
                 @Suppress("MissingPermission")
                 bluetoothGatt = device.connectGatt(
                     applicationContext,
@@ -893,19 +963,31 @@ class BeanieService : Service() {
                     }
                     isConnected = true
                     autoConnectPending = false
+                    pendingConnectStartedAtMs = 0L
                     receivedFrameThisConnection = false
                     connectedAtMs = System.currentTimeMillis()
                     updateNotification("Connected to ${targetName.ifBlank { "Beanie" }} - discovering...", force = true)
                     broadcastStatus(STATUS_DISCOVERING)
-                    // Reference parity (BleViewModel.onConnectionStateChange): request the
-                    // MTU immediately on connect. The old 600ms delay left the link idle
-                    // during the window where the firmware is most likely to drop it.
-                    @Suppress("MissingPermission")
-                    val mtuStarted = gatt.requestMtu(517)
-                    if (!mtuStarted) {
-                        @Suppress("MissingPermission")
-                        gatt.discoverServices()
-                    }
+                    // Settle delay before touching the fresh connection. v3.7.32 removed
+                    // this to match the reference app, which calls requestMtu immediately —
+                    // that was a mistake: on Samsung devices (this study's target hardware
+                    // is the Galaxy S25) issuing requestMtu/discoverServices from inside the
+                    // STATE_CONNECTED callback is a well-known way to get a callback that
+                    // never fires, leaving the link established at GATT level but stuck
+                    // before service discovery, so the app never reaches READY.
+                    handler.postDelayed({
+                        if (bluetoothGatt !== gatt) return@postDelayed
+                        try {
+                            @Suppress("MissingPermission")
+                            val mtuStarted = gatt.requestMtu(517)
+                            if (!mtuStarted) {
+                                @Suppress("MissingPermission")
+                                gatt.discoverServices()
+                            }
+                        } catch (e: SecurityException) {
+                            Log.e(TAG, "Beanie requestMtu/discoverServices threw", e)
+                        }
+                    }, POST_CONNECT_SETTLE_MS)
                 }
 
                 BluetoothProfile.STATE_DISCONNECTED -> {
@@ -1119,7 +1201,8 @@ class BeanieService : Service() {
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             if (ignoreStaleGattCallback(gatt, "onCharacteristicChanged")) return
             @Suppress("DEPRECATION")
-            processIncoming(characteristic.value)
+            val payload = characteristic.value ?: return
+            postForProcessing(payload)
         }
 
         override fun onCharacteristicChanged(
@@ -1128,7 +1211,7 @@ class BeanieService : Service() {
             value: ByteArray
         ) {
             if (ignoreStaleGattCallback(gatt, "onCharacteristicChanged")) return
-            processIncoming(value)
+            postForProcessing(value)
         }
     }
 
@@ -1141,12 +1224,31 @@ class BeanieService : Service() {
     private fun handleCharacteristicRead(status: Int, value: ByteArray) {
         readRequestInFlight = false
         if (status == BluetoothGatt.GATT_SUCCESS) {
-            processIncoming(value)
+            postForProcessing(value)
         } else {
             Log.w(TAG, "Beanie characteristic read failed with status=$status")
         }
         if (useReadPollingFallback) {
             scheduleNextReadPoll()
+        }
+    }
+
+    /**
+     * Hand a freshly-received BLE payload to [packetThread]. Called from the GATT
+     * callback (Binder) thread — must copy the array (the stack reuses its buffer) and
+     * return immediately. See the [packetThread] doc for why this matters.
+     */
+    private fun postForProcessing(payload: ByteArray) {
+        if (payload.isEmpty()) return
+        val copy = payload.copyOf()
+        packetHandler.post {
+            try {
+                processIncoming(copy)
+            } catch (t: Throwable) {
+                // A parser bug must never take down the service or the BLE link —
+                // reference parity (BleViewModel wraps processIncoming the same way).
+                Log.e(TAG, "Beanie packet processing crashed", t)
+            }
         }
     }
 

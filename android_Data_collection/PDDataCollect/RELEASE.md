@@ -1,7 +1,53 @@
-# DopaX 3.7.32 (versionCode 118) - release checklist
+# DopaX 3.7.33 (versionCode 119) - release checklist
 
 End-to-end "from clean checkout to AAB uploaded to Play Console
 Internal Testing" steps. Tick items as you go.
+
+---
+
+## What's in 3.7.33 (vc 119) — the Beanie connect-then-drop cause
+
+vc 116/117/118 each fixed a real defect but none stopped the
+connect -> stream briefly -> drop at 10-30s cycle. The mechanism was
+architectural, not protocol:
+
+**All Beanie packet handling ran inside the GATT callback thread.**
+`BluetoothGattCallback.onCharacteristicChanged` fires on a Binder thread
+owned by the BLE stack. PDCollect did everything there synchronously:
+frame splitting, `PostureEngine.process()`, and
+`ActivityEngine.startInference()` — TensorFlow Lite over a 250x7 IMU
+matrix — plus `sendBroadcast` and notification updates. At the Beanie's
+IMU packet rate that saturates the callback thread, so the stack cannot
+service the link, the peripheral's supervision timeout expires, and the
+connection drops ~10-30s in. It also explains the frozen
+temperature/heat-flux values: later packets were never processed.
+
+Both references avoid this by construction. `BleViewModel`'s callback
+body is literally `incoming.trySend(value.copyOf())`, with a separate
+`launch(Dispatchers.Default) { for (pkt in incoming) processIncoming(pkt) }`
+consumer doing the heavy work.
+
+Changes (BeanieService.kt):
+- New `Beanie-Packets` HandlerThread. GATT callbacks now only copy the
+  payload and post it; all parsing/inference/writing happens there.
+  Processing is wrapped in try/catch so a parser bug can never take down
+  the link (reference parity).
+- Cross-thread state marked `@Volatile`; the incoming-stream buffer is
+  now cleared on its owning thread instead of racing the main thread.
+- Restored the 600ms post-connect settle before requestMtu/
+  discoverServices. vc 118 removed it to match the reference, but on
+  Samsung (the study's Galaxy S25) calling those from inside the
+  STATE_CONNECTED callback can produce a callback that never fires.
+- Primary connect is a direct `autoConnect=false` connect again (fast,
+  reliable when the hat is in range); a stalled attempt now escalates to
+  a scan, and a connect attempt that yields no callback at all is torn
+  down after 25s so it can't pin the service in CONNECTING.
+- Added connect-path logging (`logcat -s BeanieService`) so any
+  remaining failure is diagnosable from a capture.
+
+**Smoke-test**: record 30+ minutes. Expect `beanie_temperature.csv` to
+show continuous ~5s cadence with *changing* values throughout, and no
+disconnect/reconnect churn in the notification.
 
 ---
 

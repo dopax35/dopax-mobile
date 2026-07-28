@@ -144,8 +144,14 @@ android {
         // RTC (0xA4/SET_TIME/0x04) on every connect, which both reference implementations
         // explicitly forbid ("RTC is NEVER seeded here"). Ported their connection scheme:
         // subscribe-only connect, 2M PHY, immediate MTU, single last-resort live-start.
-        versionCode = 118
-        versionName = "3.7.32"
+        // v3.7.33 (vc 119): Beanie packet parsing/ML inference moved OFF the GATT callback
+        // (Binder) thread onto a dedicated HandlerThread — reference architecture parity
+        // (BleViewModel: callback only does incoming.trySend, a background consumer parses).
+        // Blocking the callback thread starved the BLE stack -> supervision timeout ->
+        // connect-then-drop after 10-30s with temps/flux frozen. Also restores the
+        // post-connect settle delay and the fast direct-connect path.
+        versionCode = 119
+        versionName = "3.7.33"
     }
 
     signingConfigs {
