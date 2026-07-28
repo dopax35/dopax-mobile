@@ -22,9 +22,21 @@ object UploadState {
         return true
     }
 
-    fun tryClaimUpload(dateDir: File, nowMs: Long = System.currentTimeMillis()): Boolean {
+    /**
+     * @param force when true, claim the slot even if the date was already uploaded.
+     *   Used by the *manual* export/upload action so a researcher can re-send a date
+     *   as many times as they like and always get the newest data (collection keeps
+     *   appending to a date's CSVs after an upload). The automatic background worker
+     *   leaves this false, so it still skips completed dates instead of re-uploading
+     *   the whole history on every run.
+     */
+    fun tryClaimUpload(
+        dateDir: File,
+        nowMs: Long = System.currentTimeMillis(),
+        force: Boolean = false
+    ): Boolean {
         if (!dateDir.exists() || !dateDir.isDirectory) return false
-        if (isUploaded(dateDir)) return false
+        if (!force && isUploaded(dateDir)) return false
 
         val marker = File(dateDir, UPLOADING_MARKER)
         if (marker.exists()) {

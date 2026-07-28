@@ -1,0 +1,2 @@
+- Beanie hat: fixed the app dropping a working connection whenever the data stream paused briefly. It now recovers the stream without disconnecting, so recording keeps running in the background.
+- Data export: a date can now be exported again as many times as you like, and each export always contains the newest data. Previously the button was locked after the first upload.

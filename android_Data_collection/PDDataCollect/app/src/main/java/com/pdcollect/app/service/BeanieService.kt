@@ -72,6 +72,10 @@ class BeanieService : Service() {
         // If a connection never produces a single frame despite the warmup retries and
         // read-polling fallback, tear it down and reconnect rather than idling forever.
         private const val NEVER_STREAMED_TIMEOUT_MS = 60_000L
+        // Only tear the link down after this long of continuous silence *despite*
+        // in-place recovery attempts. Dropping a live connection is a last resort —
+        // doing it eagerly is what produced the connect/disconnect loop in the field.
+        private const val LIVE_STALL_HARD_RESET_MS = 180_000L
 
         // ── NVS storage management (reference-app parity) ─────────────────────
         // The Beanie logs history into on-device NVS flash, and every RTC seed we
@@ -199,7 +203,7 @@ class BeanieService : Service() {
     @Volatile private var isConnected = false
     @Volatile private var batteryPct: Int? = null
     @Volatile private var lastTempSample: BeaniePacketParser.TemperatureSample? = null
-    private var lastBroadcastSnapshot: BeanieStatusSnapshot? = null
+    @Volatile private var lastBroadcastSnapshot: BeanieStatusSnapshot? = null
     private var lastNotificationText: String = ""
     private var lastNotificationAtMs: Long = 0L
     private var packetParser = BeaniePacketParser(BeanieRegistry.profileForDevice(""))
@@ -232,6 +236,12 @@ class BeanieService : Service() {
     private var lastNvsEraseAtMs = 0L
     // When the currently-outstanding connectGatt attempt was issued (0 = none pending).
     private var pendingConnectStartedAtMs = 0L
+    // When the current stream-stall recovery began (0 = stream healthy).
+    @Volatile private var stallRecoveryStartedAtMs = 0L
+    // Diagnostic counters (see the HEALTH log line in heartbeatRunnable).
+    @Volatile private var notificationsReceived = 0L
+    @Volatile private var notificationsDropped = 0L
+    @Volatile private var framesAccepted = 0L
     private val incomingStreamBuffer = ArrayDeque<Byte>()
     private val commandWriteQueue = mutableListOf<ByteArray>()
 
@@ -340,6 +350,20 @@ class BeanieService : Service() {
 
     private val heartbeatRunnable = object : Runnable {
         override fun run() {
+            // Periodic health line so a `logcat -s BeanieService` capture shows exactly
+            // what the link was doing before a drop — packet counts distinguish "the hat
+            // stopped sending" from "we stopped processing".
+            if (isConnected) {
+                val quietS = if (lastAcceptedFrameAtMs > 0L) {
+                    (System.currentTimeMillis() - lastAcceptedFrameAtMs) / 1000
+                } else -1L
+                Log.i(
+                    TAG,
+                    "HEALTH connected=true notifications=$notificationsReceived frames=$framesAccepted " +
+                        "dropped=$notificationsDropped quietFor=${quietS}s readPolling=$useReadPollingFallback " +
+                        "storage=${storagePercent ?: -1}% battery=${batteryPct ?: -1}%"
+                )
+            }
             checkLiveStreamStall()
             when {
                 isConnected -> broadcastStatus(STATUS_READY)
@@ -370,12 +394,45 @@ class BeanieService : Service() {
         } else {
             lastStreamSetupAtMs > 0L && now - lastStreamSetupAtMs > NEVER_STREAMED_TIMEOUT_MS
         }
-        if (!stalled) return
-        Log.w(
-            TAG,
-            "Beanie live stream stalled (last frame ${if (lastAcceptedFrameAtMs > 0L) "${(now - lastAcceptedFrameAtMs) / 1000}s ago" else "never"}); forcing reconnect"
-        )
+        if (!stalled) {
+            stallRecoveryStartedAtMs = 0L
+            return
+        }
+
+        val silentForS = if (lastAcceptedFrameAtMs > 0L) (now - lastAcceptedFrameAtMs) / 1000 else -1L
+        if (stallRecoveryStartedAtMs == 0L) {
+            stallRecoveryStartedAtMs = now
+        }
+        val recoveringForMs = now - stallRecoveryStartedAtMs
+
+        // STAGE 1 — recover WITHOUT dropping the link.
+        //
+        // This watchdog used to call disconnectGatt() the moment the stream went quiet.
+        // That is almost certainly what turned a data stall into the visible
+        // "connects, then disconnects seconds later" loop: any pause in the stream
+        // caused US to tear down a perfectly live connection, reconnect, and repeat.
+        // Neither reference app has a live-stream watchdog that disconnects at all.
+        // Try to get the stream back on the existing link instead.
+        if (recoveringForMs < LIVE_STALL_HARD_RESET_MS) {
+            Log.w(TAG, "Beanie stream quiet (${silentForS}s); attempting in-place recovery, keeping link up")
+            val gatt = bluetoothGatt
+            val characteristic = activeDataCharacteristic
+            val descriptor = activeCccdDescriptor
+            val mode = activePushMode
+            if (gatt != null && characteristic != null && descriptor != null && mode != null) {
+                // Re-arm notifications on the existing connection.
+                enablePushMode(gatt, characteristic, descriptor, mode)
+            } else if (supportsRead(activeDataProperties)) {
+                switchToReadPollingFallback("Beanie stream quiet and CCCD unavailable")
+            }
+            return
+        }
+
+        // STAGE 2 — genuine last resort, only after minutes of silence despite
+        // in-place recovery attempts. At this point the link really is dead weight.
+        Log.w(TAG, "Beanie stream still dead after ${recoveringForMs / 1000}s of recovery attempts; reconnecting")
         updateNotification("Beanie stream stalled - reconnecting...", force = true)
+        stallRecoveryStartedAtMs = 0L
         disconnectGatt()
         broadcastStatus(STATUS_CONNECTING)
         scheduleReconnect(FAILURE_RECONNECT_DELAY_MS)
@@ -1240,6 +1297,7 @@ class BeanieService : Service() {
      */
     private fun postForProcessing(payload: ByteArray) {
         if (payload.isEmpty()) return
+        notificationsReceived++
         val copy = payload.copyOf()
         packetHandler.post {
             try {
@@ -1325,7 +1383,13 @@ class BeanieService : Service() {
             lead == 0xAA && data.size >= 2 && (data[1].toInt() and 0xFF) == 0x55 ->
                 handleFrames(BeaniePayloadDecoder.splitStream(incomingStreamBuffer, data), now)
 
-            else -> Log.d(TAG, "Dropping unrecognized Beanie notification (${data.size} bytes, lead=0x%02X".format(lead) + ")")
+            else -> {
+                notificationsDropped++
+                // Hex of the first bytes: if the hat's temperature packets ever stop
+                // matching the shapes above, this line is what identifies it.
+                val preview = data.take(8).joinToString("") { "%02X".format(it) }
+                Log.w(TAG, "Dropping unrecognized Beanie notification (${data.size} bytes, starts $preview)")
+            }
         }
     }
 
@@ -1396,6 +1460,7 @@ class BeanieService : Service() {
 
         handler.removeCallbacks(streamWarmupRunnable)
         receivedFrameThisConnection = true
+        framesAccepted++
         lastAcceptedFrameAtMs = timestampMs
         // connectedAtMs > nvsEraseStartedAtMs: only data from a connection established
         // AFTER the erase began proves the cycle finished — the firmware can keep
@@ -1481,6 +1546,7 @@ class BeanieService : Service() {
         }
         handler.removeCallbacks(streamWarmupRunnable)
         receivedFrameThisConnection = true
+        framesAccepted++
         lastAcceptedFrameAtMs = timestampMs
         val rows = samples.map { sample ->
             buildString {

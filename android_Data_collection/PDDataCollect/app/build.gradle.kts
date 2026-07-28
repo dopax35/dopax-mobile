@@ -150,8 +150,11 @@ android {
         // Blocking the callback thread starved the BLE stack -> supervision timeout ->
         // connect-then-drop after 10-30s with temps/flux frozen. Also restores the
         // post-connect settle delay and the fast direct-connect path.
-        versionCode = 119
-        versionName = "3.7.33"
+        // v3.7.34 (vc 120): stop the stall watchdog force-disconnecting a live link (it turned
+        // any stream pause into the connect/disconnect loop); recover in place instead. Allow
+        // re-export of already-uploaded dates. Add BeanieService HEALTH diagnostics.
+        versionCode = 120
+        versionName = "3.7.34"
     }
 
     signingConfigs {

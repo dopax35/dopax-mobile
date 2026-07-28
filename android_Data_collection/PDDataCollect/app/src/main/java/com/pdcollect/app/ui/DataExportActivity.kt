@@ -109,17 +109,23 @@ class DataExportActivity : AppCompatActivity() {
     @Suppress("DEPRECATION")
     private fun exportDate(dateStr: String) {
         val dateDir = java.io.File(dataManager.getStoragePath(), dateStr)
-        if (UploadState.isUploaded(dateDir)) {
-            Toast.makeText(this, "$dateStr is already uploaded", Toast.LENGTH_SHORT).show()
-            return
-        }
+        // A previous upload deliberately does NOT block re-exporting. Collection keeps
+        // appending to a date's CSVs after an upload (and today's folder is still live),
+        // so the researcher must be able to re-send a date any number of times and get
+        // the newest data each time — the zip is rebuilt from the current files on every
+        // export. The "Uploaded" checkmark stays as an at-a-glance indicator only.
+        val alreadyUploaded = UploadState.isUploaded(dateDir)
         if (!dataManager.dateHasRecordedData(dateStr)) {
             Toast.makeText(this, "No recorded data rows for $dateStr", Toast.LENGTH_LONG).show()
             return
         }
-        if (!UploadState.tryClaimUpload(dateDir)) {
+        // force = true: this is an explicit user action, so a prior upload must not block it.
+        if (!UploadState.tryClaimUpload(dateDir, force = true)) {
             Toast.makeText(this, "Upload already in progress for $dateStr", Toast.LENGTH_SHORT).show()
             return
+        }
+        if (alreadyUploaded) {
+            Toast.makeText(this, "Re-exporting $dateStr with the latest data...", Toast.LENGTH_SHORT).show()
         }
 
         val progress = ProgressDialog(this).apply {
@@ -263,8 +269,11 @@ class DataExportActivity : AppCompatActivity() {
             val isUploaded = !isToday && entry.isUploaded
             val isDeleting = dateStr in deletingDates
             holder.ivUploaded.visibility = if (isUploaded) View.VISIBLE else View.GONE
-            holder.btnExport.isEnabled = !isUploaded && !isDeleting
-            holder.btnExport.text = if (isUploaded) "Uploaded" else "Export"
+            // Export stays available after a successful upload: a date keeps accumulating
+            // data afterwards, so re-exporting must always be possible and must pick up
+            // the newest rows. The checkmark is an indicator, not a lock.
+            holder.btnExport.isEnabled = !isDeleting
+            holder.btnExport.text = if (isUploaded) "Re-export" else "Export"
             // Today's directory is actively being written to by foreground services in
             // this process — deleting it mid-collection would unlink it out from under
             // their open file writers. See confirmDelete() for the full explanation.
