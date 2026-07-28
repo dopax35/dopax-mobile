@@ -34,5 +34,5 @@
   - **Version Control:** Commit the finalized code and push the repository to GitHub.
   - **Mobile Packaging:** Compile and prepare the `.aab` file for Android.
   - **Apple Packaging:** Prepare and structure the iOS source code directory for a native Mac build.
-  - **Cloud Deployment:** Push the stable backend infrastructure and database schemas to Fly.io.
+  - **Cloud Deployment:** Push the stable backend infrastructure and database schemas to firebase
 - **Next Step:** Returns final deployment logs and artifact links to the Management Agent for project closure.

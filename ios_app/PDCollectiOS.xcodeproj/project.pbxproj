@@ -81,6 +81,20 @@
 		E4B3BF4A0BE0793E44E70560 /* CoreMotionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC60822020660C887787231 /* CoreMotionManager.swift */; };
 		EEBD77617A868B377DCEF3C5 /* BeanieBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */; };
 		EFEE8EAE03ACD5794FDC82EF /* BackgroundCollectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9D8E88266B96CA5FC25AD5 /* BackgroundCollectionManager.swift */; };
+		783B1697648C806153377530 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39DB9A041A37F94A87C544D /* AuthManager.swift */; };
+		05A282E4A6BE6A88EC57D341 /* BeanieActivityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D8CC19119896440748BC696 /* BeanieActivityEngine.swift */; };
+		FC4F25A1D357BE8B3019F180 /* BeaniePostureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C5CB4468F45CB1CAF77D89 /* BeaniePostureEngine.swift */; };
+		2FBDF4A40354D00B21B83A70 /* FirebaseSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D420AE0103A52D1C2579ADE8 /* FirebaseSyncManager.swift */; };
+		1A3793B79F077267DB56AFBB /* ImportedActivityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7902EB12E70BD7F2B2B3374 /* ImportedActivityStore.swift */; };
+		1165219E7C4980DE0AF68FF4 /* MadgwickFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1D84235F71E26CE4C7E4CD /* MadgwickFilter.swift */; };
+		3B33444BE4DCD47764EEE861 /* PostureCalibrationProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFDB33DD0AC1DF7C9D8AF65D /* PostureCalibrationProfile.swift */; };
+		99182379CC38A75F843D7951 /* PostureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 605D39B86635FFAD2754F93E /* PostureState.swift */; };
+		735D17B62A7DE02230616271 /* TskinSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBE16D1BB54BF49B81E4806 /* TskinSynthesizer.swift */; };
+		2855E45D70D7DA0CEC1D3256 /* Medication.swift in Sources */ = {isa = PBXBuildFile; fileRef = A41962FA7124BE2C9BDDF027 /* Medication.swift */; };
+		AADE1F2145A7C96D85CA0BF8 /* KeyboardSetupRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A2F2FE45DD319FCA65978A /* KeyboardSetupRow.swift */; };
+		7435D4A865FB42703CA05CAB /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F7BD916E315F0435BC65708 /* LoginView.swift */; };
+		E3A7D5F4683FE547D45DC0E7 /* PostureCalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA41BD0DAF1C304BBDF0F34E /* PostureCalibrationView.swift */; };
+		5202CF06B73EE8DADE404790 /* VoiceSampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C9C4FC4C3A57FB74322AD4E /* VoiceSampleView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -181,6 +195,20 @@
 		9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StravaManager.swift; sourceTree = "<group>"; };
 		51278D034C42F24620D0F7A3 /* MotionActivitySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivitySample.swift; sourceTree = "<group>"; };
 		382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivityHistoryService.swift; sourceTree = "<group>"; };
+		D39DB9A041A37F94A87C544D /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		5D8CC19119896440748BC696 /* BeanieActivityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieActivityEngine.swift; sourceTree = "<group>"; };
+		F1C5CB4468F45CB1CAF77D89 /* BeaniePostureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaniePostureEngine.swift; sourceTree = "<group>"; };
+		D420AE0103A52D1C2579ADE8 /* FirebaseSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseSyncManager.swift; sourceTree = "<group>"; };
+		D7902EB12E70BD7F2B2B3374 /* ImportedActivityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedActivityStore.swift; sourceTree = "<group>"; };
+		9F1D84235F71E26CE4C7E4CD /* MadgwickFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MadgwickFilter.swift; sourceTree = "<group>"; };
+		BFDB33DD0AC1DF7C9D8AF65D /* PostureCalibrationProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureCalibrationProfile.swift; sourceTree = "<group>"; };
+		605D39B86635FFAD2754F93E /* PostureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureState.swift; sourceTree = "<group>"; };
+		DCBE16D1BB54BF49B81E4806 /* TskinSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TskinSynthesizer.swift; sourceTree = "<group>"; };
+		A41962FA7124BE2C9BDDF027 /* Medication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Medication.swift; sourceTree = "<group>"; };
+		97A2F2FE45DD319FCA65978A /* KeyboardSetupRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSetupRow.swift; sourceTree = "<group>"; };
+		0F7BD916E315F0435BC65708 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		DA41BD0DAF1C304BBDF0F34E /* PostureCalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureCalibrationView.swift; sourceTree = "<group>"; };
+		3C9C4FC4C3A57FB74322AD4E /* VoiceSampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSampleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -229,6 +257,7 @@
 				BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */,
 				2F1116C47EADDC017996AE76 /* SensorReading.swift */,
 				0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */,
+				A41962FA7124BE2C9BDDF027 /* Medication.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -266,6 +295,10 @@
 				B751887CCB41F899D53CA430 /* QuestionnaireView.swift */,
 				379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */,
 				A046451CE221CE650B291599 /* Tests */,
+				97A2F2FE45DD319FCA65978A /* KeyboardSetupRow.swift */,
+				0F7BD916E315F0435BC65708 /* LoginView.swift */,
+				DA41BD0DAF1C304BBDF0F34E /* PostureCalibrationView.swift */,
+				3C9C4FC4C3A57FB74322AD4E /* VoiceSampleView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -294,6 +327,15 @@
 				9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */,
 				7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */,
 				CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */,
+				D39DB9A041A37F94A87C544D /* AuthManager.swift */,
+				5D8CC19119896440748BC696 /* BeanieActivityEngine.swift */,
+				F1C5CB4468F45CB1CAF77D89 /* BeaniePostureEngine.swift */,
+				D420AE0103A52D1C2579ADE8 /* FirebaseSyncManager.swift */,
+				D7902EB12E70BD7F2B2B3374 /* ImportedActivityStore.swift */,
+				9F1D84235F71E26CE4C7E4CD /* MadgwickFilter.swift */,
+				BFDB33DD0AC1DF7C9D8AF65D /* PostureCalibrationProfile.swift */,
+				605D39B86635FFAD2754F93E /* PostureState.swift */,
+				DCBE16D1BB54BF49B81E4806 /* TskinSynthesizer.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -539,6 +581,20 @@
 				914579E4A35D96D0D1750A8C /* TouchLogger.swift in Sources */,
 				6D4CDDDC59875727F2985DA5 /* TrailMakingTestView.swift in Sources */,
 				7BE3FEA97BF565AD2B81A19F /* UserProfile.swift in Sources */,
+				783B1697648C806153377530 /* AuthManager.swift in Sources */,
+				05A282E4A6BE6A88EC57D341 /* BeanieActivityEngine.swift in Sources */,
+				FC4F25A1D357BE8B3019F180 /* BeaniePostureEngine.swift in Sources */,
+				2FBDF4A40354D00B21B83A70 /* FirebaseSyncManager.swift in Sources */,
+				1A3793B79F077267DB56AFBB /* ImportedActivityStore.swift in Sources */,
+				1165219E7C4980DE0AF68FF4 /* MadgwickFilter.swift in Sources */,
+				3B33444BE4DCD47764EEE861 /* PostureCalibrationProfile.swift in Sources */,
+				99182379CC38A75F843D7951 /* PostureState.swift in Sources */,
+				735D17B62A7DE02230616271 /* TskinSynthesizer.swift in Sources */,
+				2855E45D70D7DA0CEC1D3256 /* Medication.swift in Sources */,
+				AADE1F2145A7C96D85CA0BF8 /* KeyboardSetupRow.swift in Sources */,
+				7435D4A865FB42703CA05CAB /* LoginView.swift in Sources */,
+				E3A7D5F4683FE547D45DC0E7 /* PostureCalibrationView.swift in Sources */,
+				5202CF06B73EE8DADE404790 /* VoiceSampleView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
