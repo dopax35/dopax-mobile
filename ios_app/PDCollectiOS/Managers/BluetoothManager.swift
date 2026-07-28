@@ -338,20 +338,25 @@ class BluetoothManager: NSObject, ObservableObject {
     private func scheduleBeanieReconnect() {
         guard !userInitiatedBeanieDisconnect else { return }
         
-        if beanieReconnectAttempts < Self.maxReconnectAttempts {
+        let delay: TimeInterval
+        if beanieService.isErasing {
+            // Firmware drops BLE for ~90s during NVS erase — wait 30s between retries
+            delay = 30.0
+            print("[BluetoothManager] Beanie in erase window — scheduling reconnect in 30s")
+        } else if beanieReconnectAttempts < Self.maxReconnectAttempts {
             // Phase 1: exponential backoff using cached peripheral handle
             beanieReconnectAttempts += 1
-            let delay = Self.baseReconnectDelay * pow(2.0, Double(min(beanieReconnectAttempts - 1, 4)))
-            let clampedDelay = min(delay, 60.0)
-            
-            beanieReconnectTimer?.invalidate()
-            beanieReconnectTimer = Timer.scheduledTimer(withTimeInterval: clampedDelay, repeats: false) { [weak self] _ in
-                self?.connectToSavedBeanie()
-            }
+            delay = min(Self.baseReconnectDelay * pow(2.0, Double(min(beanieReconnectAttempts - 1, 4))), 60.0)
         } else {
             // Phase 2: scan-based fallback (Android BleViewModel.kt: startAutoReconnectScan parity)
             // Runs indefinitely until the device reappears — never gives up.
             startBeanieReconnectScan()
+            return
+        }
+        
+        beanieReconnectTimer?.invalidate()
+        beanieReconnectTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            self?.connectToSavedBeanie()
         }
     }
     

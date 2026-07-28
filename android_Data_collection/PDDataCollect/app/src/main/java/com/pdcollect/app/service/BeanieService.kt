@@ -241,12 +241,24 @@ class BeanieService : Service() {
     private var pendingConnectStartedAtMs = 0L
     // When the current stream-stall recovery began (0 = stream healthy).
     @Volatile private var stallRecoveryStartedAtMs = 0L
-    // Diagnostic counters (see the HEALTH log line in heartbeatRunnable).
     @Volatile private var notificationsReceived = 0L
     @Volatile private var notificationsDropped = 0L
     @Volatile private var framesAccepted = 0L
     private val incomingStreamBuffer = ArrayDeque<Byte>()
     private val commandWriteQueue = mutableListOf<ByteArray>()
+
+    // Persistence & session tracking (BleViewModel.kt parity)
+    private val beaniePrefs by lazy {
+        getSharedPreferences("beanie_prefs", Context.MODE_PRIVATE)
+    }
+
+    private var pendingPostEraseRTCSeed: Boolean
+        get() = beaniePrefs.getBoolean("pendingPostEraseRTCSeed", false)
+        set(value) = beaniePrefs.edit().putBoolean("pendingPostEraseRTCSeed", value).apply()
+
+    private var pendingSkipErase: Boolean
+        get() = beaniePrefs.getBoolean("pendingSkipErase", false)
+        set(value) = beaniePrefs.edit().putBoolean("pendingSkipErase", value).apply()
 
     // ── Inference engines (Beanie upstream integration) ───────────────────────
     private lateinit var activityEngine: ActivityEngine
@@ -312,7 +324,11 @@ class BeanieService : Service() {
             scheduleAutoReconnectScanFallback(AUTO_RECONNECT_SCAN_RETRY_MS)
             return@Runnable
         }
-        scanFailCount++
+        if (!isInNvsEraseWindow()) {
+            scanFailCount++
+        } else {
+            Log.i(TAG, "Beanie scan timed out during NVS erase window — preserving scan backoff state")
+        }
         val backoff = (RECONNECT_DELAY_MS * (1 shl minOf(scanFailCount, 5))).coerceAtMost(300_000L)
         updateNotification("Beanie not found - retrying in ${backoff / 1000}s...", force = true)
         handler.removeCallbacks(reconnectRunnable)
@@ -1103,15 +1119,18 @@ class BeanieService : Service() {
                     broadcastStatus(STATUS_DISCONNECTED)
                     if (erasing) {
                         // Expected: the firmware drops BLE while erasing NVS (~90s).
-                        // Not a failure — keep calm, reconnect once it's done.
-                        Log.i(TAG, "Beanie disconnected during NVS erase (expected); will reconnect")
+                        // Not a failure — reconnect in 30s to allow flash erase to complete cleanly.
+                        Log.i(TAG, "Beanie disconnected during NVS erase (expected); will reconnect in 30s")
                         updateNotification("Beanie erasing storage - reconnecting when done...", force = true)
+                        @Suppress("MissingPermission")
+                        gatt.close()
+                        scheduleReconnect(30_000L)
                     } else {
                         updateNotification("Beanie disconnected - reconnecting...", force = true)
+                        @Suppress("MissingPermission")
+                        gatt.close()
+                        scheduleReconnect()
                     }
-                    @Suppress("MissingPermission")
-                    gatt.close()
-                    scheduleReconnect()
                 }
             }
         }
@@ -1312,6 +1331,19 @@ class BeanieService : Service() {
         scanFailCount = 0
         updateNotification("Ready: Recording ${targetName.ifBlank { "Beanie" }}", force = true)
         broadcastStatus(STATUS_READY)
+
+        // Handle pending commands on connect (BleViewModel.kt parity)
+        if (pendingSkipErase) {
+            pendingSkipErase = false
+            Log.d(TAG, "pendingSkipErase — sending ERASE_ALL command (0x03) now")
+            handler.postDelayed({ triggerNvsErase() }, 300L)
+        } else if (pendingPostEraseRTCSeed) {
+            Log.d(TAG, "pendingPostEraseRTCSeed — NVS blank after erase, sending RTC seed now")
+            handler.postDelayed({
+                sendRtcAndResumeRecording()
+                pendingPostEraseRTCSeed = false
+            }, 300L)
+        }
     }
 
     private fun handleCharacteristicRead(status: Int, value: ByteArray) {
@@ -1442,7 +1474,7 @@ class BeanieService : Service() {
      */
     private fun maybeStartNvsErase(pct: Int) {
         if (pct < NVS_ERASE_THRESHOLD_PERCENT) return
-        if (!isConnected || nvsEraseInProgress) return
+        if (!isConnected || nvsEraseInProgress || pendingPostEraseRTCSeed) return
         if (activeCommandCharacteristic == null) return
         // Only ever issue a flash operation on a demonstrably healthy stream: the hat
         // must actually be delivering live frames on this connection. Erasing into a
@@ -1453,11 +1485,17 @@ class BeanieService : Service() {
         if (connectedAtMs <= 0L || now - connectedAtMs < NVS_ERASE_MIN_CONNECT_AGE_MS) return
         if (lastNvsEraseAtMs > 0L && now - lastNvsEraseAtMs < NVS_ERASE_COOLDOWN_MS) return
 
+        triggerNvsErase()
+    }
+
+    private fun triggerNvsErase() {
+        val now = System.currentTimeMillis()
+        pendingPostEraseRTCSeed = true
         nvsEraseInProgress = true
         nvsEraseStartedAtMs = now
         lastNvsEraseAtMs = now
-        Log.i(TAG, "Beanie NVS storage at $pct% — sending ERASE_ALL (expect ~90s BLE drop while it erases)")
-        updateNotification("Beanie storage $pct% - erasing (approx. 90s)...", force = true)
+        Log.i(TAG, "Beanie NVS storage — sending ERASE_ALL (expect ~90s BLE drop while it erases)")
+        updateNotification("Beanie storage - erasing (approx. 90s)...", force = true)
         enqueueCommandWrite(byteArrayOf(CMD_ERASE_ALL))
     }
 

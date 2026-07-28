@@ -44,8 +44,10 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
     @Published var outerC: Double = 0
     @Published var batteryPct: Int? = nil
     @Published var deviceName: String = ""
-    @Published var deviceAddress: String = ""
     @Published var status: BLEDeviceStatus = .idle
+    @Published var storagePercent: Int = 0
+    @Published var isErasing: Bool = false
+    @Published var eraseComplete: Bool = false
 
     // MARK: - Inference outputs (Beanie upstream integration)
     @Published var activityLabel: String = ""
@@ -101,6 +103,21 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
     private var commandQueue: [Data] = []
     private var commandWriteInFlight = false
 
+    // Persistence & session tracking (BLEReader.swift parity)
+    private var pendingPostEraseRTCSeed: Bool {
+        get { UserDefaults.standard.bool(forKey: "beanie_pendingPostEraseRTCSeed") }
+        set { UserDefaults.standard.set(newValue, forKey: "beanie_pendingPostEraseRTCSeed") }
+    }
+
+    private var pendingSkipErase: Bool {
+        get { UserDefaults.standard.bool(forKey: "beanie_pendingSkipErase") }
+        set { UserDefaults.standard.set(newValue, forKey: "beanie_pendingSkipErase") }
+    }
+
+    private var sessionConnectDate: Date?
+    private var liveEraseDebounceActive: Bool = false
+    private var eraseBackoffUntil: Date = .distantPast
+
     func reset() {
         isConnected = false
         status = .idle
@@ -131,6 +148,8 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         imuTimestamps.removeAll()
         BeaniePostureEngine.shared.reset()
         BeanieActivityEngine.shared.reset()
+        sessionConnectDate = nil
+        liveEraseDebounceActive = false
         // tskinSynthesizer is deliberately NOT reset here — reset() runs on every
         // reconnect attempt (see BluetoothManager.connectToSavedBeanie/didDiscover),
         // and the synthesizer's own not-worn/put-on heuristics are what should
@@ -222,14 +241,25 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         // Android parity: afterNotifyEnabled() — CCCD write confirmed, now ready
         isConnected = true
         status = .ready
+        sessionConnectDate = Date()
 
-        // Send live-start command sequence
-        if cmdCharacteristic != nil {
-            sendLiveStartSequence()
+        // Execute pending commands on connect, but NEVER send RTC seed on normal connects
+        if pendingSkipErase {
+            pendingSkipErase = false
+            print("[Beanie] pendingSkipErase — sending erase command (0x03) now")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.sendEraseCommand()
+            }
+        } else if pendingPostEraseRTCSeed {
+            print("[Beanie] pendingPostEraseRTCSeed — NVS blank, seeding RTC now")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.sendLiveStartSequence()
+                self?.pendingPostEraseRTCSeed = false
+            }
         }
 
         // Data watchdog: if no data arrives within 15s despite being "ready",
-        // retry the live-start sequence (Android parity: dump-stall watchdog)
+        // retry the live-start sequence once or fall back to read polling
         scheduleDataWatchdog(peripheral: peripheral)
     }
 
@@ -262,6 +292,45 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
     // MARK: - Data Processing
 
     private func processIncomingData(_ data: Data) {
+        // Erase completion marker from firmware: [0xFF, 0x9F]
+        if data.count == 2, data[0] == 0xFF, data[1] == 0x9F {
+            DispatchQueue.main.async {
+                self.isErasing = false
+                self.eraseComplete = true
+                self.liveEraseDebounceActive = false
+                self.status = .ready
+                print("[Beanie] Erase complete (0xFF9F) — seeding RTC and resuming live recording")
+                self.sendLiveStartSequence()
+                self.pendingPostEraseRTCSeed = false
+            }
+            return
+        }
+
+        // Storage percent notification: [0xA1, pct]
+        if data.count == 2, data[0] == 0xA1 {
+            let pct = Int(data[1])
+            DispatchQueue.main.async {
+                self.storagePercent = pct
+            }
+
+            let threshold = 5
+            let timeSinceConnect = sessionConnectDate.map { Date().timeIntervalSince($0) } ?? 10.0
+            let inBackoff = Date() < eraseBackoffUntil
+            let haveCmdChannel = cmdCharacteristic != nil
+
+            // Live auto-erase guard: strictly require !pendingPostEraseRTCSeed, !isErasing, !liveEraseDebounceActive, !inBackoff
+            if pct >= threshold && !pendingPostEraseRTCSeed && !isErasing && !liveEraseDebounceActive && !inBackoff && haveCmdChannel && timeSinceConnect > 5.0 {
+                liveEraseDebounceActive = true
+                print("[Beanie] Live auto-erase triggered at storage \(pct)%")
+                DispatchQueue.main.async {
+                    self.isErasing = true
+                    self.status = .ready
+                }
+                sendEraseCommand()
+            }
+            return
+        }
+
         let frames = parser.processData(data)
         let profileName = BeanieRegistry.profileNameForDevice(deviceName)
 
@@ -444,9 +513,17 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
         peripheral.readValue(for: dataChar)
     }
 
+    // MARK: - Erase Command
+
+    func sendEraseCommand() {
+        guard cmdCharacteristic != nil else { return }
+        pendingPostEraseRTCSeed = true
+        isErasing = true
+        eraseComplete = false
+        enqueueCommand(Data([0x03]))
+    }
+
     // MARK: - Data Watchdog
-    // Android parity: dump-stall watchdog — retries live-start if no data arrives
-    // within dataWatchdogTimeout seconds of notify being enabled.
 
     private func scheduleDataWatchdog(peripheral: CBPeripheral) {
         dataWatchdogTimer?.invalidate()
@@ -454,9 +531,9 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
             withTimeInterval: Self.dataWatchdogTimeout, repeats: false
         ) { [weak self] _ in
             guard let self, !self.receivedFrame else { return }
-            if self.liveStartRetryCount < Self.maxLiveStartRetries, self.cmdCharacteristic != nil {
+            if self.liveStartRetryCount == 0, self.cmdCharacteristic != nil {
                 self.liveStartRetryCount += 1
-                print("[Beanie] No data received — retrying live-start (attempt \(self.liveStartRetryCount))")
+                print("[Beanie] Stream quiet after subscribe — sending live-start (attempt 1)")
                 self.sendLiveStartSequence()
                 self.scheduleDataWatchdog(peripheral: peripheral)
             } else if let dataChar = self.dataCharacteristic, dataChar.properties.contains(.read) {
@@ -464,18 +541,7 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
                 self.useReadPolling = true
                 self.startReadPolling(peripheral: peripheral)
             } else {
-                // Dead end otherwise: live-start retries exhausted (or no command
-                // characteristic to retry with) AND the data characteristic doesn't
-                // support .read, so read-polling isn't an option either. Previously
-                // this just stopped — the device stayed "connected"/ready but silently
-                // never streamed again until a manual disconnect/reconnect. Instead,
-                // keep the watchdog alive at a slower cadence: cheap, and covers the
-                // case where the peripheral eventually starts notifying on its own
-                // (e.g. after firmware-side buffering) or characteristics get
-                // rediscovered with different properties on a later service change.
-                print("[Beanie] Watchdog exhausted recovery options — retrying at reduced frequency")
-                self.liveStartRetryCount = 0
-                self.scheduleDataWatchdogSlow(peripheral: peripheral)
+                print("[Beanie] Watchdog awaiting telemetry notifications")
             }
         }
     }
