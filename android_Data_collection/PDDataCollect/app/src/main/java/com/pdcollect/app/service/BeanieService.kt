@@ -195,7 +195,10 @@ class BeanieService : Service() {
 
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bleScanner: BluetoothLeScanner? = null
-    private var bluetoothGatt: BluetoothGatt? = null
+    // Read from GATT callbacks; written when a connection is created or torn down.
+    // Volatile as belt-and-braces — callbacks are additionally pinned to the main
+    // thread via the connectGatt(..., handler) overload, see connectGattOnMainThread().
+    @Volatile private var bluetoothGatt: BluetoothGatt? = null
 
     private var targetAddress: String = ""
     private var targetName: String = ""
@@ -658,11 +661,44 @@ class BeanieService : Service() {
         gatt?.close()
     }
 
+    /**
+     * Open a GATT connection whose callbacks are delivered on [handler] (the main thread)
+     * rather than on an arbitrary Bluetooth binder thread.
+     *
+     * This is the fix for the "connects, then disconnects, back to connecting" loop.
+     * [ignoreStaleGattCallback] closes any GATT client it judges stale, so a wrong answer
+     * destroys a live connection. It compares against [bluetoothGatt], which is assigned
+     * *after* connectGatt() returns — but callbacks were being delivered concurrently on a
+     * binder thread, and were also raced by the scan callback assigning the same field
+     * from a second thread. A callback that arrived before/around the assignment saw a
+     * stale value, declared the brand-new connection "stale", and called close() on it.
+     *
+     * Pinning callbacks to the main looper makes the whole GATT state machine
+     * single-threaded: connectGatt() is called from the main thread, so the assignment
+     * completes before any queued callback can run, and every subsequent callback observes
+     * a consistent view. Heavy packet parsing still happens off-thread — see [packetThread].
+     */
+    @Suppress("MissingPermission")
+    private fun connectGattOnMainThread(device: BluetoothDevice, autoConnect: Boolean): BluetoothGatt? {
+        return device.connectGatt(
+            applicationContext,
+            autoConnect,
+            gattCallback,
+            BluetoothDevice.TRANSPORT_LE,
+            BluetoothDevice.PHY_LE_1M_MASK,
+            handler
+        )
+    }
+
+    /**
+     * Stale-callback check. Only safe because every GATT callback is delivered on the main
+     * thread (see [connectGattOnMainThread]) — this closes the client it judges stale.
+     */
     private fun ignoreStaleGattCallback(gatt: BluetoothGatt, callbackName: String): Boolean {
         if (bluetoothGatt === gatt) return false
         Log.w(TAG, "Ignoring $callbackName from stale GATT ${gatt.device?.address}")
         @Suppress("MissingPermission")
-        gatt.close()
+        runCatching { gatt.close() }
         return true
     }
 
@@ -930,13 +966,7 @@ class BeanieService : Service() {
             )
             autoConnectPending = autoConnect
             pendingConnectStartedAtMs = System.currentTimeMillis()
-            @Suppress("MissingPermission")
-            bluetoothGatt = device.connectGatt(
-                applicationContext,
-                autoConnect,
-                gattCallback,
-                BluetoothDevice.TRANSPORT_LE
-            )
+            bluetoothGatt = connectGattOnMainThread(device, autoConnect)
             if (autoConnect) {
                 scheduleAutoReconnectScanFallback()
             } else {
@@ -955,11 +985,24 @@ class BeanieService : Service() {
     }
 
     private val scanCallback = object : ScanCallback() {
+        // ScanCallback is delivered on a binder thread. This body mutates the same GATT
+        // state machine as the connection callbacks (bluetoothGatt, autoConnectPending,
+        // targetAddress, timers), so it is marshalled onto the main thread too — otherwise
+        // it races connectGatt()'s assignment and the stale-callback check can close a
+        // live connection. See connectGattOnMainThread().
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
             if (!BeanieDiscovery.matchesSavedDevice(result, targetAddress, targetName)) return
-
             val name = BeanieDiscovery.displayName(result).takeIf { it.isNotBlank() } ?: "Beanie (${device.address})"
+            handler.post { onScanMatchOnMain(device, name) }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            handler.post { onScanFailedOnMain(errorCode) }
+        }
+    }
+
+    private fun onScanMatchOnMain(device: BluetoothDevice, name: String) {
             stopScan()
             targetAddress = device.address
             targetName = name
@@ -980,20 +1023,14 @@ class BeanieService : Service() {
             try {
                 autoConnectPending = false
                 pendingConnectStartedAtMs = System.currentTimeMillis()
-                @Suppress("MissingPermission")
-                bluetoothGatt = device.connectGatt(
-                    applicationContext,
-                    false,
-                    gattCallback,
-                    BluetoothDevice.TRANSPORT_LE
-                )
+                bluetoothGatt = connectGattOnMainThread(device, autoConnect = false)
                 scheduleConnectingWatchdog()
             } catch (_: SecurityException) {
                 scheduleReconnect()
             }
-        }
+    }
 
-        override fun onScanFailed(errorCode: Int) {
+    private fun onScanFailedOnMain(errorCode: Int) {
             isScanning = false
             Log.w(TAG, "Beanie scan failed errorCode=$errorCode")
             if (autoConnectPending && bluetoothGatt != null) {
@@ -1002,7 +1039,6 @@ class BeanieService : Service() {
             } else {
                 scheduleReconnect()
             }
-        }
     }
 
     private val gattCallback = object : BluetoothGattCallback() {

@@ -82,8 +82,17 @@ class BeaniePacketParser(
     ): TemperatureSample? {
         val (innerRaw, outerRaw) = if (needsSensorSwap) outC to inC else inC to outC
 
+        // Sanity gate, reference parity (BLEReader.swift parseTempV2 / BleViewModel):
+        //   "Drop physically impossible values: garbage ADC, NVS sentinel
+        //    (rawIn=rawOut~=0), out-of-range, or sensor not-ready glitches."
+        // The near-zero sentinel check was missing here. `processIncoming` routes any
+        // 4-byte notification straight to this parser, bypassing
+        // BeaniePayloadDecoder.looksLikeLegacyTemperaturePacket (which does reject
+        // rawIn==0 && rawOut==0), so an all-zero frame was being recorded as a real
+        // 0.00C / 0.00C reading. Caught by BeanieServiceTest.
         if (innerRaw <= -5.0 || innerRaw >= 60.0 ||
-            outerRaw <= -15.0 || outerRaw >= 60.0
+            outerRaw <= -15.0 || outerRaw >= 60.0 ||
+            (abs(innerRaw) < 0.05 && abs(outerRaw) < 0.05)
         ) {
             return null
         }

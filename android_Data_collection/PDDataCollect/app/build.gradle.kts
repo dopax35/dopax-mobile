@@ -153,8 +153,14 @@ android {
         // v3.7.34 (vc 120): stop the stall watchdog force-disconnecting a live link (it turned
         // any stream pause into the connect/disconnect loop); recover in place instead. Allow
         // re-export of already-uploaded dates. Add BeanieService HEALTH diagnostics.
-        versionCode = 120
-        versionName = "3.7.34"
+        // v3.7.35 (vc 121): ROOT CAUSE of the Beanie connect/disconnect loop — the GATT
+        // state machine was multi-threaded. bluetoothGatt was written on the main thread
+        // AND the scan binder thread, and read on the BLE binder thread with no
+        // synchronisation; ignoreStaleGattCallback() closes whatever it judges stale, so a
+        // stale read closed the live connection. All GATT/scan callbacks are now pinned to
+        // the main thread. Also: reject the all-zero temperature sentinel (found by test).
+        versionCode = 121
+        versionName = "3.7.35"
     }
 
     signingConfigs {

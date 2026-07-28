@@ -1,0 +1,2 @@
+- Beanie hat: fixed the connect-then-disconnect loop. Internally the app could mistake a brand-new connection for a stale one and close it immediately; Bluetooth events are now handled on a single thread so this cannot happen.
+- Beanie hat: invalid all-zero sensor frames are no longer recorded as 0.00 degree readings.
