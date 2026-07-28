@@ -1,0 +1,2 @@
+- Beanie hat: fixed the repeated disconnects and frozen temperature/heat-flux readings. The app was re-programming the hat's clock every time it connected, which the manufacturer's own app never does — it destabilised the hat's firmware a few seconds after each connection.
+- The connection now follows the manufacturer's scheme exactly: subscribe and listen, with faster radio settings for a more reliable link.

@@ -57,7 +57,6 @@ class BeanieService : Service() {
         private const val LIVE_NOTIFICATION_MIN_INTERVAL_MS = 2_000L
         private const val STREAM_WARMUP_TIMEOUT_MS = 10_000L
         private const val READ_POLL_INTERVAL_MS = 1_500L
-        private const val LIVE_START_RETRY_LIMIT = 2
         private const val TEMP_SAMPLE_STALE_MS = 120_000L
         // Live-stream stall watchdog: firmware cadence is one temperature packet every
         // ~5s (plus 25Hz IMU on hats that stream it), so 30s of silence on a "connected"
@@ -278,9 +277,13 @@ class BeanieService : Service() {
             scheduleStreamWarmupTimeout()
             return@Runnable
         }
-        if (liveStartRetryCount < LIVE_START_RETRY_LIMIT && activeCommandCharacteristic != null) {
+        // At most ONE live-start attempt per connection (was LIVE_START_RETRY_LIMIT=2
+        // *additional* retries on top of the one sent on every connect — i.e. up to
+        // three RTC/NVS write bursts per connection). See startBeanieLiveStream() for
+        // why repeated RTC seeding wedges the firmware.
+        if (liveStartRetryCount == 0 && activeCommandCharacteristic != null) {
             liveStartRetryCount++
-            Log.w(TAG, "Beanie stream stayed silent after notification setup; retrying live-start command sequence")
+            Log.w(TAG, "Beanie stream silent after subscribe; one live-start attempt (hat may have sampling disabled)")
             sendRtcAndResumeRecording()
             scheduleStreamWarmupTimeout()
             return@Runnable
@@ -678,6 +681,28 @@ class BeanieService : Service() {
         }
     }
 
+    /**
+     * LAST-RESORT recovery only — never call this on a normal connect.
+     *
+     * This sends the RTC seed sequence (0xA4 → SET_TIME → 0x04). Both reference
+     * implementations are emphatic that RTC must NOT be seeded on connect:
+     *
+     *   BleViewModel.afterNotifyEnabled():
+     *     "── RTC is NEVER seeded here ── setting RTC before or during a dump causes
+     *      the firmware to write a fresh START marker at the current NVS write
+     *      position, corrupting all subsequent timestamps."
+     *   BLEReader.swift didDiscoverCharacteristicsFor: identical comment.
+     *
+     * PDCollect previously ran this on EVERY connect (and the warmup watchdog retried
+     * it twice more), hammering a fresh START marker into the hat's NVS flash on every
+     * single connection — which is what wedged the firmware: temps/flux froze seconds
+     * after connecting and the link dropped 10-30s later. Both references simply
+     * subscribe to notifications and let the firmware stream on its own.
+     *
+     * Kept solely for the one case the references don't have to handle: a hat left with
+     * sampling_active=0 would never stream at all. Fired at most once per connection,
+     * only after the warmup window proves no data is arriving.
+     */
     private fun startBeanieLiveStream() {
         if (activeCommandCharacteristic == null) {
             Log.w(TAG, "Beanie command characteristic unavailable; cannot send live-start commands")
@@ -872,14 +897,15 @@ class BeanieService : Service() {
                     connectedAtMs = System.currentTimeMillis()
                     updateNotification("Connected to ${targetName.ifBlank { "Beanie" }} - discovering...", force = true)
                     broadcastStatus(STATUS_DISCOVERING)
-                    handler.postDelayed({
+                    // Reference parity (BleViewModel.onConnectionStateChange): request the
+                    // MTU immediately on connect. The old 600ms delay left the link idle
+                    // during the window where the firmware is most likely to drop it.
+                    @Suppress("MissingPermission")
+                    val mtuStarted = gatt.requestMtu(517)
+                    if (!mtuStarted) {
                         @Suppress("MissingPermission")
-                        val mtuStarted = gatt.requestMtu(517)
-                        if (!mtuStarted) {
-                            @Suppress("MissingPermission")
-                            gatt.discoverServices()
-                        }
-                    }, 600L)
+                        gatt.discoverServices()
+                    }
                 }
 
                 BluetoothProfile.STATE_DISCONNECTED -> {
@@ -969,6 +995,20 @@ class BeanieService : Service() {
                 Log.w(TAG, "CMD_UUID characteristic not found; Beanie live-start commands unavailable")
             }
 
+            // Reference parity (BleViewModel.onServicesDiscovered): prefer the 2M PHY.
+            // Halves airtime per packet, which materially reduces the chance of a
+            // supervision timeout while IMU packets are streaming.
+            try {
+                @Suppress("MissingPermission")
+                gatt.setPreferredPhy(
+                    BluetoothDevice.PHY_LE_2M_MASK,
+                    BluetoothDevice.PHY_LE_2M_MASK,
+                    BluetoothDevice.PHY_OPTION_NO_PREFERRED
+                )
+            } catch (e: Exception) {
+                Log.w(TAG, "Beanie 2M PHY request failed (harmless, staying on 1M)", e)
+            }
+
             activeDataCharacteristic = dataChar
             activeDataProperties = dataChar.properties
             activeCommandCharacteristic = cmdChar
@@ -1015,13 +1055,19 @@ class BeanieService : Service() {
         ) {
             if (ignoreStaleGattCallback(gatt, "onDescriptorWrite")) return
             Log.i(TAG, "Descriptor write status=$status uuid=${descriptor.uuid}")
+            // Reference parity: both implementations proceed after the CCCD write without
+            // inspecting status — some firmware revisions report a non-zero status yet
+            // still stream fine. Immediately tearing the stream down into the
+            // indication/read-polling fallback here caused needless mode churn on a
+            // link that was actually healthy. If the stream really is dead, the warmup
+            // watchdog below catches it a few seconds later and recovers properly.
             if (status != BluetoothGatt.GATT_SUCCESS) {
-                handler.removeCallbacks(streamWarmupRunnable)
-                recoverSilentStream("Beanie CCCD write completed with status=$status")
-                return
+                Log.w(TAG, "Beanie CCCD write returned status=$status; continuing anyway (warmup watchdog will verify)")
             }
+            // NOTE: deliberately NO command writes here. See startBeanieLiveStream().
+            // Both reference implementations subscribe and then simply let the firmware
+            // stream — the live-start/RTC sequence is only a last-resort recovery.
             onNotifyEnabled()
-            startBeanieLiveStream()
             scheduleStreamWarmupTimeout()
         }
 
@@ -1196,6 +1242,11 @@ class BeanieService : Service() {
         if (pct < NVS_ERASE_THRESHOLD_PERCENT) return
         if (!isConnected || nvsEraseInProgress) return
         if (activeCommandCharacteristic == null) return
+        // Only ever issue a flash operation on a demonstrably healthy stream: the hat
+        // must actually be delivering live frames on this connection. Erasing into a
+        // link that is still warming up (or already wedged) is how a recovery action
+        // turns into another disconnect.
+        if (!receivedFrameThisConnection) return
         val now = System.currentTimeMillis()
         if (connectedAtMs <= 0L || now - connectedAtMs < NVS_ERASE_MIN_CONNECT_AGE_MS) return
         if (lastNvsEraseAtMs > 0L && now - lastNvsEraseAtMs < NVS_ERASE_COOLDOWN_MS) return

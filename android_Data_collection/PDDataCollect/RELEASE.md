@@ -1,7 +1,59 @@
-# DopaX 3.7.31 (versionCode 117) - release checklist
+# DopaX 3.7.32 (versionCode 118) - release checklist
 
 End-to-end "from clean checkout to AAB uploaded to Play Console
 Internal Testing" steps. Tick items as you go.
+
+---
+
+## What's in 3.7.32 (vc 118) — ROOT CAUSE of the Beanie disconnect loop
+
+vc 116 and vc 117 treated symptoms. This release fixes the actual cause,
+found by reading the connection scheme in BOTH reference implementations
+(lukasIFM/BeanieAppAndroid `BleViewModel.kt` and lukasIFM/Beanie-App
+`BLEReader.swift`).
+
+**PDCollect was seeding the hat's RTC on every single connection.**
+`onDescriptorWrite` called `startBeanieLiveStream()` →
+`sendRtcAndResumeRecording()`, writing `0xA4` → `0x02`+SET_TIME → `0x04`
+immediately after subscribing, and the warmup watchdog retried that whole
+sequence up to twice more — up to three RTC bursts per connection.
+
+Both references forbid this in identical comments:
+
+> "── RTC is NEVER seeded here ── setting RTC before or during a dump
+> causes the firmware to write a fresh START marker at the current NVS
+> write position, corrupting all subsequent timestamps. RTC is seeded
+> ONLY in finalizeDump(), after the dump stream is fully closed."
+
+Every connect was hammering a fresh START marker into the hat's NVS
+flash. That is what wedged the firmware: temperatures and heat flux
+froze seconds after connecting, and the link dropped 10-30s later.
+Both references simply subscribe to notifications and let the firmware
+stream on its own.
+
+Changes (BeanieService.kt) — reference connection scheme ported:
+- **No command writes on connect.** Subscribe to the data
+  characteristic and let live data flow, exactly as both references do.
+- `startBeanieLiveStream()` is now last-resort recovery ONLY, fired at
+  most once per connection and only after the warmup window proves no
+  data is arriving (covers a hat left with sampling_active=0 — the one
+  case the references never have to handle).
+- 2M PHY requested in `onServicesDiscovered` (reference parity) — halves
+  airtime per packet, materially reducing supervision-timeout risk while
+  IMU is streaming.
+- MTU requested immediately on connect; the old 600ms delay left the
+  link idle exactly when the firmware is most likely to drop it.
+- CCCD write status no longer forces a fallback-mode switch; some
+  firmware revisions report non-zero status yet stream fine (reference
+  parity). The warmup watchdog still catches a genuinely dead stream.
+- NVS erase (vc 117) now additionally requires a demonstrably healthy
+  stream (`receivedFrameThisConnection`) before issuing a flash op.
+
+**Smoke-test for this release**: pair the hat and record for 30+
+minutes. Expect `beanie_temperature.csv` to show continuous ~5s cadence
+with *changing* inner/outer/tskin/heat-flux values throughout — not a
+handful of rows then silence. Walk out of BLE range 2-3 min and back;
+collection should resume automatically.
 
 ---
 

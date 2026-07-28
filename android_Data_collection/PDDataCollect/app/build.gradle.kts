@@ -140,8 +140,12 @@ android {
         // v3.7.31 (vc 117): Beanie NVS storage management — erase hat flash at 5% usage
         // (reference-app parity); fixes the connect → stream 10-30s → disconnect loop caused by
         // never-erased NVS destabilizing the firmware.
-        versionCode = 117
-        versionName = "3.7.31"
+        // v3.7.32 (vc 118): ROOT CAUSE of the Beanie disconnect loop — PDCollect seeded the
+        // RTC (0xA4/SET_TIME/0x04) on every connect, which both reference implementations
+        // explicitly forbid ("RTC is NEVER seeded here"). Ported their connection scheme:
+        // subscribe-only connect, 2M PHY, immediate MTU, single last-resort live-start.
+        versionCode = 118
+        versionName = "3.7.32"
     }
 
     signingConfigs {
