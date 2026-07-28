@@ -1244,9 +1244,11 @@ class BeanieService : Service() {
         handler.removeCallbacks(streamWarmupRunnable)
         receivedFrameThisConnection = true
         lastAcceptedFrameAtMs = timestampMs
-        if (nvsEraseInProgress) {
-            // Live data flowing again after the erase-induced disconnect/reconnect —
-            // the erase cycle is complete.
+        // connectedAtMs > nvsEraseStartedAtMs: only data from a connection established
+        // AFTER the erase began proves the cycle finished — the firmware can keep
+        // streaming for a moment after accepting ERASE_ALL, and clearing the flag on
+        // those trailing frames would re-enable the failure heuristics mid-erase.
+        if (nvsEraseInProgress && connectedAtMs > nvsEraseStartedAtMs) {
             nvsEraseInProgress = false
             Log.i(TAG, "Beanie NVS erase cycle complete — live stream resumed")
         }
