@@ -35,6 +35,7 @@ class HandTurningActivity : AppCompatActivity(), SensorEventListener, TextToSpee
     private var endRowWritten = false
     private var textToSpeech: TextToSpeech? = null
     private var isTextToSpeechReady = false
+    private val finishHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     // Hand-turning header has 6 sensor columns: gx,gy,gz,ax,ay,az.
     private val sensorColCount = 6
@@ -136,7 +137,8 @@ class HandTurningActivity : AppCompatActivity(), SensorEventListener, TextToSpee
         findViewById<TextView>(R.id.tvTimer).text = "Done!"
         Toast.makeText(this, "Test complete", Toast.LENGTH_SHORT).show()
 
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        finishHandler.postDelayed({
+            if (isFinishing || isDestroyed) return@postDelayed
             val forceHand = intent.getStringExtra("EXTRA_HAND")
             if (intent.getBooleanExtra("IS_BATTERY_MODE", false)) {
                 setResult(android.app.Activity.RESULT_OK)
@@ -234,6 +236,8 @@ class HandTurningActivity : AppCompatActivity(), SensorEventListener, TextToSpee
         countdownTimer = null
         testTimer?.cancel()
         testTimer = null
+        // Cancel any pending post-test transition — see FingerTappingActivity for why.
+        finishHandler.removeCallbacksAndMessages(null)
         unregisterSensors()
         // If activity is killed mid-trial, still close out the trial cleanly.
         writeEndRow()

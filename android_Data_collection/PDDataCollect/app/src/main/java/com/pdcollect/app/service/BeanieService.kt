@@ -59,6 +59,13 @@ class BeanieService : Service() {
         private const val READ_POLL_INTERVAL_MS = 1_500L
         private const val LIVE_START_RETRY_LIMIT = 2
         private const val TEMP_SAMPLE_STALE_MS = 120_000L
+        // Live-stream stall watchdog: firmware cadence is one temperature packet every
+        // ~5s (plus 25Hz IMU on hats that stream it), so 30s of silence on a "connected"
+        // link means the stream is dead even though GATT never reported a disconnect.
+        private const val LIVE_STALL_TIMEOUT_MS = 30_000L
+        // If a connection never produces a single frame despite the warmup retries and
+        // read-polling fallback, tear it down and reconnect rather than idling forever.
+        private const val NEVER_STREAMED_TIMEOUT_MS = 60_000L
         private val ENABLE_NOTIFICATION_VALUE_BYTES = byteArrayOf(0x01, 0x00)
         private val ENABLE_INDICATION_VALUE_BYTES = byteArrayOf(0x02, 0x00)
 
@@ -163,6 +170,12 @@ class BeanieService : Service() {
     private var liveStartRetryCount = 0
     private var lastStreamSetupAtMs: Long = 0L
     private var receivedFrameThisConnection = false
+    // Wall-clock time of the last *accepted* frame (temp/IMU/battery) — drives the
+    // live-stream stall watchdog in heartbeatRunnable. 0 = nothing yet this connection.
+    private var lastAcceptedFrameAtMs: Long = 0L
+    // After a STOP_ALL/barcode command echo (1-byte 0xB0), firmware sends 7 × 4-byte
+    // barcode chunks that must be suppressed, not parsed (reference-app parity).
+    private var barcodePacketsRemaining = 0
     private val incomingStreamBuffer = ArrayDeque<Byte>()
     private val commandWriteQueue = mutableListOf<ByteArray>()
 
@@ -253,6 +266,7 @@ class BeanieService : Service() {
 
     private val heartbeatRunnable = object : Runnable {
         override fun run() {
+            checkLiveStreamStall()
             when {
                 isConnected -> broadcastStatus(STATUS_READY)
                 targetAddress.isNotBlank() -> broadcastStatus(STATUS_CONNECTING)
@@ -260,6 +274,34 @@ class BeanieService : Service() {
             }
             handler.postDelayed(this, 15_000L)
         }
+    }
+
+    /**
+     * Live-stream stall watchdog. The one-shot warmup watchdog only covers the window
+     * before the *first* frame — once a frame arrived, nothing detected a stream that
+     * later went silent while GATT still reported "connected" (peripheral firmware
+     * pause, notification loss after Doze, BT stack wedge). The service would sit in
+     * READY forever writing no data — exactly the field failure seen in participant
+     * CSVs (a handful of rows, then silence with the hat still live). Detect it and
+     * force a full disconnect/reconnect cycle, which re-runs MTU + CCCD + live-start.
+     */
+    private fun checkLiveStreamStall() {
+        if (!isConnected) return
+        val now = System.currentTimeMillis()
+        val stalled = if (lastAcceptedFrameAtMs > 0L) {
+            now - lastAcceptedFrameAtMs > LIVE_STALL_TIMEOUT_MS
+        } else {
+            lastStreamSetupAtMs > 0L && now - lastStreamSetupAtMs > NEVER_STREAMED_TIMEOUT_MS
+        }
+        if (!stalled) return
+        Log.w(
+            TAG,
+            "Beanie live stream stalled (last frame ${if (lastAcceptedFrameAtMs > 0L) "${(now - lastAcceptedFrameAtMs) / 1000}s ago" else "never"}); forcing reconnect"
+        )
+        updateNotification("Beanie stream stalled - reconnecting...", force = true)
+        disconnectGatt()
+        broadcastStatus(STATUS_CONNECTING)
+        scheduleReconnect(FAILURE_RECONNECT_DELAY_MS)
     }
 
     override fun onCreate() {
@@ -279,17 +321,36 @@ class BeanieService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                Constants.NOTIFICATION_ID_BEANIE,
-                buildNotification("Searching for Beanie..."),
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            )
-        } else {
-            startForeground(
-                Constants.NOTIFICATION_ID_BEANIE,
-                buildNotification("Searching for Beanie...")
-            )
+        // BLUETOOTH_CONNECT can be revoked between restarts (user action, or Android's
+        // auto-revoke of unused permissions). Starting a FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+        // service without it throws SecurityException on Android 14+ — uncaught, that crashes
+        // the app, and START_STICKY would just restart into the same crash.
+        val hasBluetoothPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+            ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!hasBluetoothPermission) {
+            Log.w(TAG, "onStartCommand: BLUETOOTH_CONNECT missing — stopping service instead of crashing")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    Constants.NOTIFICATION_ID_BEANIE,
+                    buildNotification("Searching for Beanie..."),
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                )
+            } else {
+                startForeground(
+                    Constants.NOTIFICATION_ID_BEANIE,
+                    buildNotification("Searching for Beanie...")
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "onStartCommand: startForeground failed — stopping service", e)
+            stopSelf()
+            return START_NOT_STICKY
         }
         connect()
         handler.removeCallbacks(heartbeatRunnable)
@@ -404,6 +465,8 @@ class BeanieService : Service() {
         liveStartRetryCount = 0
         lastStreamSetupAtMs = 0L
         receivedFrameThisConnection = false
+        lastAcceptedFrameAtMs = 0L
+        barcodePacketsRemaining = 0
         incomingStreamBuffer.clear()
         if (clearVitals) {
             lastTempSample = null
@@ -671,10 +734,18 @@ class BeanieService : Service() {
                 "Direct GATT connect fallback to $targetAddress (${targetName.ifBlank { "Beanie" }}) autoConnect=$autoConnect"
             )
             autoConnectPending = autoConnect
+            // autoConnect must actually be passed through to connectGatt — it was
+            // previously hardcoded to false here, making every reconnect a one-shot
+            // ~30s attempt that race-fails whenever the hat is briefly out of range,
+            // even though the whole autoConnectPending state machine around this call
+            // assumes an OS-level background autoConnect. The reference Beanie app
+            // (BleViewModel.performReconnect) documents this exact failure mode:
+            // "autoConnect=false (old) was a one-shot attempt; if the beanie was out
+            // of range overnight the reconnect loop would race-fail and stop trying."
             @Suppress("MissingPermission")
             bluetoothGatt = device.connectGatt(
                 applicationContext,
-                false,
+                autoConnect,
                 gattCallback,
                 BluetoothDevice.TRANSPORT_LE
             )
@@ -986,15 +1057,78 @@ class BeanieService : Service() {
         }
     }
 
+    /**
+     * Per-notification, shape-based packet dispatch (reference-app parity).
+     *
+     * The previous implementation pushed every notification into a rolling byte deque
+     * and scanned byte-by-byte for tag bytes. That misframes any packet type this port
+     * doesn't know — storage notifies (2B 0xA1), command responses (5B 0xA2/0xA3/0xA4),
+     * barcode chunks after 0xB0 — because any 0xA6/0xA0 byte *inside* those packets gets
+     * extracted as a "temperature"/"battery" frame. In the field this produced a constant
+     * garbage row (inner 23.68 / outer 0.00 / tskin 87.62) written next to every real
+     * sample, and bogus battery readings (100 → 0). The reference app (BleViewModel
+     * processIncoming) instead matches each whole notification against exact known
+     * shapes and drops everything else — mirrored here. The stream-reassembly buffer
+     * is kept, but only for 0xAA55 IMU packets, which are the one packet type large
+     * enough to straddle notification boundaries when MTU negotiation fails.
+     */
     private fun processIncoming(data: ByteArray) {
         if (data.isEmpty()) return
         val now = System.currentTimeMillis()
-        val frames = BeaniePayloadDecoder.splitStream(incomingStreamBuffer, data)
-        if (frames.isEmpty()) {
-            Log.d(TAG, "Ignoring unrecognized Beanie payload (${data.size} bytes)")
+
+        // Continuation bytes of a fragmented IMU packet already being reassembled —
+        // firmware sends packets sequentially, so nothing else can interleave mid-packet.
+        if (incomingStreamBuffer.isNotEmpty()) {
+            handleFrames(BeaniePayloadDecoder.splitStream(incomingStreamBuffer, data), now)
             return
         }
 
+        val lead = data[0].toInt() and 0xFF
+
+        // STOP_ALL barcode stream suppression: [0xB0] then 7 × 4-byte barcode chunks.
+        // Checked first — the chunks are arbitrary bytes and must never reach parsing.
+        if (data.size == 1 && lead == 0xB0) {
+            barcodePacketsRemaining = 7
+            return
+        }
+        if (barcodePacketsRemaining > 0) {
+            barcodePacketsRemaining--
+            return
+        }
+
+        when {
+            // Storage-percent notify — not used by this app, but must be consumed
+            // so it can't be misparsed.
+            data.size == 2 && lead == 0xA1 -> return
+
+            // Command responses/echoes (RTC setup 0xA4, worn state 0xA2, 0xA3) — consume.
+            data.size == 5 && (lead == 0xA2 || lead == 0xA3 || lead == 0xA4) -> return
+
+            // Battery: exactly 3 bytes, tag 0xA0. Deliberately does NOT stamp
+            // lastAcceptedFrameAtMs — battery notifies can keep ticking even when the
+            // live-start never took and no temp/IMU is flowing, and the stall watchdog
+            // must fire in exactly that situation.
+            data.size == 3 && lead == 0xA0 -> {
+                batteryPct = BeaniePacketParser.parseBatteryPercent(data)
+                broadcastStatus(if (isConnected) STATUS_READY else STATUS_CONNECTING)
+            }
+
+            // Live temperature v2: exactly 5 bytes, tag 0xA6.
+            data.size == 5 && lead == 0xA6 -> handleTemperatureFrame(data, now)
+
+            // Legacy live temperature: exactly 4 bytes, no tag (parser validates plausibility).
+            data.size == 4 -> handleTemperatureFrame(data, now)
+
+            // IMU packets (legacy 182B or stream-typed 247B, both lead 0xAA 0x55). Routed
+            // through the reassembly buffer so partial packets survive small-MTU links.
+            lead == 0xAA && data.size >= 2 && (data[1].toInt() and 0xFF) == 0x55 ->
+                handleFrames(BeaniePayloadDecoder.splitStream(incomingStreamBuffer, data), now)
+
+            else -> Log.d(TAG, "Dropping unrecognized Beanie notification (${data.size} bytes, lead=0x%02X".format(lead) + ")")
+        }
+    }
+
+    private fun handleFrames(frames: List<BeaniePayloadFrame>, now: Long) {
         frames.forEach { frame ->
             when (frame) {
                 is BeaniePayloadFrame.Battery -> {
@@ -1019,6 +1153,7 @@ class BeanieService : Service() {
 
         handler.removeCallbacks(streamWarmupRunnable)
         receivedFrameThisConnection = true
+        lastAcceptedFrameAtMs = timestampMs
         lastTempSample = sample
         val beanieProfile = BeanieRegistry.profileForDevice(targetName)
         val profileName = beanieProfile.name
@@ -1095,6 +1230,7 @@ class BeanieService : Service() {
         }
         handler.removeCallbacks(streamWarmupRunnable)
         receivedFrameThisConnection = true
+        lastAcceptedFrameAtMs = timestampMs
         val rows = samples.map { sample ->
             buildString {
                 append(sample.timestampMs).append(',')

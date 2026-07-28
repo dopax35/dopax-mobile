@@ -1,7 +1,47 @@
-# DopaX 3.7.28 (versionCode 114) - release checklist
+# DopaX 3.7.30 (versionCode 116) - release checklist
 
 End-to-end "from clean checkout to AAB uploaded to Play Console
 Internal Testing" steps. Tick items as you go.
+
+---
+
+## What's in 3.7.30 (vc 116)
+
+Beanie BLE reliability + general stability hardening (full-codebase review).
+
+Beanie fixes (root causes found by comparing against the reference
+lukasIFM/BeanieAppAndroid implementation — see BeanieService.kt comments):
+- `connectGatt` autoConnect flag is now actually passed through (was
+  hardcoded `false`), so reconnects are OS-level background retries
+  instead of one-shot ~30s attempts that race-fail when the hat is
+  briefly out of range. This was the main "keeps disconnecting" cause.
+- New live-stream stall watchdog: if a "connected" hat delivers no
+  temp/IMU frame for 30s (or never streams within 60s), the service
+  forces a full disconnect/reconnect cycle. Previously a silently
+  stalled stream left the service in READY forever, recording nothing.
+- Shape-based packet filtering (reference-app parity): unknown packet
+  types (storage notifies, command echoes, barcode chunks) are consumed
+  instead of byte-scanned, which was producing a constant garbage
+  temperature row (87.62 C) beside every real sample and phantom
+  battery readings.
+
+General stability (same review):
+- DataManager: all CSV writes serialized onto the I/O thread — fixes a
+  daily midnight writer-rotation race that could crash or drop rows.
+- Foreground services (FaceDistance/AntHR/Beanie) no longer crash-loop
+  if Camera/Bluetooth permission was revoked between restarts.
+- Deleting *today's* data folder is now blocked while collection is live.
+- Motor-test activities no longer crash if backed out during the
+  post-test 1.5s transition window.
+- Setup health check now also monitors Usage-Stats + overlay permission
+  (Android can silently revoke both).
+- Firestore dashboard sync bounded to 90 days (1 MiB doc-cap guard).
+
+**Extra smoke-test step for this release**: pair the Beanie hat, record
+~1 hour including deliberately walking out of BLE range for 2-3 minutes
+and returning. Then check the day's `beanie_temperature.csv`: expect
+continuous ~5s cadence, no `87.62` rows, and automatic resumption after
+the out-of-range gap.
 
 ---
 

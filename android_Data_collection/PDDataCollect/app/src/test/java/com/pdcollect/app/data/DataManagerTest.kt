@@ -264,6 +264,20 @@ class DataManagerTest {
     }
 
     @Test
+    fun writeGazeData_createsFileWithHeaderAndData() {
+        val row = "1234567890,-0.1200,0.0400,-0.1100,0.0380,1.0000,1.0000,0.0000,0.0000,0.0000,mlkit_face_landmarks"
+        dataManager.writeGazeData(row)
+        dataManager.closeAll()
+
+        val file = File(dataManager.getDayDir(), Constants.GAZE_FILE)
+        assertTrue(file.exists())
+        val lines = file.readLines()
+        assertEquals(Constants.GAZE_HEADER, lines[0])
+        assertEquals(row, lines[1])
+        assertEquals(2, lines.size)
+    }
+
+    @Test
     fun writeFaceDistanceData_noFaceDetected_matchesHeaderColumnCount() {
         val row = "1234567890,always_on,false,false,-1.0000,-1.0000,-1.0000,0.0000,0.0000,0.0000,no_face"
         dataManager.writeFaceDistanceData(row)

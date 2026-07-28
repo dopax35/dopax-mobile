@@ -21,6 +21,7 @@ object Constants {
     const val SLEEP_FILE = "sleep.csv"
     const val HR_FILE = "heart_rate.csv"
     const val BLINK_FILE = "blink_log.csv"
+    const val GAZE_FILE = "gaze_tracking.csv"
     const val VOICE_LOG_FILE = "voice_log.csv"
     const val BEANIE_TEMP_FILE = "beanie_temperature.csv"
     const val BEANIE_IMU_FILE = "beanie_imu.csv"
@@ -39,6 +40,7 @@ object Constants {
     // same column name, two different meanings across platforms).
     const val TMT_HEADER = "start_time_ms,timestamp_ms,test_type,total_time_ms,wrong_target_errors,lift_off_errors,segment_timings_json,finger_path_json,path_data_json"
     const val FACE_DISTANCE_HEADER = "timestamp_ms,context,face_detected,landmarks_detected,eye_distance_px,focal_length_px,estimated_cm,confidence,head_euler_y,head_euler_z,method"
+    const val GAZE_HEADER = "timestamp_ms,left_gaze_x,left_gaze_y,right_gaze_x,right_gaze_y,left_blink,right_blink,look_at_x,look_at_y,look_at_z,method"
     const val PROFILE_HEADER = "timestamp_ms,user_id,age,gender,dominant_hand,affected_side,medications_json"
     const val QUESTIONNAIRE_HEADER = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score"
     // Motor-test schemas v2:

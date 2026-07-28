@@ -1074,6 +1074,16 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        if (!PermissionUtils.hasUsageStatsPermission(this)) {
+            PermissionUtils.openUsageAccessSettings(this)
+            return
+        }
+
+        if (!PermissionUtils.canDrawOverlays(this)) {
+            PermissionUtils.openOverlaySettings(this)
+            return
+        }
+
         requestPermissions()
     }
 

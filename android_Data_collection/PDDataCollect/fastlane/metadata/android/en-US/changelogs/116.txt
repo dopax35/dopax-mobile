@@ -1,0 +1,4 @@
+- Beanie hat: fixed dropped connections not recovering — the app now auto-reconnects in the background whenever the hat comes back into range.
+- Beanie hat: fixed recording silently stopping while connected; a watchdog now restarts the stream automatically.
+- Beanie hat: fixed invalid temperature rows appearing in the daily data.
+- General stability fixes for background recording, midnight file rotation, and data export.

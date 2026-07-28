@@ -55,9 +55,21 @@ class PDCollectService : LifecycleService(), SensorEventListener {
     private val shellyRestartRunnable = object : Runnable {
         override fun run() {
             // Android limits continuous BLE scans to 30 mins. Restart it periodically.
-            shellyBleScanner?.stopScanning()
+            // Guarded: an uncaught exception here (e.g. BLE permission revoked, adapter
+            // error) would crash the whole app from this Handler's callback.
+            try {
+                shellyBleScanner?.stopScanning()
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "shellyRestartRunnable: stopScanning failed", e)
+            }
             handler.postDelayed({
-                if (isServiceActive) shellyBleScanner?.startPassive()
+                if (isServiceActive) {
+                    try {
+                        shellyBleScanner?.startPassive()
+                    } catch (e: Exception) {
+                        android.util.Log.e(TAG, "shellyRestartRunnable: startPassive failed", e)
+                    }
+                }
             }, 2000)
             handler.postDelayed(this, 15 * 60 * 1000L) // 15 mins
         }
@@ -90,7 +102,11 @@ class PDCollectService : LifecycleService(), SensorEventListener {
         dataManager.initializeAllDailyLogs()
 
         if (Constants.SHELLY_BLE_ENABLED) {
-            shellyBleScanner?.startPassive()
+            try {
+                shellyBleScanner?.startPassive()
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "onStartCommand: shelly startPassive failed", e)
+            }
             handler.removeCallbacks(shellyRestartRunnable)
             handler.postDelayed(shellyRestartRunnable, 15 * 60 * 1000L) // 15 mins
         }

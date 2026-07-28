@@ -134,8 +134,11 @@ android {
         //   adds a 10 s screen-on fallback so ALWAYS mode records even when Accessibility Service is
         //   not enabled; stamps SharedPreferences with lastFaceDistanceSampleMs for UI diagnostics.
         // v3.7.28 (vc 114): Version bump and release prep — expert review verified, changelogs backfilled.
-        versionCode = 114
-        versionName = "3.7.28"
+        // v3.7.30 (vc 116): Stability hardening (writer rotation, FGS permission guards, delete-today
+        // guard) + Beanie BLE reliability: autoConnect passthrough, live-stream stall watchdog,
+        // shape-based packet filtering (fixes garbage temp rows + silent recording stalls).
+        versionCode = 116
+        versionName = "3.7.30"
     }
 
     signingConfigs {

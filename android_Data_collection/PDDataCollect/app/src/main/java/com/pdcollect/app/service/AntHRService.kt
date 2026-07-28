@@ -105,14 +105,33 @@ class AntHRService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                Constants.NOTIFICATION_ID_HR,
-                buildNotification("Searching for HR monitor…"),
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            )
-        } else {
-            startForeground(Constants.NOTIFICATION_ID_HR, buildNotification("Searching for HR monitor…"))
+        // BLUETOOTH_CONNECT can be revoked between restarts (user action, or Android's
+        // auto-revoke of unused permissions). Starting a FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+        // service without it throws SecurityException on Android 14+ — uncaught, that crashes
+        // the app, and START_STICKY would just restart into the same crash.
+        val hasBluetoothPermission = android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S ||
+            androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!hasBluetoothPermission) {
+            Log.w(TAG, "onStartCommand: BLUETOOTH_CONNECT missing — stopping service instead of crashing")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    Constants.NOTIFICATION_ID_HR,
+                    buildNotification("Searching for HR monitor…"),
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                )
+            } else {
+                startForeground(Constants.NOTIFICATION_ID_HR, buildNotification("Searching for HR monitor…"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "onStartCommand: startForeground failed — stopping service", e)
+            stopSelf()
+            return START_NOT_STICKY
         }
         connect()
         handler.post(heartbeatRunnable)
@@ -161,6 +180,10 @@ class AntHRService : Service() {
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Invalid device address, starting scan instead", e)
             startScan()
+        } catch (e: SecurityException) {
+            // BLUETOOTH_CONNECT revoked between service restarts — don't crash, just retry later.
+            Log.e(TAG, "Bluetooth permission missing, will retry", e)
+            scheduleReconnect()
         }
     }
 
@@ -179,8 +202,14 @@ class AntHRService : Service() {
         Log.d(TAG, "Starting BLE scan for HR devices…")
         updateNotification("Scanning for HR devices…")
         broadcastStatus(STATUS_SCANNING)
-        @Suppress("MissingPermission")
-        scanner.startScan(listOf(filter), settings, scanCallback)
+        try {
+            @Suppress("MissingPermission")
+            scanner.startScan(listOf(filter), settings, scanCallback)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Bluetooth scan permission missing", e)
+            isScanning = false
+            scheduleReconnect()
+        }
     }
 
     private fun stopScan() {
@@ -193,10 +222,14 @@ class AntHRService : Service() {
     }
 
     private fun disconnectGatt() {
-        @Suppress("MissingPermission")
-        bluetoothGatt?.disconnect()
-        @Suppress("MissingPermission")
-        bluetoothGatt?.close()
+        try {
+            @Suppress("MissingPermission")
+            bluetoothGatt?.disconnect()
+            @Suppress("MissingPermission")
+            bluetoothGatt?.close()
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Bluetooth permission missing while disconnecting", e)
+        }
         bluetoothGatt = null
     }
 
@@ -222,8 +255,13 @@ class AntHRService : Service() {
                 profile.hrDeviceAddress = targetAddress
                 profile.hrDeviceName = name
                 updateNotification("Connecting to $name…")
-                @Suppress("MissingPermission")
-                bluetoothGatt = device.connectGatt(applicationContext, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+                try {
+                    @Suppress("MissingPermission")
+                    bluetoothGatt = device.connectGatt(applicationContext, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
+                } catch (e: SecurityException) {
+                    Log.e(TAG, "Bluetooth permission missing while connecting from scan result", e)
+                    scheduleReconnect()
+                }
             }
         }
 
@@ -239,26 +277,32 @@ class AntHRService : Service() {
     private val gattCallback = object : BluetoothGattCallback() {
 
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
-            when (newState) {
-                BluetoothProfile.STATE_CONNECTED -> {
-                    Log.d(TAG, "GATT connected, discovering services…")
-                    isConnected = true
-                    updateNotification("Connected to $targetName — discovering…")
-                    broadcastStatus(STATUS_DISCOVERING)
-                    @Suppress("MissingPermission")
-                    gatt.discoverServices()
+            try {
+                when (newState) {
+                    BluetoothProfile.STATE_CONNECTED -> {
+                        Log.d(TAG, "GATT connected, discovering services…")
+                        isConnected = true
+                        updateNotification("Connected to $targetName — discovering…")
+                        broadcastStatus(STATUS_DISCOVERING)
+                        @Suppress("MissingPermission")
+                        gatt.discoverServices()
+                    }
+                    BluetoothProfile.STATE_DISCONNECTED -> {
+                        Log.d(TAG, "GATT disconnected (status=$status), reconnecting…")
+                        isConnected = false
+                        lastBpm = 0
+                        broadcastUpdate(connected = false, bpm = 0)
+                        updateNotification("Disconnected — reconnecting…")
+                        @Suppress("MissingPermission")
+                        gatt.close()
+                        bluetoothGatt = null
+                        scheduleReconnect()
+                    }
                 }
-                BluetoothProfile.STATE_DISCONNECTED -> {
-                    Log.d(TAG, "GATT disconnected (status=$status), reconnecting…")
-                    isConnected = false
-                    lastBpm = 0
-                    broadcastUpdate(connected = false, bpm = 0)
-                    updateNotification("Disconnected — reconnecting…")
-                    @Suppress("MissingPermission")
-                    gatt.close()
-                    bluetoothGatt = null
-                    scheduleReconnect()
-                }
+            } catch (e: SecurityException) {
+                Log.e(TAG, "Bluetooth permission missing in onConnectionStateChange", e)
+                bluetoothGatt = null
+                scheduleReconnect()
             }
         }
 
@@ -275,22 +319,26 @@ class AntHRService : Service() {
                 return
             }
 
-            @Suppress("MissingPermission")
-            gatt.setCharacteristicNotification(hrChar, true)
-
-            // Write to CCCD (descriptor) to enable remote notifications
-            val descriptor = hrChar.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
-            if (descriptor != null) {
-                descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            try {
                 @Suppress("MissingPermission")
-                gatt.writeDescriptor(descriptor)
-                Log.d(TAG, "Notifications enabled on HR characteristic")
-                updateNotification("Ready: Recording $targetName")
-                broadcastStatus(STATUS_READY)
-                
-                // Log ready state
-                val timestamp = System.currentTimeMillis()
-                dataManager.writeHeartRateData("$timestamp,0,HEARTBEAT_READY,$targetAddress,$targetName")
+                gatt.setCharacteristicNotification(hrChar, true)
+
+                // Write to CCCD (descriptor) to enable remote notifications
+                val descriptor = hrChar.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
+                if (descriptor != null) {
+                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    @Suppress("MissingPermission")
+                    gatt.writeDescriptor(descriptor)
+                    Log.d(TAG, "Notifications enabled on HR characteristic")
+                    updateNotification("Ready: Recording $targetName")
+                    broadcastStatus(STATUS_READY)
+
+                    // Log ready state
+                    val timestamp = System.currentTimeMillis()
+                    dataManager.writeHeartRateData("$timestamp,0,HEARTBEAT_READY,$targetAddress,$targetName")
+                }
+            } catch (e: SecurityException) {
+                Log.e(TAG, "Bluetooth permission missing in onServicesDiscovered", e)
             }
         }
 

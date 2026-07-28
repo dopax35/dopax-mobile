@@ -2,6 +2,38 @@
 
 ---
 
+## 3.7.30 (build 116) — 2026-07-28
+
+### Stability hardening + Beanie/HR BLE reliability (full-codebase review)
+
+- **Keyboard extension App Group entitlement added** — the extension's
+  entitlements file was empty, so `containerURL(forSecurityApplicationGroup:)`
+  returned nil and every keystroke-metrics write silently no-op'd. Typing
+  metrics collection works for the first time in this build. (Regenerate the
+  Xcode project with `./setup.sh` so the entitlement is picked up.)
+- HR strap reconnect no longer gives up after 5 attempts — added the same
+  indefinite scan-based fallback the Beanie already had.
+- Beanie data watchdog dead-end fixed: when live-start retries exhaust and
+  read-polling isn't available, it now keeps retrying at reduced cadence
+  instead of leaving the device "connected" but silent.
+- CoreBluetooth state restoration now reattaches the Beanie peripheral
+  (previously only HR), closing a background-relaunch data gap.
+- ARKit face tracking: distance now measured from the live camera position
+  (was drifting from the fixed world origin); session auto-recovers after
+  interruptions (calls, thermal, camera contention).
+- Thread-safety: passive sensor (50Hz) and motor-test (100Hz) buffers are
+  now serialized on their delivery queues (data-race crash risk).
+- BGTask handlers can no longer double-complete (API misuse that risks
+  background-scheduling throttling).
+- Settings "Data Collection" off now also stops HR/Beanie BLE writes.
+- Deleting a day's data is serialized against in-flight writes; today's
+  active folder can't be deleted mid-collection.
+- Gaze/face CSV values guard against NaN/Inf corrupting downstream parsing.
+- New: gaze tracking (`gaze_tracking.csv`) via ARKit TrueDepth with Vision
+  fallback — new file `Models/GazeSample.swift` (picked up by XcodeGen).
+
+---
+
 ## 3.7.29 (build 115) — 2026-07-18
 
 ### Fix: User profile erasure on app update

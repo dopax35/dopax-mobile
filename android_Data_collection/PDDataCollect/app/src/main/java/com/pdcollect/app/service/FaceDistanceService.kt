@@ -146,14 +146,31 @@ class FaceDistanceService : LifecycleService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                Constants.NOTIFICATION_ID_FACE,
-                buildNotification(),
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
-            )
-        } else {
-            startForeground(Constants.NOTIFICATION_ID_FACE, buildNotification())
+        // Camera permission can be revoked (user action, or Android's auto-revoke of
+        // unused permissions) between when this service was last stopped and this
+        // START_STICKY restart. Starting a FOREGROUND_SERVICE_TYPE_CAMERA service
+        // without it throws SecurityException on Android 14+ — uncaught, that crashes
+        // the whole app, and START_STICKY would just restart it into the same crash.
+        if (!PermissionUtils.hasCameraPermission(this)) {
+            android.util.Log.w(TAG, "onStartCommand: camera permission missing — stopping service instead of crashing")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    Constants.NOTIFICATION_ID_FACE,
+                    buildNotification(),
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+                )
+            } else {
+                startForeground(Constants.NOTIFICATION_ID_FACE, buildNotification())
+            }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "onStartCommand: startForeground failed — stopping service", e)
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         foregroundServiceStarted = true
@@ -253,7 +270,8 @@ class FaceDistanceService : LifecycleService() {
                 // a silently-stopped recorder and alert the participant.
                 prefs.edit().putLong(PREF_LAST_SAMPLE_MS, System.currentTimeMillis()).apply()
             },
-            onBlink  = { blink  -> dataManager.writeBlinkData(blink.toCsvRow()) },
+            onBlink  = { blink -> dataManager.writeBlinkData(blink.toCsvRow()) },
+            onGaze   = { gaze  -> dataManager.writeGazeData(gaze.toCsvRow()) },
             onError  = { android.util.Log.e(TAG, "Face distance capture failed", it) }
         ).also { it.start() }
     }
@@ -268,8 +286,13 @@ class FaceDistanceService : LifecycleService() {
     override fun onDestroy() {
         foregroundServiceStarted = false
         fallbackHandler.removeCallbacks(fallbackRetryRunnable)
-        unregisterReceiver(screenReceiver)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(foregroundAppReceiver)
+        // Guarded: if onCreate() ever threw before registration completed, onDestroy()
+        // still runs and an unmatched unregisterReceiver() throws IllegalArgumentException,
+        // crashing teardown.
+        try { unregisterReceiver(screenReceiver) } catch (_: IllegalArgumentException) {}
+        try {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(foregroundAppReceiver)
+        } catch (_: IllegalArgumentException) {}
         (application as? PDCollectApp)?.removeAppForegroundListener(appForegroundListener)
         stopRecorder()
         dataManager.closeAll()

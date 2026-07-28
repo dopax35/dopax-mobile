@@ -47,8 +47,46 @@ class FaceDistanceRecorder(
     private val sampleIntervalMs: Long = Constants.FACE_CAPTURE_INTERVAL_MS,
     private val onSample: (DistanceSample) -> Unit,
     private val onBlink: ((BlinkSample) -> Unit)? = null,
+    private val onGaze: ((GazeSample) -> Unit)? = null,
     private val onError: (Throwable) -> Unit = {}
 ) {
+
+    /** Emitted per frame for eye/pupil gaze tracking across timestamps. */
+    data class GazeSample(
+        val timestampMs: Long,
+        val leftGazeX: Float,
+        val leftGazeY: Float,
+        val rightGazeX: Float,
+        val rightGazeY: Float,
+        val leftBlink: Float,
+        val rightBlink: Float,
+        val lookAtX: Float,
+        val lookAtY: Float,
+        val lookAtZ: Float,
+        val method: String
+    ) {
+        fun toCsvRow(): String {
+            return listOf(
+                timestampMs.toString(),
+                formatFloat(leftGazeX),
+                formatFloat(leftGazeY),
+                formatFloat(rightGazeX),
+                formatFloat(rightGazeY),
+                formatFloat(leftBlink),
+                formatFloat(rightBlink),
+                formatFloat(lookAtX),
+                formatFloat(lookAtY),
+                formatFloat(lookAtZ),
+                method
+            ).joinToString(",")
+        }
+
+        private fun formatFloat(value: Float): String = if (value.isFinite()) {
+            String.format(Locale.US, "%.4f", value)
+        } else {
+            "0.0000"
+        }
+    }
 
     /** Emitted once per completed blink (eyes-closed → eyes-open transition). */
     data class BlinkSample(
@@ -221,8 +259,11 @@ class FaceDistanceRecorder(
                     rotationDegrees = rotation
                 )
                 onSample(sample)
-                if (face != null && onBlink != null) {
-                    processBlink(face, timestamp)
+                if (face != null) {
+                    if (onBlink != null) {
+                        processBlink(face, timestamp)
+                    }
+                    onGaze?.invoke(buildGazeSample(timestamp, face, frameWidth, frameHeight))
                 }
             }
             .addOnFailureListener(onError)
@@ -421,6 +462,45 @@ class FaceDistanceRecorder(
                 rightTroughProb = event.rightTroughProb,
                 blinkRatePerMin = event.blinkRatePerMin
             )
+        )
+    }
+
+    private fun buildGazeSample(
+        timestampMs: Long,
+        face: Face,
+        frameWidthPx: Int,
+        frameHeightPx: Int
+    ): GazeSample {
+        val leftEye = face.getLandmark(FaceLandmark.LEFT_EYE)?.position
+        val rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE)?.position
+
+        val boundingBox = face.boundingBox
+        val boxWidth = boundingBox.width().toFloat().coerceAtLeast(1.0f)
+        val boxHeight = boundingBox.height().toFloat().coerceAtLeast(1.0f)
+        val boxCenterX = boundingBox.centerX().toFloat()
+        val boxCenterY = boundingBox.centerY().toFloat()
+
+        // Normalize pupil/eye position relative to face bounding box
+        val leftGazeX = leftEye?.let { (it.x - boxCenterX) / boxWidth } ?: 0f
+        val leftGazeY = leftEye?.let { (it.y - boxCenterY) / boxHeight } ?: 0f
+        val rightGazeX = rightEye?.let { (it.x - boxCenterX) / boxWidth } ?: 0f
+        val rightGazeY = rightEye?.let { (it.y - boxCenterY) / boxHeight } ?: 0f
+
+        val leftBlink = face.leftEyeOpenProbability ?: 1.0f
+        val rightBlink = face.rightEyeOpenProbability ?: 1.0f
+
+        return GazeSample(
+            timestampMs = timestampMs,
+            leftGazeX = leftGazeX,
+            leftGazeY = leftGazeY,
+            rightGazeX = rightGazeX,
+            rightGazeY = rightGazeY,
+            leftBlink = leftBlink,
+            rightBlink = rightBlink,
+            lookAtX = face.headEulerAngleY, // head yaw proxy
+            lookAtY = face.headEulerAngleZ, // head roll proxy
+            lookAtZ = face.headEulerAngleX, // head pitch proxy
+            method = "mlkit_face_landmarks"
         )
     }
 

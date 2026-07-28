@@ -21,6 +21,7 @@ class DataManager(private val context: Context, private val userProfile: UserPro
 
     private val writers = mutableMapOf<String, BufferedWriter>()
     private var currentDate = TimeUtils.todayDateString()
+    @Volatile private var closed = false
     private val dashboardSummaryStore = DashboardSummaryStore(context, userProfile, this)
 
     // ── Background I/O thread ───────────────────────────────────────────────
@@ -70,6 +71,7 @@ class DataManager(private val context: Context, private val userProfile: UserPro
      */
     @Synchronized
     fun initializeAllDailyLogs() {
+        if (closed) return
         android.util.Log.d("DataManager", "Initializing all daily logs for $currentDate...")
         // Passive / sensor files
         getWriter(Constants.SENSORS_FILE, Constants.SENSORS_HEADER)
@@ -78,6 +80,7 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         getWriter(Constants.KEYS_FILE, Constants.KEYS_HEADER)
         getWriter(Constants.APPS_FILE, Constants.APPS_HEADER)
         getWriter(Constants.FACE_DISTANCE_FILE, Constants.FACE_DISTANCE_HEADER)
+        getWriter(Constants.GAZE_FILE, Constants.GAZE_HEADER)
         getWriter(Constants.MEDICATION_FILE, Constants.MEDICATION_HEADER)
         getWriter(Constants.PHYSICAL_ACTIVITY_FILE, Constants.PHYSICAL_ACTIVITY_HEADER)
         getWriter(Constants.SLEEP_FILE, Constants.SLEEP_HEADER)
@@ -141,9 +144,36 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         return writer
     }
 
+    /**
+     * Every writer mutation in this class funnels through here so it only ever runs on
+     * [ioThread]. That single-threaded serialization is what actually guarantees safety —
+     * a [BufferedWriter] obtained from [getWriter] on one thread could otherwise be closed
+     * by a day-rollover on another thread between the lookup and the write/flush call.
+     * Also guards against writing after [closeAll] has torn down the writer map.
+     */
+    private fun ioPost(tag: String, block: () -> Unit) {
+        ioHandler.post {
+            if (closed) return@post
+            try {
+                block()
+            } catch (e: Exception) {
+                android.util.Log.e("DataManager", "Error in $tag", e)
+            }
+        }
+    }
+
+    private fun postWrite(filename: String, header: String, row: String, flush: Boolean = false) {
+        ioPost(filename) {
+            val writer = getWriter(filename, header)
+            writer.write(row)
+            writer.newLine()
+            if (flush) writer.flush()
+        }
+    }
+
     fun writeSensorData(rows: List<String>) {
         val snapshot = rows.toList()
-        ioHandler.post {
+        ioPost(Constants.SENSORS_FILE) {
             val writer = getWriter(Constants.SENSORS_FILE, Constants.SENSORS_HEADER)
             for (row in snapshot) {
                 writer.write(row)
@@ -152,171 +182,53 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         }
     }
 
-    fun writeScreenStateData(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.SCREEN_STATE_FILE, Constants.SCREEN_STATE_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeScreenStateData(row: String) = postWrite(Constants.SCREEN_STATE_FILE, Constants.SCREEN_STATE_HEADER, row)
 
-    fun writeTouchEvent(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.TOUCH_FILE, Constants.TOUCH_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeTouchEvent(row: String) = postWrite(Constants.TOUCH_FILE, Constants.TOUCH_HEADER, row)
 
-    fun writeKeyEvent(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.KEYS_FILE, Constants.KEYS_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeKeyEvent(row: String) = postWrite(Constants.KEYS_FILE, Constants.KEYS_HEADER, row)
 
-    fun writeAppEvent(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.APPS_FILE, Constants.APPS_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeAppEvent(row: String) = postWrite(Constants.APPS_FILE, Constants.APPS_HEADER, row)
 
-    fun writeFaceDistanceData(row: String) {
-        ioHandler.post {
-            try {
-                val writer = getWriter(Constants.FACE_DISTANCE_FILE, Constants.FACE_DISTANCE_HEADER)
-                writer.write(row)
-                writer.newLine()
-            } catch (e: Exception) {
-                android.util.Log.e("DataManager", "Error writing face distance data", e)
-            }
-        }
-    }
+    fun writeFaceDistanceData(row: String) = postWrite(Constants.FACE_DISTANCE_FILE, Constants.FACE_DISTANCE_HEADER, row)
 
-    @Synchronized
-    fun writeTmtResult(row: String) {
-        val writer = getWriter(Constants.TMT_RESULTS_FILE, Constants.TMT_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writeGazeData(row: String) = postWrite(Constants.GAZE_FILE, Constants.GAZE_HEADER, row)
 
-    @Synchronized
-    fun writeProfileData(row: String) {
-        val writer = getWriter(Constants.PROFILE_FILE, Constants.PROFILE_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writeTmtResult(row: String) = postWrite(Constants.TMT_RESULTS_FILE, Constants.TMT_HEADER, row, flush = true)
 
-    @Synchronized
+    fun writeProfileData(row: String) = postWrite(Constants.PROFILE_FILE, Constants.PROFILE_HEADER, row, flush = true)
+
     fun writeProfileSnapshot() {
         writeProfileData(buildProfileRow(userProfile))
     }
 
-    @Synchronized
-    fun writeQuestionnaireData(row: String) {
-        val writer = getWriter(Constants.QUESTIONNAIRE_FILE, Constants.QUESTIONNAIRE_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writeQuestionnaireData(row: String) = postWrite(Constants.QUESTIONNAIRE_FILE, Constants.QUESTIONNAIRE_HEADER, row, flush = true)
 
-    fun writeFingerTappingData(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.TEST_FINGER_TAPPING_FILE, Constants.FINGER_TAPPING_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeFingerTappingData(row: String) = postWrite(Constants.TEST_FINGER_TAPPING_FILE, Constants.FINGER_TAPPING_HEADER, row)
 
-    fun writeHandTurningData(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.TEST_HAND_TURNING_FILE, Constants.HAND_TURNING_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeHandTurningData(row: String) = postWrite(Constants.TEST_HAND_TURNING_FILE, Constants.HAND_TURNING_HEADER, row)
 
-    fun writeSpiralData(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.TEST_SPIRAL_FILE, Constants.SPIRAL_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeSpiralData(row: String) = postWrite(Constants.TEST_SPIRAL_FILE, Constants.SPIRAL_HEADER, row)
 
-    fun writeLegAgilityData(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.TEST_LEG_AGILITY_FILE, Constants.LEG_AGILITY_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeLegAgilityData(row: String) = postWrite(Constants.TEST_LEG_AGILITY_FILE, Constants.LEG_AGILITY_HEADER, row)
 
-    @Synchronized
-    fun writeMedicationData(row: String) {
-        val writer = getWriter(Constants.MEDICATION_FILE, Constants.MEDICATION_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writeMedicationData(row: String) = postWrite(Constants.MEDICATION_FILE, Constants.MEDICATION_HEADER, row, flush = true)
 
-    @Synchronized
-    fun writePhysicalActivityData(row: String) {
-        val writer = getWriter(Constants.PHYSICAL_ACTIVITY_FILE, Constants.PHYSICAL_ACTIVITY_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writePhysicalActivityData(row: String) = postWrite(Constants.PHYSICAL_ACTIVITY_FILE, Constants.PHYSICAL_ACTIVITY_HEADER, row, flush = true)
 
-    @Synchronized
-    fun writeSleepData(row: String) {
-        val writer = getWriter(Constants.SLEEP_FILE, Constants.SLEEP_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writeSleepData(row: String) = postWrite(Constants.SLEEP_FILE, Constants.SLEEP_HEADER, row, flush = true)
 
-    @Synchronized
-    fun writeVoiceLogData(row: String) {
-        val writer = getWriter(Constants.VOICE_LOG_FILE, Constants.VOICE_LOG_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writeVoiceLogData(row: String) = postWrite(Constants.VOICE_LOG_FILE, Constants.VOICE_LOG_HEADER, row, flush = true)
 
-    @Synchronized
-    fun writeBlinkData(row: String) {
-        val writer = getWriter(Constants.BLINK_FILE, Constants.BLINK_HEADER)
-        writer.write(row)
-        writer.newLine()
-        writer.flush()
-    }
+    fun writeBlinkData(row: String) = postWrite(Constants.BLINK_FILE, Constants.BLINK_HEADER, row, flush = true)
 
-    fun writeHeartRateData(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.HR_FILE, Constants.HR_HEADER)
-            writer.write(row)
-            writer.newLine()
-        }
-    }
+    fun writeHeartRateData(row: String) = postWrite(Constants.HR_FILE, Constants.HR_HEADER, row)
 
-    fun writeBeanieTemperatureData(row: String) {
-        ioHandler.post {
-            val writer = getWriter(Constants.BEANIE_TEMP_FILE, Constants.BEANIE_TEMP_HEADER)
-            writer.write(row)
-            writer.newLine()
-            writer.flush()
-        }
-    }
+    fun writeBeanieTemperatureData(row: String) = postWrite(Constants.BEANIE_TEMP_FILE, Constants.BEANIE_TEMP_HEADER, row, flush = true)
 
     fun writeBeanieImuData(rows: List<String>) {
         val snapshot = rows.toList()
-        ioHandler.post {
+        ioPost(Constants.BEANIE_IMU_FILE) {
             val writer = getWriter(Constants.BEANIE_IMU_FILE, Constants.BEANIE_IMU_HEADER)
             for (row in snapshot) {
                 writer.write(row)
@@ -326,13 +238,20 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         }
     }
 
+    /**
+     * Closing must itself run *on [ioThread]*, ordered after every write already queued —
+     * otherwise a write posted between the flush-latch firing and this method's own
+     * writer-close loop can find an empty [writers] map, lazily reopen a brand-new writer
+     * via [getWriter], and leak it (never flushed or closed, final rows likely lost). The
+     * [closed] flag then makes any write attempted after this point a safe no-op instead of
+     * silently reopening a writer for a `DataManager` that's already been torn down.
+     */
     fun closeAll() {
+        if (closed) return
         val latch = java.util.concurrent.CountDownLatch(1)
-        ioHandler.post { latch.countDown() }
-        try { latch.await(5, java.util.concurrent.TimeUnit.SECONDS) } catch (_: InterruptedException) {}
-
-        synchronized(this) {
-            stopPeriodicFlush()
+        stopPeriodicFlush()
+        ioHandler.post {
+            closed = true
             writers.values.forEach { writer ->
                 try {
                     writer.flush()
@@ -340,8 +259,11 @@ class DataManager(private val context: Context, private val userProfile: UserPro
                 } catch (_: Exception) {}
             }
             writers.clear()
-            ioThread.quitSafely()
+            latch.countDown()
         }
+        try { latch.await(5, java.util.concurrent.TimeUnit.SECONDS) } catch (_: InterruptedException) {}
+        closed = true
+        ioThread.quitSafely()
     }
 
     fun getDataSizeBytes(): Long {

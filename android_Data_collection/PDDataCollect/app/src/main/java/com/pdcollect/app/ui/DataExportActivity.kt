@@ -178,6 +178,16 @@ class DataExportActivity : AppCompatActivity() {
     }
 
     private fun confirmDelete(dateStr: String) {
+        // Defence in depth: the "Delete" button is already disabled for today in
+        // onBindViewHolder, but guard here too since active foreground services
+        // (PDCollectService, FaceDistanceService, etc.) hold open writers to today's
+        // directory in this same process — deleting it out from under them would
+        // unlink the directory while writes keep silently succeeding into thin air,
+        // losing the rest of that day's data with no error surfaced anywhere.
+        if (dateStr == com.pdcollect.app.util.TimeUtils.todayDateString()) {
+            Toast.makeText(this, "Today's data can't be deleted while it's still being collected", Toast.LENGTH_SHORT).show()
+            return
+        }
         AlertDialog.Builder(this)
             .setTitle("Delete Data")
             .setMessage("This will permanently delete all data for $dateStr. This action cannot be undone.")
@@ -249,12 +259,16 @@ class DataExportActivity : AppCompatActivity() {
             // Show upload checkmark for past dates with a marker file.
             // Never show it for today — data is still being collected.
             val today = com.pdcollect.app.util.TimeUtils.todayDateString()
-            val isUploaded = dateStr != today && entry.isUploaded
+            val isToday = dateStr == today
+            val isUploaded = !isToday && entry.isUploaded
             val isDeleting = dateStr in deletingDates
             holder.ivUploaded.visibility = if (isUploaded) View.VISIBLE else View.GONE
             holder.btnExport.isEnabled = !isUploaded && !isDeleting
             holder.btnExport.text = if (isUploaded) "Uploaded" else "Export"
-            holder.btnDelete.isEnabled = !isDeleting
+            // Today's directory is actively being written to by foreground services in
+            // this process — deleting it mid-collection would unlink it out from under
+            // their open file writers. See confirmDelete() for the full explanation.
+            holder.btnDelete.isEnabled = !isDeleting && !isToday
             holder.btnDelete.text = if (isDeleting) "Deleting" else "Delete"
         }
 

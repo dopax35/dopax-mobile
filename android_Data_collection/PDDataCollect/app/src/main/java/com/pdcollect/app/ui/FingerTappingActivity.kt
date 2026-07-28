@@ -30,6 +30,7 @@ class FingerTappingActivity : AppCompatActivity() {
     private var isBatteryMode = false
     private var session: MotorTestSession? = null
     private var endRowWritten = false
+    private val finishHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     // Finger-tapping header has 1 sensor column between event and side: button_id.
     private val sensorColCount = 1
@@ -169,7 +170,8 @@ class FingerTappingActivity : AppCompatActivity() {
         Toast.makeText(this, "Test complete: $tapCount whacks", Toast.LENGTH_LONG).show()
 
         val forceHand = intent.getStringExtra("EXTRA_HAND")
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        finishHandler.postDelayed({
+            if (isFinishing || isDestroyed) return@postDelayed
             if (isBatteryMode) {
                 // Battery mode: signal coordinator to advance
                 setResult(android.app.Activity.RESULT_OK)
@@ -210,6 +212,10 @@ class FingerTappingActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         testTimer?.cancel()
+        // Cancel any pending post-test transition — without this, a Back-press during
+        // the 1.5s window after finishTest() still fires the delayed callback against a
+        // finishing/destroyed Activity, and AlertDialog.show() below throws BadTokenException.
+        finishHandler.removeCallbacksAndMessages(null)
         // Backstop: if the activity dies mid-trial, still write END.
         writeEndRow()
         dataManager.closeAll()

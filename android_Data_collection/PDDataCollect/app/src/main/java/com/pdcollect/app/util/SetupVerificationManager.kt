@@ -55,6 +55,20 @@ class SetupVerificationManager {
                 missing.add("Notifications")
             }
 
+            // 7. Degraded: App Usage Detection — Android periodically revokes this on its own
+            // (auto-reset permissions for rarely-opened apps) and there's no ongoing runtime
+            // prompt for it, so it must be actively re-checked or app-tagging data silently
+            // stops without anyone noticing.
+            if (!PermissionUtils.hasUsageStatsPermission(context)) {
+                missing.add("App Usage Detection")
+            }
+
+            // 8. Degraded: Recording Indicator overlay — same class of silently-revocable
+            // permission as usage stats.
+            if (!PermissionUtils.canDrawOverlays(context)) {
+                missing.add("Recording Indicator")
+            }
+
             val status = when {
                 missing.isEmpty() -> HealthStatus.OPTIMAL
                 missing.any {
