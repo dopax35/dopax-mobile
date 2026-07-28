@@ -1,7 +1,39 @@
-# DopaX 3.7.30 (versionCode 116) - release checklist
+# DopaX 3.7.31 (versionCode 117) - release checklist
 
 End-to-end "from clean checkout to AAB uploaded to Play Console
 Internal Testing" steps. Tick items as you go.
+
+---
+
+## What's in 3.7.31 (vc 117)
+
+Fixes the remaining Beanie failure mode after vc 116: the hat still
+dropped the connection 10-30s after every connect. Root cause (found by
+protocol comparison with the reference lukasIFM/BeanieAppAndroid app):
+the hat logs history into its internal NVS flash, every RTC seed we send
+on connect writes a START marker into that flash, and the reference app
+*erases the flash whenever usage reaches 5%* during live streaming —
+this app never erased it at all. Months of accumulation left the
+firmware sitting on full/degraded flash, destabilizing it shortly after
+each connect.
+
+Changes (BeanieService.kt):
+- Storage notifications (0xA1) are now parsed instead of discarded; at
+  >= 5% usage the app sends ERASE_ALL (0x03), matching the reference
+  app's live auto-erase.
+- The firmware drops BLE during the ~90s erase — this is now an
+  *expected* disconnect: no failure heuristics fire, the stall watchdog
+  and warmup RTC retries are suppressed for the window, and the normal
+  on-connect RTC seed doubles as the post-erase re-seed.
+- Safety valves: no erase in the first 5s of a connection, max one
+  erase per hour (protects the flash from erase loops on misreads).
+
+**Smoke-test for this release**: pair the hat and record. On first
+connect with a full hat, expect the notification to show
+"Beanie storage N% - erasing (approx. 90s)...", one disconnect, then an
+automatic reconnect followed by *stable* 5s-cadence rows in
+`beanie_temperature.csv` for 30+ minutes. Subsequent connects should
+show storage < 5% and no erase.
 
 ---
 

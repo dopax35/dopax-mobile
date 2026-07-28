@@ -1,0 +1,2 @@
+- Beanie hat: fixed repeated disconnects 10-30 seconds after connecting. The app now manages the hat's internal storage the same way the manufacturer's app does (automatic ~90-second cleanup when storage fills up), which keeps the hat's firmware stable during long recording sessions.
+- During the one-time storage cleanup the hat briefly disconnects and reconnects automatically — this is expected and shown in the notification.

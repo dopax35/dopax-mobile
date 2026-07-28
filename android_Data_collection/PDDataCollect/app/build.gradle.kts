@@ -137,8 +137,11 @@ android {
         // v3.7.30 (vc 116): Stability hardening (writer rotation, FGS permission guards, delete-today
         // guard) + Beanie BLE reliability: autoConnect passthrough, live-stream stall watchdog,
         // shape-based packet filtering (fixes garbage temp rows + silent recording stalls).
-        versionCode = 116
-        versionName = "3.7.30"
+        // v3.7.31 (vc 117): Beanie NVS storage management — erase hat flash at 5% usage
+        // (reference-app parity); fixes the connect → stream 10-30s → disconnect loop caused by
+        // never-erased NVS destabilizing the firmware.
+        versionCode = 117
+        versionName = "3.7.31"
     }
 
     signingConfigs {
