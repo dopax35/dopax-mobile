@@ -45,6 +45,7 @@
 		93B40DE2C0FBB879893185D7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */; };
 		977858DF39D1C4A8BF6370FB /* SensorReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1116C47EADDC017996AE76 /* SensorReading.swift */; };
 		A361B4AA5513779D444BABB4 /* FaceDistanceSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */; };
+		E7A1B2C3D4E5F60718293A4B /* GazeSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E1D2C3B4A5968778695A4B /* GazeSample.swift */; };
 		A6C9ECBE23F8E01DAB81E4B6 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B695E6A88B41A4C62473A13 /* Constants.swift */; };
 		A7A7001026D9B57CE4E514AC /* KeystrokeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */; };
 		B2CA4943BB2A0FD47C824444 /* HandTurningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45430F02B73F6AD368333557 /* HandTurningView.swift */; };
@@ -154,6 +155,7 @@
 		BE7F96C7CA690AA371902185 /* CloudUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploader.swift; sourceTree = "<group>"; };
 		BEC0CD58496F5F46414D1507 /* AppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEvent.swift; sourceTree = "<group>"; };
 		BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceDistanceSample.swift; sourceTree = "<group>"; };
+		F0E1D2C3B4A5968778695A4B /* GazeSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazeSample.swift; sourceTree = "<group>"; };
 		C3081E4BFBCEB41B97984E56 /* PDCollectiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PDCollectiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		CE537F928BE88E3762FAB657 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 				6FCDAC414ADF66D0189ADC10 /* BeanieTemperatureReading.swift */,
 				BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */,
 				D29757E221F20ECE18EED954 /* GaitMetric.swift */,
+				F0E1D2C3B4A5968778695A4B /* GazeSample.swift */,
 				4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */,
 				5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */,
 				48F1ED50F27D20344A3C400B /* MedicationEvent.swift */,
@@ -482,6 +485,7 @@
 				0B2079CA1977261E10701E00 /* Extensions.swift in Sources */,
 				DD5320E6B151098F80D001D6 /* FaceDistanceManager.swift in Sources */,
 				A361B4AA5513779D444BABB4 /* FaceDistanceSample.swift in Sources */,
+				E7A1B2C3D4E5F60718293A4B /* GazeSample.swift in Sources */,
 				D95BB2D0B9A8F755A9947A15 /* FingerTappingView.swift in Sources */,
 				35AA01C2FB7652E9B8CED696 /* GaitMetric.swift in Sources */,
 				5F62A13E03D4E6EBF8F472A1 /* GamificationManager.swift in Sources */,
@@ -539,7 +543,7 @@
 				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 98;
+				CURRENT_PROJECT_VERSION = 116;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = YD2UPLT5JG;
 				INFOPLIST_FILE = PDCollectiOS/Info.plist;
@@ -548,7 +552,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.7.14;
+				MARKETING_VERSION = 3.7.30;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -648,7 +652,7 @@
 				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 98;
+				CURRENT_PROJECT_VERSION = 116;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = YD2UPLT5JG;
 				INFOPLIST_FILE = PDCollectiOS/Info.plist;
@@ -657,7 +661,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.7.14;
+				MARKETING_VERSION = 3.7.30;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
