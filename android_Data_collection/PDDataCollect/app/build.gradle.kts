@@ -158,9 +158,10 @@ android {
         // AND the scan binder thread, and read on the BLE binder thread with no
         // synchronisation; ignoreStaleGattCallback() closes whatever it judges stale, so a
         // stale read closed the live connection. All GATT/scan callbacks are now pinned to
-        // the main thread. Also: reject the all-zero temperature sentinel (found by test).
-        versionCode = 121
-        versionName = "3.7.35"
+        // v3.7.36 (vc 122): Beanie BLE connection stability and flash management alignment
+        // with lukasIFM reference protocol (BLEReader.swift / BleViewModel.kt).
+        versionCode = 122
+        versionName = "3.7.36"
     }
 
     signingConfigs {
