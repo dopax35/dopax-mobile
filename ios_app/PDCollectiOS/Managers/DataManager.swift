@@ -42,6 +42,11 @@ class DataManager: ObservableObject {
                 (Constants.CSV.gaitMetricsFile,      Constants.CSV.gaitMetricsHeader),
                 (Constants.CSV.pedometerFile,        Constants.CSV.pedometerHeader),
                 (Constants.CSV.motionActivityFile,   Constants.CSV.motionActivityHeader),
+                // SensorKit files
+                (Constants.CSV.sensorKitAccelerometerFile, Constants.CSV.sensorKitAccelerometerHeader),
+                (Constants.CSV.sensorKitRotationRateFile,  Constants.CSV.sensorKitRotationRateHeader),
+                (Constants.CSV.sensorKitKeyboardFile,      Constants.CSV.sensorKitKeyboardHeader),
+                (Constants.CSV.sensorKitDeviceUsageFile,   Constants.CSV.sensorKitDeviceUsageHeader),
                 // Beanie files
                 (Constants.CSV.beanieTemperatureFile, Constants.CSV.beanieTemperatureHeader),
                 (Constants.CSV.beanieImuFile,         Constants.CSV.beanieImuHeader),
@@ -467,6 +472,28 @@ class DataManager: ObservableObject {
         try? fm.removeItem(at: claimFile)
     }
 
+    // MARK: - SensorKit Writes
+
+    func writeSensorKitAccelerometerRow(timestampMs: Int64, x: Double, y: Double, z: Double) {
+        let row = "\(timestampMs),\(x),\(y),\(z)\n"
+        append(row, to: todayDir, filename: Constants.CSV.sensorKitAccelerometerFile, header: Constants.CSV.sensorKitAccelerometerHeader)
+    }
+
+    func writeSensorKitRotationRateRow(timestampMs: Int64, x: Double, y: Double, z: Double) {
+        let row = "\(timestampMs),\(x),\(y),\(z)\n"
+        append(row, to: todayDir, filename: Constants.CSV.sensorKitRotationRateFile, header: Constants.CSV.sensorKitRotationRateHeader)
+    }
+
+    func writeSensorKitKeyboardRow(timestampMs: Int64, totalWords: Int, deleteCount: Int, pauseCount: Int, typingSpeed: Double) {
+        let row = "\(timestampMs),\(totalWords),\(deleteCount),\(pauseCount),\(typingSpeed),0,0\n"
+        append(row, to: todayDir, filename: Constants.CSV.sensorKitKeyboardFile, header: Constants.CSV.sensorKitKeyboardHeader)
+    }
+
+    func writeSensorKitDeviceUsageRow(timestampMs: Int64, durationSeconds: TimeInterval, totalUnlocks: Int, unlockDurationSeconds: TimeInterval, webUsageSeconds: TimeInterval) {
+        let row = "\(timestampMs),\(durationSeconds),\(totalUnlocks),\(unlockDurationSeconds),\(webUsageSeconds),{}\n"
+        append(row, to: todayDir, filename: Constants.CSV.sensorKitDeviceUsageFile, header: Constants.CSV.sensorKitDeviceUsageHeader)
+    }
+
     // MARK: - ZIP
 
     func zipDate(_ dateKey: String) throws -> URL {
@@ -500,6 +527,10 @@ class DataManager: ObservableObject {
                 (Constants.CSV.gaitMetricsFile,      Constants.CSV.gaitMetricsHeader),
                 (Constants.CSV.pedometerFile,        Constants.CSV.pedometerHeader),
                 (Constants.CSV.motionActivityFile,   Constants.CSV.motionActivityHeader),
+                (Constants.CSV.sensorKitAccelerometerFile, Constants.CSV.sensorKitAccelerometerHeader),
+                (Constants.CSV.sensorKitRotationRateFile,  Constants.CSV.sensorKitRotationRateHeader),
+                (Constants.CSV.sensorKitKeyboardFile,      Constants.CSV.sensorKitKeyboardHeader),
+                (Constants.CSV.sensorKitDeviceUsageFile,   Constants.CSV.sensorKitDeviceUsageHeader),
                 (Constants.CSV.beanieTemperatureFile, Constants.CSV.beanieTemperatureHeader),
                 (Constants.CSV.beanieImuFile,         Constants.CSV.beanieImuHeader),
                 (Constants.CSV.fingerTappingFile,    Constants.CSV.fingerTappingHeader),

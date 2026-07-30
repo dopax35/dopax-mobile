@@ -18,6 +18,7 @@ class AppState: ObservableObject {
     let passiveSensor  = PassiveSensorService()
     let faceDistance   = FaceDistanceManager()
     let appEventLogger = AppEventLogger()
+    let sensorKitManager = SensorKitManager()
     let bgCollection   = BackgroundCollectionManager.shared
 
     // MARK: - Bluetooth
@@ -78,9 +79,21 @@ class AppState: ObservableObject {
             .sink { [weak self] newId in self?.dataManager.userId = newId }
             .store(in: &cancellables)
 
+        sensorKitManager.configure(dataManager: dataManager)
+
         bgCollection.configure(healthKit: healthKitManager,
                                data: dataManager,
-                               sensor: passiveSensor)
+                               sensor: passiveSensor,
+                               sensorKit: sensorKitManager)
+
+        // Fetch SensorKit data whenever app becomes active
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .receive(on: DispatchQueue.global(qos: .utility))
+            .sink { [weak self] _ in
+                guard let self, self.isCollecting else { return }
+                self.sensorKitManager.fetchSensorKitData()
+            }
+            .store(in: &cancellables)
 
         // Import keystrokes whenever app becomes active (foreground)
         NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
@@ -159,6 +172,7 @@ class AppState: ObservableObject {
         // wasn't open — see PedometerHistoryService / MotionActivityHistoryService)
         Task { await PedometerHistoryService.shared.syncHistory(dataManager: dataManager) }
         Task { await MotionActivityHistoryService.shared.syncHistory(dataManager: dataManager) }
+        sensorKitManager.fetchSensorKitData()
         // FaceDistanceManager is started separately after camera permission is granted
     }
 

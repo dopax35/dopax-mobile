@@ -48,13 +48,16 @@ class BackgroundCollectionManager {
     private weak var healthKitManager: HealthKitManager?
     private weak var dataManager: DataManager?
     private weak var passiveSensor: PassiveSensorService?
+    private weak var sensorKitManager: SensorKitManager?
 
     func configure(healthKit: HealthKitManager,
                    data: DataManager,
-                   sensor: PassiveSensorService) {
+                   sensor: PassiveSensorService,
+                   sensorKit: SensorKitManager? = nil) {
         self.healthKitManager = healthKit
         self.dataManager      = data
         self.passiveSensor    = sensor
+        self.sensorKitManager = sensorKit
     }
 
     // MARK: - Registration (call once at app startup before any task fires)
@@ -127,6 +130,9 @@ class BackgroundCollectionManager {
             if let dm = dataManager {
                 await PedometerHistoryService.shared.syncHistory(dataManager: dm)
                 await MotionActivityHistoryService.shared.syncHistory(dataManager: dm)
+            }
+            if let sk = sensorKitManager {
+                sk.fetchSensorKitData()
             }
             completion.complete(success: true)
         }

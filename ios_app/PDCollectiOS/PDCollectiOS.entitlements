@@ -14,5 +14,12 @@
 	<array>
 		<string>group.com.oriw.pdcollect.ios1.shared</string>
 	</array>
+	<key>com.apple.developer.sensorkit.reader.allow</key>
+	<array>
+		<string>accelerometer</string>
+		<string>rotation-rate</string>
+		<string>keyboard-metrics</string>
+		<string>device-usage</string>
+	</array>
 </dict>
 </plist>

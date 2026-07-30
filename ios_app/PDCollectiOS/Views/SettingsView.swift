@@ -102,6 +102,58 @@ struct SettingsView: View {
                         .font(.caption)
                 }
 
+                // MARK: - SensorKit Reader Access
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("SensorKit Framework")
+                                .fontWeight(.medium)
+                            Spacer()
+                            if appState.sensorKitManager.isFetching {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                statusBadge(running: appState.sensorKitManager.isAvailable)
+                            }
+                        }
+                        
+                        ForEach(Array(appState.sensorKitManager.authorizationStatuses.keys.sorted()), id: \.self) { key in
+                            HStack {
+                                Text(key)
+                                    .font(.subheadline)
+                                Spacer()
+                                Text(appState.sensorKitManager.authorizationStatuses[key] ?? "Unknown")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(appState.sensorKitManager.authorizationStatuses[key] == "Authorized" ? .green : .orange)
+                            }
+                        }
+                    }
+
+                    Button(action: {
+                        appState.sensorKitManager.requestAuthorization { _, _ in }
+                    }) {
+                        Label("Request SensorKit Authorization", systemImage: "key.fill")
+                            .font(.subheadline)
+                    }
+
+                    Button(action: {
+                        appState.sensorKitManager.fetchSensorKitData()
+                    }) {
+                        Label("Fetch SensorKit Data Now", systemImage: "arrow.clockwise")
+                            .font(.subheadline)
+                    }
+
+                    if let lastDate = appState.sensorKitManager.lastFetchDate {
+                        LabeledContent("Last Fetch", value: lastDate.formatted(date: .omitted, time: .standard))
+                    }
+                } header: {
+                    Label("SensorKit Reader Access", systemImage: "sensor.fill")
+                } footer: {
+                    Text("Approved streams under Case-ID: 20926388: Accelerometer, RotationRate, KeyboardMetrics, DeviceUsage.")
+                        .font(.caption)
+                }
+
 
                 Section {
                     NavigationLink {

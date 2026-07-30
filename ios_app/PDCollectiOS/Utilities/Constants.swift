@@ -63,6 +63,10 @@ enum Constants {
         static let motionActivityFile   = "motion_activity.csv"
         static let blinkLogFile         = "blink_log.csv"
         static let gazeFile             = "gaze_tracking.csv"
+        static let sensorKitAccelerometerFile = "sensorkit_accelerometer.csv"
+        static let sensorKitRotationRateFile  = "sensorkit_rotation_rate.csv"
+        static let sensorKitKeyboardFile      = "sensorkit_keyboard_metrics.csv"
+        static let sensorKitDeviceUsageFile   = "sensorkit_device_usage.csv"
 
         // ── Passive / sensor headers ──────────────────────────────────────
         static let questionnaireHeader  = "timestamp_ms,date,time,q1_text,q2_score,q3_score,q4_score,q5_score,q6_sleep_yesno,q6_sleep_score,q6_smell_yesno,q6_smell_score,q6_const_yesno,q6_const_score,q6_anxiety_yesno,q6_anxiety_score,q6_depr_yesno,q6_depr_score\n"
@@ -110,6 +114,10 @@ enum Constants {
         // Multiple flags can be true on one row (Apple's own model allows
         // ambiguous transitions, e.g. walking+automotive uncertainty).
         static let motionActivityHeader = "timestamp_ms,activity_start_ms,confidence,stationary,walking,running,automotive,cycling,unknown\n"
+        static let sensorKitAccelerometerHeader = "timestamp_ms,x,y,z\n"
+        static let sensorKitRotationRateHeader  = "timestamp_ms,x,y,z\n"
+        static let sensorKitKeyboardHeader      = "timestamp_ms,total_words,delete_count,pause_count,typing_speed_wpm,char_count,path_paused_count\n"
+        static let sensorKitDeviceUsageHeader   = "timestamp_ms,duration_s,total_unlocks,total_unlock_duration_s,web_usage_s,app_category_usage_json\n"
     }
 
     // MARK: - Test Durations

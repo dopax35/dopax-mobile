@@ -43,6 +43,12 @@ targets:
         UILaunchStoryboardName: "Launch Screen"
         NSPrincipalClass: "$(PRODUCT_MODULE_NAME).LoggingApplication"
         NSMotionUsageDescription: "This app uses motion data to detect physical activity and monitor movement patterns"
+        NSSensorKitUsageDescription: "PDCollect accesses SensorKit data streams to generate digital markers for Parkinson's Disease research."
+        NSSensorKitPrivacyPolicyURL: "https://pdcollect.web.app/privacy.html"
+        NSSensorKitUsageDescriptionAccelerometer: "Used to record passive high-resolution accelerometer data for Parkinson's Disease motion analysis."
+        NSSensorKitUsageDescriptionRotationRate: "Used to record passive gyroscope rotation rate data for Parkinson's Disease tremor and movement analysis."
+        NSSensorKitUsageDescriptionKeyboardMetrics: "Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease."
+        NSSensorKitUsageDescriptionDeviceUsage: "Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease."
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
@@ -64,6 +70,11 @@ targets:
           - Default
         com.apple.security.application-groups:
           - group.com.oriw.pdcollect.ios1.shared
+        com.apple.developer.sensorkit.reader.allow:
+          - accelerometer
+          - rotation-rate
+          - keyboard-metrics
+          - device-usage
     capabilities:
       healthKit:
         enabled: true

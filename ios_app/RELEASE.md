@@ -2,6 +2,22 @@
 
 ---
 
+## 3.8.0 (build 122) — 2026-07-30
+
+### Apple SensorKit Reader Access Integration & Ad-Hoc Downloadable Build
+
+- **SensorKit Reader Entitlements Added**: Added entitlement `com.apple.developer.sensorkit.reader.allow` for approved data streams: `accelerometer`, `rotation-rate`, `keyboard-metrics`, `device-usage` under Apple Case-ID: `20926388`.
+- **SensorKit Manager (`SensorKitManager.swift`)**: Added native `SRSensorReader` orchestration for authorization, periodic fetch cycles, and logging into research CSV files:
+  - `sensorkit_accelerometer.csv`
+  - `sensorkit_rotation_rate.csv`
+  - `sensorkit_keyboard_metrics.csv`
+  - `sensorkit_device_usage.csv`
+- **Background & Active Fetch**: Wired SensorKit data fetching into app foreground activation and background processing tasks (`com.pdcollect.ios.bg-processing`).
+- **Settings UI**: Added **SensorKit Reader Access** section in Settings with live authorization badges, authorization request trigger, and manual fetch options.
+- **Downloadable Ad-Hoc IPA Script**: Added `build_adhoc_ipa.sh` for compiling an Ad-Hoc downloadable `.ipa` installer package for direct deployment to registered devices prior to TestFlight approval.
+
+---
+
 ## 3.7.30 (build 116) — 2026-07-28
 
 ### Stability hardening + Beanie/HR BLE reliability (full-codebase review)
