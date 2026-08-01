@@ -1,0 +1,117 @@
+import sys
+import os
+import re
+
+print("==========================================================================")
+print("  iOS SensorKit Mode Switcher (TestFlight vs Full Research Build)")
+print("==========================================================================")
+
+ios_dir = os.path.join(os.path.dirname(__file__), 'ios_app', 'PDCollectiOS')
+entitlements_path = os.path.join(ios_dir, 'PDCollectiOS.entitlements')
+info_plist_path = os.path.join(ios_dir, 'Info.plist')
+sensorkit_manager_path = os.path.join(ios_dir, 'Managers', 'SensorKitManager.swift')
+
+if len(sys.argv) < 2:
+    print("Usage:")
+    print("  python toggle_sensorkit.py testflight   # Strip SensorKit for TestFlight submission")
+    print("  python toggle_sensorkit.py full         # Restore SensorKit for Ad-Hoc / Research build")
+    sys.exit(1)
+
+mode = sys.argv[1].lower()
+
+# Read entitlements
+with open(entitlements_path, 'r', encoding='utf-8') as f:
+    entitlements_content = f.read()
+
+# Read Info.plist
+with open(info_plist_path, 'r', encoding='utf-8') as f:
+    info_plist_content = f.read()
+
+# Read SensorKitManager.swift
+with open(sensorkit_manager_path, 'r', encoding='utf-8') as f:
+    sk_content = f.read()
+
+if mode == 'testflight' or mode == 'no-sensorkit':
+    print("Configuring iOS App for TestFlight Submission (No SensorKit)...")
+
+    # 1. Remove SensorKit entitlement
+    entitlements_clean = re.sub(
+        r'\s*<key>com\.apple\.developer\.sensorkit\.reader\.allow</key>\s*<array>.*?</array>',
+        '',
+        entitlements_content,
+        flags=re.DOTALL
+    )
+    with open(entitlements_path, 'w', encoding='utf-8') as f:
+        f.write(entitlements_clean)
+    print(" -> Removed 'com.apple.developer.sensorkit.reader.allow' from PDCollectiOS.entitlements.")
+
+    # 2. Remove NSSensorKitUsageDescription keys from Info.plist
+    info_clean = re.sub(
+        r'\s*<key>NSSensorKitUsageDescription.*?</string>',
+        '',
+        info_plist_content,
+        flags=re.DOTALL
+    )
+    info_clean = re.sub(
+        r'\s*<key>NSSensorKitPrivacyPolicyURL.*?</string>',
+        '',
+        info_clean,
+        flags=re.DOTALL
+    )
+    with open(info_plist_path, 'w', encoding='utf-8') as f:
+        f.write(info_clean)
+    print(" -> Removed NSSensorKitUsageDescription keys from Info.plist.")
+
+    # 3. Add #define DISABLE_SENSORKIT to SensorKitManager.swift header
+    if '#define DISABLE_SENSORKIT' not in sk_content:
+        sk_content = "// TestFlight Build: SensorKit Disabled\n#define DISABLE_SENSORKIT 1\n" + sk_content
+        with open(sensorkit_manager_path, 'w', encoding='utf-8') as f:
+            f.write(sk_content)
+    print(" -> Enabled DISABLE_SENSORKIT stub in SensorKitManager.swift.")
+
+    print("\nSUCCESS: iOS project is now configured for TESTFLIGHT distribution!")
+
+elif mode == 'full' or mode == 'with-sensorkit':
+    print("Restoring iOS App for Full Research Build (With SensorKit)...")
+
+    # 1. Restore SensorKit entitlement
+    if 'com.apple.developer.sensorkit.reader.allow' not in entitlements_content:
+        sensorkit_entitlement = """\t<key>com.apple.developer.sensorkit.reader.allow</key>
+\t<array>
+\t\t<string>accelerometer</string>
+\t\t<string>rotation-rate</string>
+\t\t<string>keyboard-metrics</string>
+\t\t<string>device-usage</string>
+\t</array>"""
+        entitlements_content = entitlements_content.replace('</dict>', f'{sensorkit_entitlement}\n</dict>')
+        with open(entitlements_path, 'w', encoding='utf-8') as f:
+            f.write(entitlements_content)
+    print(" -> Restored SensorKit entitlement in PDCollectiOS.entitlements.")
+
+    # 2. Restore Info.plist keys
+    if 'NSSensorKitUsageDescription' not in info_plist_content:
+        sensorkit_plist_keys = """\t<key>NSSensorKitUsageDescription</key>
+\t<string>PDCollect accesses SensorKit data streams to generate digital markers for Parkinson's Disease research.</string>
+\t<key>NSSensorKitPrivacyPolicyURL</key>
+\t<string>https://pdcollect.web.app/privacy.html</string>
+\t<key>NSSensorKitUsageDescriptionAccelerometer</key>
+\t<string>Used to record passive high-resolution accelerometer data for Parkinson's Disease motion analysis.</string>
+\t<key>NSSensorKitUsageDescriptionRotationRate</key>
+\t<string>Used to record passive gyroscope rotation rate data for Parkinson's Disease tremor and movement analysis.</string>
+\t<key>NSSensorKitUsageDescriptionKeyboardMetrics</key>
+\t<string>Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease.</string>
+\t<key>NSSensorKitUsageDescriptionDeviceUsage</key>
+\t<string>Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease.</string>"""
+        info_plist_content = info_plist_content.replace('</dict>', f'{sensorkit_plist_keys}\n</dict>')
+        with open(info_plist_path, 'w', encoding='utf-8') as f:
+            f.write(info_plist_content)
+    print(" -> Restored SensorKit keys in Info.plist.")
+
+    # 3. Remove DISABLE_SENSORKIT define
+    if '#define DISABLE_SENSORKIT' in sk_content:
+        sk_content = sk_content.replace("// TestFlight Build: SensorKit Disabled\n#define DISABLE_SENSORKIT 1\n", "")
+        with open(sensorkit_manager_path, 'w', encoding='utf-8') as f:
+            f.write(sk_content)
+    print(" -> Restored full SensorKit compilation in SensorKitManager.swift.")
+
+    print("\nSUCCESS: iOS project is now restored to FULL SENSORKIT mode!")

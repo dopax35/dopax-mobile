@@ -1,5 +1,9 @@
+// TestFlight Build: SensorKit Disabled
+#define DISABLE_SENSORKIT 1
 import Foundation
 import Combine
+
+#if canImport(SensorKit) && !DISABLE_SENSORKIT
 import SensorKit
 
 /// Manages SensorKit reader access for Parkinson's Disease research.
@@ -58,89 +62,88 @@ class SensorKitManager: NSObject, ObservableObject, SRSensorReaderDelegate {
             reader.delegate = self
             readers[sensor] = reader
 
-            let statusString: String
+            let statusStr: String
             switch reader.authorizationStatus {
             case .authorized:
-                statusString = "Authorized"
+                statusStr = "Authorized"
             case .denied:
-                statusString = "Denied"
+                statusStr = "Denied"
             case .notDetermined:
-                statusString = "Not Determined"
+                statusStr = "Not Determined"
             @unknown default:
-                statusString = "Unknown"
+                statusStr = "Unknown"
             }
-            statuses[sensorName(sensor)] = statusString
+            statuses[sensor.rawValue] = statusStr
         }
 
         DispatchQueue.main.async {
-            self.isAvailable = true
             self.authorizationStatuses = statuses
+            self.isAvailable = true
         }
     }
 
     // MARK: - Authorization Request
     func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
-        guard #available(iOS 14.0, *) else {
+        guard #available(iOS 14.0, *), isAvailable else {
             completion(false, NSError(domain: "SensorKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "SensorKit is not supported on this iOS version"]))
             return
         }
 
-        let sensorSet = Set(approvedSensors)
-        SRSensorReader.requestAuthorization(sensors: sensorSet) { [weak self] error in
+        let sensorsToRequest = Set(approvedSensors)
+        SRSensorReader.requestAuthorization(sensors: sensorsToRequest) { [weak self] error in
             DispatchQueue.main.async {
                 self?.checkAvailabilityAndStatus()
-                if let error = error {
-                    completion(false, error)
-                } else {
-                    completion(true, nil)
-                }
+                completion(error == nil, error)
             }
         }
     }
 
-    // MARK: - Data Fetch Cycle
+    // MARK: - Data Fetching
     func fetchSensorKitData(from startDate: Date = Date().addingTimeInterval(-86400),
-                            to endDate: Date = Date()) {
+                             to endDate: Date = Date()) {
         guard #available(iOS 14.0, *), isAvailable else { return }
-        guard !isFetching else { return }
 
         DispatchQueue.main.async { self.isFetching = true }
 
-        fetchQueue.async { [weak self] in
-            guard let self = self else { return }
+        let fetchGroup = DispatchGroup()
 
-            let fetchRequest = SRFetchRequest()
-            fetchRequest.from = SRAbsoluteTime(startDate.timeIntervalSinceReferenceDate)
-            fetchRequest.to = SRAbsoluteTime(endDate.timeIntervalSinceReferenceDate)
-
-            for (sensor, reader) in self.readers {
-                if reader.authorizationStatus == .authorized {
-                    reader.fetch(fetchRequest)
-                }
+        for sensor in approvedSensors {
+            guard let reader = readers[sensor],
+                  reader.authorizationStatus == .authorized else {
+                continue
             }
 
-            DispatchQueue.main.async {
-                self.isFetching = false
-                self.lastFetchDate = Date()
-            }
+            fetchGroup.enter()
+            let request = SRFetchRequest()
+            request.from = SRAbsoluteTime(from: startDate)
+            request.to = SRAbsoluteTime(from: endDate)
+
+            reader.fetch(request)
+        }
+
+        fetchGroup.notify(queue: .main) {
+            self.isFetching = false
+            self.lastFetchDate = Date()
         }
     }
 
-    // MARK: - SRSensorReaderDelegate Callbacks
-    func sensorReader(_ reader: SRSensorReader, fetching fetchRequest: SRFetchRequest, didFetchResult result: SRFetchResult) -> Bool {
+    // MARK: - SRSensorReaderDelegate
+    func sensorReader(_ reader: SRSensorReader,
+                      fetching request: SRFetchRequest,
+                      didFetch result: SRFetchResult) -> Bool {
         guard let dm = dataManager else { return true }
 
+        let timestampMs = Int64(result.timestamp.date.timeIntervalSince1970 * 1000)
         let sample = result.sample
-        let timestampMs = Int64((result.timestamp.rawValue + Date.timeIntervalBetween1970AndReferenceDate) * 1000)
 
         switch reader.sensor {
         case .accelerometer:
-            if let accelData = sample as? CMRecordedAccelerometerData {
+            if let accelData = sample as? CRAcceleration {
                 dm.writeSensorKitAccelerometerRow(timestampMs: timestampMs, x: accelData.acceleration.x, y: accelData.acceleration.y, z: accelData.acceleration.z)
                 incrementCount("accelerometer")
             }
         case .rotationRate:
-            if let gyroData = sample as? CMRecordedRotationRateData {
+            if let gyroData = sample as? CRRotationRate {
                 dm.writeSensorKitRotationRateRow(timestampMs: timestampMs, x: gyroData.rotationRate.x, y: gyroData.rotationRate.y, z: gyroData.rotationRate.z)
                 incrementCount("rotationRate")
             }
@@ -184,14 +187,33 @@ class SensorKitManager: NSObject, ObservableObject, SRSensorReaderDelegate {
             self.sampleCountsToday[key] = current + 1
         }
     }
-
-    private func sensorName(_ sensor: SRSensor) -> String {
-        switch sensor {
-        case .accelerometer: return "Accelerometer"
-        case .rotationRate: return "Rotation Rate"
-        case .keyboardMetrics: return "Keyboard Metrics"
-        case .deviceUsage: return "Device Usage"
-        default: return sensor.rawValue
-        }
-    }
 }
+
+#else
+
+// MARK: - TestFlight Stub (Compiled when DISABLE_SENSORKIT is defined or SensorKit framework is omitted)
+class SensorKitManager: NSObject, ObservableObject {
+    @Published private(set) var isAvailable: Bool = false
+    @Published private(set) var isFetching: Bool = false
+    @Published private(set) var lastFetchDate: Date? = nil
+    @Published private(set) var authorizationStatuses: [String: String] = [:]
+    @Published private(set) var sampleCountsToday: [String: Int] = [
+        "accelerometer": 0,
+        "rotationRate": 0,
+        "keyboardMetrics": 0,
+        "deviceUsage": 0
+    ]
+
+    override init() {
+        super.init()
+    }
+
+    func configure(dataManager: DataManager) {}
+    func checkAvailabilityAndStatus() {}
+    func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
+        completion(false, nil)
+    }
+    func fetchSensorKitData(from startDate: Date = Date().addingTimeInterval(-86400), to endDate: Date = Date()) {}
+}
+
+#endif
