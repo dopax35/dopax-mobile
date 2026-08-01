@@ -42,6 +42,20 @@ object FirebaseSyncManager {
             }
 
             db.collection("users").document(uid).set(data).await()
+
+            // Reverse lookup mapping: user_mappings/{userId} -> authUid, email, name, etc.
+            val fileUserId = profile.userId
+            if (fileUserId.isNotBlank()) {
+                val mappingData = mapOf(
+                    "authUid" to uid,
+                    "email" to (user.email ?: ""),
+                    "signatureName" to profile.signatureName,
+                    "platform" to "Android",
+                    "lastSyncTime" to System.currentTimeMillis()
+                )
+                db.collection("user_mappings").document(fileUserId).set(mappingData).await()
+            }
+
             true
         } catch (e: Exception) {
             e.printStackTrace()

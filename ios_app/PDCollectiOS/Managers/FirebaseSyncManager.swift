@@ -18,11 +18,23 @@ class FirebaseSyncManager {
         data["email"] = user.email ?? ""
         data["lastSyncTime"] = Int64(Date().timeIntervalSince1970 * 1000)
 
-        db.collection("users").document(user.uid).setData(data) { error in
+        db.collection("users").document(user.uid).setData(data) { [weak self] error in
             if let error = error {
                 print("[FirebaseSyncManager] Error saving profile: \(error)")
                 completion?(false)
             } else {
+                // Write reverse lookup index: user_mappings/{userId} -> authUid, email, name, platform
+                let fileUserId = profile.userId
+                if !fileUserId.isEmpty {
+                    let mappingData: [String: Any] = [
+                        "authUid": user.uid,
+                        "email": user.email ?? "",
+                        "signatureName": profile.signatureName,
+                        "platform": "iOS",
+                        "lastSyncTime": Int64(Date().timeIntervalSince1970 * 1000)
+                    ]
+                    self?.db.collection("user_mappings").document(fileUserId).setData(mappingData)
+                }
                 completion?(true)
             }
         }

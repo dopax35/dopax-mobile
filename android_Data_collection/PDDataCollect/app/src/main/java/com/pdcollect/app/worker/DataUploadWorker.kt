@@ -47,6 +47,13 @@ class DataUploadWorker(context: Context, params: WorkerParameters) : CoroutineWo
         val dataManager = DataManager(applicationContext, profile)
         val todayStr = com.pdcollect.app.util.TimeUtils.todayDateString()
 
+        // Ensure user profile & reverse lookup mapping (user_mappings/{userId}) exist in Firestore before uploading files
+        runCatching {
+            com.pdcollect.app.data.FirebaseSyncManager.saveProfileToCloud(profile, dataManager)
+        }.onFailure {
+            android.util.Log.e(TAG, "Pre-upload Firestore profile sync failed", it)
+        }
+
         var allSuccess = true
         try {
             val dates = dataManager.listAvailableDates()

@@ -204,6 +204,10 @@ class BackgroundCollectionManager {
 
         let todayKey = Date().dateKey
         let dates = dm.listDates()
+
+        // Ensure user profile & reverse lookup mapping exist in Firestore before uploading files
+        FirebaseSyncManager.shared.saveProfileToCloud(profile: dm.userProfile)
+
         let uploader = CloudUploader()
         var uploadedAny = false
 
