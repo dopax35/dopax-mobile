@@ -16,6 +16,7 @@
 		12FE7E7ABB39DDE434F53536 /* PDCollectKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */; };
 		28AD1CE01C8C6616C6EDD678 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */; };
+		88A1B2C3D4E5F67890123456 /* SensorKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A1B2C3D4E5F67890123456 /* SensorKitManager.swift */; };
 		35AA01C2FB7652E9B8CED696 /* GaitMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29757E221F20ECE18EED954 /* GaitMetric.swift */; };
 		3771022B1B1853F78DFCC05B /* BeanieRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6D71D118D7706233B8123C /* BeanieRegistry.swift */; };
 		3802AE5A866159350482457F /* QuestionnaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B751887CCB41F899D53CA430 /* QuestionnaireView.swift */; };
@@ -124,6 +125,7 @@
 /* Begin PBXFileReference section */
 		05F42555E81C60211FCFFB2A /* BeaniePacketParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaniePacketParser.swift; sourceTree = "<group>"; };
 		07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
+		99A1B2C3D4E5F67890123456 /* SensorKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorKitManager.swift; sourceTree = "<group>"; };
 		0A3C3A8E94F67E3A8F50607D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchEvent.swift; sourceTree = "<group>"; };
 		0F479B8C6B9A865318EC7678 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -318,6 +320,7 @@
 				1AAEC12DE6C92EE0F4ACD428 /* FaceDistanceManager.swift */,
 				E7AC3AD42DAF623C4191CF3A /* GamificationManager.swift */,
 				07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */,
+				99A1B2C3D4E5F67890123456 /* SensorKitManager.swift */,
 				B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */,
 				26219CFA974662F0772A8E8E /* KeystrokeSync.swift */,
 				BF795633272B2FDF584A3458 /* SetupVerificationManager.swift */,
@@ -551,6 +554,7 @@
 				8C2788FF565DC54663694C89 /* HRBluetoothService.swift in Sources */,
 				B2CA4943BB2A0FD47C824444 /* HandTurningView.swift in Sources */,
 				28AD1CE01C8C6616C6EDD678 /* HealthKitManager.swift in Sources */,
+				88A1B2C3D4E5F67890123456 /* SensorKitManager.swift in Sources */,
 				2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */,
 				A7A7001026D9B57CE4E514AC /* KeystrokeEvent.swift in Sources */,
 				E49EA952DDC572D21A24DFC6 /* KeystrokeSync.swift in Sources */,
