@@ -44,6 +44,7 @@ class BeanieBluetoothService: NSObject, ObservableObject, CBPeripheralDelegate {
     @Published var outerC: Double = 0
     @Published var batteryPct: Int? = nil
     @Published var deviceName: String = ""
+    @Published var deviceAddress: String = ""
     @Published var status: BLEDeviceStatus = .idle
     @Published var storagePercent: Int = 0
     @Published var isErasing: Bool = false

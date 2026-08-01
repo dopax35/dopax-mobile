@@ -9,7 +9,6 @@ print("=========================================================================
 ios_dir = os.path.join(os.path.dirname(__file__), 'ios_app', 'PDCollectiOS')
 entitlements_path = os.path.join(ios_dir, 'PDCollectiOS.entitlements')
 info_plist_path = os.path.join(ios_dir, 'Info.plist')
-sensorkit_manager_path = os.path.join(ios_dir, 'Managers', 'SensorKitManager.swift')
 
 if len(sys.argv) < 2:
     print("Usage:")
@@ -26,10 +25,6 @@ with open(entitlements_path, 'r', encoding='utf-8') as f:
 # Read Info.plist
 with open(info_plist_path, 'r', encoding='utf-8') as f:
     info_plist_content = f.read()
-
-# Read SensorKitManager.swift
-with open(sensorkit_manager_path, 'r', encoding='utf-8') as f:
-    sk_content = f.read()
 
 if mode == 'testflight' or mode == 'no-sensorkit':
     print("Configuring iOS App for TestFlight Submission (No SensorKit)...")
@@ -61,13 +56,6 @@ if mode == 'testflight' or mode == 'no-sensorkit':
     with open(info_plist_path, 'w', encoding='utf-8') as f:
         f.write(info_clean)
     print(" -> Removed NSSensorKitUsageDescription keys from Info.plist.")
-
-    # 3. Add #define DISABLE_SENSORKIT to SensorKitManager.swift header
-    if '#define DISABLE_SENSORKIT' not in sk_content:
-        sk_content = "// TestFlight Build: SensorKit Disabled\n#define DISABLE_SENSORKIT 1\n" + sk_content
-        with open(sensorkit_manager_path, 'w', encoding='utf-8') as f:
-            f.write(sk_content)
-    print(" -> Enabled DISABLE_SENSORKIT stub in SensorKitManager.swift.")
 
     print("\nSUCCESS: iOS project is now configured for TESTFLIGHT distribution!")
 
@@ -106,12 +94,5 @@ elif mode == 'full' or mode == 'with-sensorkit':
         with open(info_plist_path, 'w', encoding='utf-8') as f:
             f.write(info_plist_content)
     print(" -> Restored SensorKit keys in Info.plist.")
-
-    # 3. Remove DISABLE_SENSORKIT define
-    if '#define DISABLE_SENSORKIT' in sk_content:
-        sk_content = sk_content.replace("// TestFlight Build: SensorKit Disabled\n#define DISABLE_SENSORKIT 1\n", "")
-        with open(sensorkit_manager_path, 'w', encoding='utf-8') as f:
-            f.write(sk_content)
-    print(" -> Restored full SensorKit compilation in SensorKitManager.swift.")
 
     print("\nSUCCESS: iOS project is now restored to FULL SENSORKIT mode!")

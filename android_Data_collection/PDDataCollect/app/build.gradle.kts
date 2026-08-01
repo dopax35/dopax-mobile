@@ -160,8 +160,8 @@ android {
         // stale read closed the live connection. All GATT/scan callbacks are now pinned to
         // v3.7.36 (vc 122): Beanie BLE connection stability and flash management alignment
         // with lukasIFM reference protocol (BLEReader.swift / BleViewModel.kt).
-        versionCode = 122
-        versionName = "3.7.36"
+        versionCode = 125
+        versionName = "3.7.37"
     }
 
     signingConfigs {

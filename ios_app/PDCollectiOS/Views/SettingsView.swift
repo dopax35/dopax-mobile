@@ -95,10 +95,7 @@ struct SettingsView: View {
                 } header: {
                     Label("PDCollect Keyboard", systemImage: "keyboard")
                 } footer: {
-                    Text("Now with a numbers/symbols page, long-press for digits & accents, " +
-                         "and swipe left on ⌫ to delete a whole word. Enables typing metrics " +
-                         "(word length, backspace rate) — bilingual (Hebrew / English) and never " +
-                         "stores what you type.")
+                    Text("Now with a numbers/symbols page, long-press for digits & accents, and swipe left on ⌫ to delete a whole word. Enables typing metrics (word length, backspace rate) — bilingual (Hebrew / English) and never stores what you type.")
                         .font(.caption)
                 }
 

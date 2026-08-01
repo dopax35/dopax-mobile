@@ -29,7 +29,7 @@ class FirebaseSyncManager {
                     let mappingData: [String: Any] = [
                         "authUid": user.uid,
                         "email": user.email ?? "",
-                        "signatureName": profile.signatureName,
+                        "signatureName": user.displayName ?? "",
                         "platform": "iOS",
                         "lastSyncTime": Int64(Date().timeIntervalSince1970 * 1000)
                     ]
