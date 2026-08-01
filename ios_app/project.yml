@@ -43,12 +43,6 @@ targets:
         UILaunchStoryboardName: "Launch Screen"
         NSPrincipalClass: "$(PRODUCT_MODULE_NAME).LoggingApplication"
         NSMotionUsageDescription: "This app uses motion data to detect physical activity and monitor movement patterns"
-        NSSensorKitUsageDescription: "PDCollect accesses SensorKit data streams to generate digital markers for Parkinson's Disease research."
-        NSSensorKitPrivacyPolicyURL: "https://pdcollect.web.app/privacy.html"
-        NSSensorKitUsageDescriptionAccelerometer: "Used to record passive high-resolution accelerometer data for Parkinson's Disease motion analysis."
-        NSSensorKitUsageDescriptionRotationRate: "Used to record passive gyroscope rotation rate data for Parkinson's Disease tremor and movement analysis."
-        NSSensorKitUsageDescriptionKeyboardMetrics: "Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease."
-        NSSensorKitUsageDescriptionDeviceUsage: "Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease."
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
@@ -99,8 +93,7 @@ targets:
         product: GoogleSignInSwift
       - target: PDCollectKeyboard
     settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
+      base:        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
         MARKETING_VERSION: 3.7.35
@@ -147,9 +140,13 @@ targets:
         # nil and every keystroke-metrics write silently no-ops.
         com.apple.security.application-groups:
           - group.com.oriw.pdcollect.ios1.shared
+        com.apple.developer.sensorkit.reader.allow:
+          - accelerometer
+          - rotation-rate
+          - keyboard-metrics
+          - device-usage
     settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.keyboard
+      base:        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.keyboard
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
         DEVELOPMENT_TEAM: YD2UPLT5JG

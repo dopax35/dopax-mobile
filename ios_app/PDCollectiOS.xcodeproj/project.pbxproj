@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		047D161DDBEE5D2B3ECB8FEF /* GazeSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8876A74BE1382206826BA88 /* GazeSample.swift */; };
 		0A20ADB4C86A2846C097B5CD /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F479B8C6B9A865318EC7678 /* MainTabView.swift */; };
 		0B2079CA1977261E10701E00 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C3A8E94F67E3A8F50607D /* Extensions.swift */; };
 		0E0D49DA346C1BAF53E32F5E /* BluetoothDevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED736E4394B92F29688FF60 /* BluetoothDevicesView.swift */; };
@@ -16,16 +17,27 @@
 		12FE7E7ABB39DDE434F53536 /* PDCollectKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */; };
 		28AD1CE01C8C6616C6EDD678 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */; };
-		88A1B2C3D4E5F67890123456 /* SensorKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A1B2C3D4E5F67890123456 /* SensorKitManager.swift */; };
+		2F6C143B8577CCC0168ECFF5 /* VoiceSampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FC3C2B888419A082CA4DF1 /* VoiceSampleView.swift */; };
+		32F8E86DE948AC8610DF1A24 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DD5339E158559F26256FEAAB /* GoogleService-Info.plist */; };
+		34FC71B7C20DD31A1C66DDDC /* SensorKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE94C5C5BA89D0845D3F0464 /* SensorKitManager.swift */; };
 		35AA01C2FB7652E9B8CED696 /* GaitMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29757E221F20ECE18EED954 /* GaitMetric.swift */; };
 		3771022B1B1853F78DFCC05B /* BeanieRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE6D71D118D7706233B8123C /* BeanieRegistry.swift */; };
 		3802AE5A866159350482457F /* QuestionnaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B751887CCB41F899D53CA430 /* QuestionnaireView.swift */; };
+		39B39FEABAC703FF720576FD /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A23BF136B75AB77FEDABB1E /* KeychainHelper.swift */; };
+		3B5C38FA7B78B209440AED13 /* KeyboardSetupRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B51F03BD185EA820CA329C /* KeyboardSetupRow.swift */; };
+		3ECF551E0ABC13B4C1966CC1 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FC4E8D782E0B08B1F5A41AA6 /* FirebaseAuth */; };
+		40F0F402100792161AE9E7AE /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FD96A8E412F210A4C3E3253A /* GoogleSignInSwift */; };
+		48F83DD41CECB2F141814488 /* MotionActivityHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B301564D0412C7F81F746377 /* MotionActivityHistoryService.swift */; };
 		4CBB1245DEDAD1FAF3033049 /* TouchEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */; };
+		4EBB3603843581AD69B7597D /* BeaniePostureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFE9E40C353B8B4CD6657D2 /* BeaniePostureEngine.swift */; };
 		56BCECE3E51E6C4376A963E6 /* CloudUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE7F96C7CA690AA371902185 /* CloudUploader.swift */; };
+		575DD0E70175292E4F48A344 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 13851280C42D9A56782C6F56 /* FirebaseFirestore */; };
 		57FE276D18C46A7CA9AD2C31 /* MedicationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48F1ED50F27D20344A3C400B /* MedicationEvent.swift */; };
+		5A6DA311D3B408B2DB82D5BB /* PedometerHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF2776BEA9A2F44319CE59E /* PedometerHistoryService.swift */; };
 		5F62A13E03D4E6EBF8F472A1 /* GamificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7AC3AD42DAF623C4191CF3A /* GamificationManager.swift */; };
 		6349B8DD2AD0FDCEC5BACBDA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2291E97313FB912D275C98D8 /* Theme.swift */; };
 		686F63F4F8B35AFB3CA3AA19 /* BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE537F928BE88E3762FAB657 /* BluetoothManager.swift */; };
+		689A7422675B744BE22B1E4A /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57169E2A60B139FA3B1AA983 /* LoginView.swift */; };
 		6CD47DFF56E46D29883DD19D /* PDCollectiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE8ED11086C03259EBB5042 /* PDCollectiOSApp.swift */; };
 		6D4CDDDC59875727F2985DA5 /* TrailMakingTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */; };
 		70E00A8B330B3318C8062DFB /* BeanieIMUReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A8B02E21783F5E4E98BF55B /* BeanieIMUReading.swift */; };
@@ -35,67 +47,58 @@
 		7B1493DAB8251D9B80369CC7 /* SpiralTracingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863F45179A7EDC27F9EF7FC7 /* SpiralTracingView.swift */; };
 		7B34C866055E0D5B3D46191A /* Rajdhani-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E27B7721269E2B99709286E6 /* Rajdhani-Bold.ttf */; };
 		7BE3FEA97BF565AD2B81A19F /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */; };
+		7E807DFA22736DE09D015619 /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3BF715A1F29374D377F39C6D /* FirebaseFirestoreSwift */; };
 		866A13C77F5E5A2E78417ADB /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA79D7166D406F24993CF624 /* AppState.swift */; };
+		86978612CD8756CB7B18E524 /* PostureCalibrationProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6998DC05D7E5F43F5BC06119 /* PostureCalibrationProfile.swift */; };
 		88BFC8BABE7F924FC2B3F512 /* AppEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC0CD58496F5F46414D1507 /* AppEvent.swift */; };
 		88E22909C0BF344842880BD2 /* DataExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77182DDAF6CD9E8FD28907BE /* DataExportView.swift */; };
+		8B1FC8B437322535D3F8ECD6 /* StravaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFFB2246859697F5AB08F58 /* StravaManager.swift */; };
 		8B3D45D9F5441DD3931FB127 /* ActiveTestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410B546D30D439C6B4DE48D1 /* ActiveTestsView.swift */; };
 		8C2788FF565DC54663694C89 /* HRBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */; };
 		8C9613DC58FDBE51C16CD586 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80A99C46B3B91911EA3D1EEC /* DataManager.swift */; };
 		914579E4A35D96D0D1750A8C /* TouchLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */; };
 		91A282AB1DFF442B0514A4D7 /* PhysicalActivityLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 262FA521A0E402933B29D470 /* PhysicalActivityLogView.swift */; };
 		93B40DE2C0FBB879893185D7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */; };
+		93DEEBB6E8CA4C070F0F1FE4 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 6A7ED2D237878F127E0DD933 /* GoogleSignIn */; };
+		94DCD8B1B9618984E10CDBD9 /* FirebaseSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B07748303CBDC194A3A8FB /* FirebaseSyncManager.swift */; };
+		96DC85C00551E618AE4D29DB /* TskinSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DD8A89C867977AD6B6FDDBA /* TskinSynthesizer.swift */; };
 		977858DF39D1C4A8BF6370FB /* SensorReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1116C47EADDC017996AE76 /* SensorReading.swift */; };
+		9B44C0B22C5B77E165980E0D /* PedometerSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC034C991B7F12FEF8F67AE /* PedometerSample.swift */; };
+		9BF036DE95A57BB2EB26AC6F /* PostureCalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2298F5AE2E19A1C14406B881 /* PostureCalibrationView.swift */; };
 		A361B4AA5513779D444BABB4 /* FaceDistanceSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */; };
-		E7A1B2C3D4E5F60718293A4B /* GazeSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E1D2C3B4A5968778695A4B /* GazeSample.swift */; };
 		A6C9ECBE23F8E01DAB81E4B6 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B695E6A88B41A4C62473A13 /* Constants.swift */; };
 		A7A7001026D9B57CE4E514AC /* KeystrokeEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */; };
+		AC029017AC2686C1453E05EC /* MotionActivitySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F92FEF2E136CF03FCC68E77 /* MotionActivitySample.swift */; };
 		B2CA4943BB2A0FD47C824444 /* HandTurningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45430F02B73F6AD368333557 /* HandTurningView.swift */; };
+		B37C7A816EC85AF3DD3CAD3C /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBE2C6BE36A39C686DEAB3B /* AuthManager.swift */; };
 		B5F5E0B513337AF3A5B99804 /* Rajdhani-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F53D80EB594E436DA599ABC3 /* Rajdhani-Regular.ttf */; };
 		B7F94D393BA111925C30620E /* BeanieTemperatureReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCDAC414ADF66D0189ADC10 /* BeanieTemperatureReading.swift */; };
 		BC4F727055E452FDBA83175A /* ConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF15356AF268639E2BC13B82 /* ConsentView.swift */; };
 		C0AFD9FA75913E6044F1FF72 /* ProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933DFCA5B942B1896E1B9173 /* ProfileSetupView.swift */; };
+		C5604946F52F7C1BC642E837 /* BeanieActivityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B17922E3B917766BD5115F69 /* BeanieActivityEngine.swift */; };
+		C6E81F8E56002D9F3331527D /* MadgwickFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019C0A28F271B2689519483E /* MadgwickFilter.swift */; };
 		C785910F8FA2F690D74355C9 /* MedicationLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E58F3171B3CADF5F9C7BB4BD /* MedicationLogView.swift */; };
+		C8181CC6D6E89E89713A02FC /* Medication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C32124BFF5E901A8663AE77 /* Medication.swift */; };
 		C86A69F103ABA77243A1FC3C /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568A3FA9B3C6E347FFFF7BCC /* DashboardView.swift */; };
 		C8C0E1B4AE04E74074DD9011 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 29122AECD96E65493B8A5E3D /* Assets.xcassets */; };
+		CA3FCA41887CEB1BA0BB445B /* SetupVerificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CEA195DB4C2AC612CE4635C /* SetupVerificationManager.swift */; };
 		CABE3DFE9C55F943324B523C /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = CB18E99E2EED8D5C92402E8B /* ZIPFoundation */; };
-		FB20A0000000000000000001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FB10A0000000000000000001 /* FirebaseAuth */; };
-		FB20A0000000000000000002 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = FB10A0000000000000000002 /* FirebaseFirestore */; };
-		FB20A0000000000000000003 /* FirebaseFirestoreSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FB10A0000000000000000003 /* FirebaseFirestoreSwift */; };
-		FB20A0000000000000000004 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = FB10A0000000000000000004 /* GoogleSignIn */; };
-		FB20A0000000000000000005 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = FB10A0000000000000000005 /* GoogleSignInSwift */; };
 		CAD961BFA4B7982590B10FF2 /* PDAlgorithms.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21A7978B22683611141966E /* PDAlgorithms.swift */; };
 		CB53A3EE995A01804FF74470 /* PhysicalActivityEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */; };
-		FFCCF83B8412B71D1ABE8170 /* SleepEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FE1B0CFABD710141D338E6 /* SleepEvent.swift */; };
-		A0B4761A6BBB53D4A35D800E /* PedometerSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBBDF974353EFE9F34BCD5F /* PedometerSample.swift */; };
-		14B53669B1616E4FB739D6D4 /* PedometerHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C6B440D08040066E0D21731 /* PedometerHistoryService.swift */; };
-		798B07D7DEA9E72DE37F8E06 /* StravaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */; };
-		F667F2D674EB5B5F1AA6CA8D /* MotionActivitySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51278D034C42F24620D0F7A3 /* MotionActivitySample.swift */; };
-		AFB4881DC55F17CBDACA37CB /* MotionActivityHistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */; };
 		CBB3ED519A7862EAC5AF9865 /* Rajdhani-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D8D557F15CDC697364C00987 /* Rajdhani-Medium.ttf */; };
+		CE6810666EB9F205387E1F12 /* PostureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D1631060A55B7FAFCCBE3C /* PostureState.swift */; };
 		D0F7DBA1666674CD6F484E9B /* DailyReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE1DE713251384FA69CF92E /* DailyReportView.swift */; };
+		D17D2F3CE2D68D1B725A2B33 /* ImportedActivityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FE4E8238B2D5981C0470B0 /* ImportedActivityStore.swift */; };
 		D95BB2D0B9A8F755A9947A15 /* FingerTappingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1879D6C5CB7722462EF426A2 /* FingerTappingView.swift */; };
 		DD5320E6B151098F80D001D6 /* FaceDistanceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AAEC12DE6C92EE0F4ACD428 /* FaceDistanceManager.swift */; };
+		DFAAA39F799224DFE9CDB6EA /* IMUTempClassifier_V5_250.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 36132E6B52B74289A9A8A80F /* IMUTempClassifier_V5_250.mlpackage */; };
 		E2055B4C5E8567B0661EDD19 /* QuestionnaireResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */; };
 		E48F30702EE977047022B202 /* PassiveSensorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */; };
 		E49EA952DDC572D21A24DFC6 /* KeystrokeSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26219CFA974662F0772A8E8E /* KeystrokeSync.swift */; };
-		A211B4AA5513779D444BABB1 /* SetupVerificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF795633272B2FDF584A3458 /* SetupVerificationManager.swift */; };
 		E4B3BF4A0BE0793E44E70560 /* CoreMotionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACC60822020660C887787231 /* CoreMotionManager.swift */; };
 		EEBD77617A868B377DCEF3C5 /* BeanieBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */; };
 		EFEE8EAE03ACD5794FDC82EF /* BackgroundCollectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB9D8E88266B96CA5FC25AD5 /* BackgroundCollectionManager.swift */; };
-		783B1697648C806153377530 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39DB9A041A37F94A87C544D /* AuthManager.swift */; };
-		05A282E4A6BE6A88EC57D341 /* BeanieActivityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D8CC19119896440748BC696 /* BeanieActivityEngine.swift */; };
-		FC4F25A1D357BE8B3019F180 /* BeaniePostureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C5CB4468F45CB1CAF77D89 /* BeaniePostureEngine.swift */; };
-		2FBDF4A40354D00B21B83A70 /* FirebaseSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D420AE0103A52D1C2579ADE8 /* FirebaseSyncManager.swift */; };
-		1A3793B79F077267DB56AFBB /* ImportedActivityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7902EB12E70BD7F2B2B3374 /* ImportedActivityStore.swift */; };
-		1165219E7C4980DE0AF68FF4 /* MadgwickFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1D84235F71E26CE4C7E4CD /* MadgwickFilter.swift */; };
-		3B33444BE4DCD47764EEE861 /* PostureCalibrationProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFDB33DD0AC1DF7C9D8AF65D /* PostureCalibrationProfile.swift */; };
-		99182379CC38A75F843D7951 /* PostureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 605D39B86635FFAD2754F93E /* PostureState.swift */; };
-		735D17B62A7DE02230616271 /* TskinSynthesizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCBE16D1BB54BF49B81E4806 /* TskinSynthesizer.swift */; };
-		2855E45D70D7DA0CEC1D3256 /* Medication.swift in Sources */ = {isa = PBXBuildFile; fileRef = A41962FA7124BE2C9BDDF027 /* Medication.swift */; };
-		AADE1F2145A7C96D85CA0BF8 /* KeyboardSetupRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97A2F2FE45DD319FCA65978A /* KeyboardSetupRow.swift */; };
-		7435D4A865FB42703CA05CAB /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F7BD916E315F0435BC65708 /* LoginView.swift */; };
-		E3A7D5F4683FE547D45DC0E7 /* PostureCalibrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA41BD0DAF1C304BBDF0F34E /* PostureCalibrationView.swift */; };
-		5202CF06B73EE8DADE404790 /* VoiceSampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C9C4FC4C3A57FB74322AD4E /* VoiceSampleView.swift */; };
+		FF28C88265F13F4057CD31B3 /* SleepEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D81DE7E2C62A5D8CFF370444 /* SleepEvent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,27 +126,33 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		019C0A28F271B2689519483E /* MadgwickFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MadgwickFilter.swift; sourceTree = "<group>"; };
 		05F42555E81C60211FCFFB2A /* BeaniePacketParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaniePacketParser.swift; sourceTree = "<group>"; };
 		07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
-		99A1B2C3D4E5F67890123456 /* SensorKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorKitManager.swift; sourceTree = "<group>"; };
 		0A3C3A8E94F67E3A8F50607D /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		0DC034C991B7F12FEF8F67AE /* PedometerSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedometerSample.swift; sourceTree = "<group>"; };
 		0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchEvent.swift; sourceTree = "<group>"; };
 		0F479B8C6B9A865318EC7678 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		1879D6C5CB7722462EF426A2 /* FingerTappingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerTappingView.swift; sourceTree = "<group>"; };
+		1A23BF136B75AB77FEDABB1E /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		1AAEC12DE6C92EE0F4ACD428 /* FaceDistanceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceDistanceManager.swift; sourceTree = "<group>"; };
 		1CB6732CCB96F2806CC08ACD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		1DD8A89C867977AD6B6FDDBA /* TskinSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TskinSynthesizer.swift; sourceTree = "<group>"; };
 		1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailMakingTestView.swift; sourceTree = "<group>"; };
 		2291E97313FB912D275C98D8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		2298F5AE2E19A1C14406B881 /* PostureCalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureCalibrationView.swift; sourceTree = "<group>"; };
 		26219CFA974662F0772A8E8E /* KeystrokeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeystrokeSync.swift; sourceTree = "<group>"; };
-		BF795633272B2FDF584A3458 /* SetupVerificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupVerificationManager.swift; sourceTree = "<group>"; };
 		262FA521A0E402933B29D470 /* PhysicalActivityLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityLogView.swift; sourceTree = "<group>"; };
 		269FF147A286D9ED721528EB /* AppEventLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEventLogger.swift; sourceTree = "<group>"; };
 		29122AECD96E65493B8A5E3D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2D6DC17477E60268A9078B93 /* LegAgilityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegAgilityView.swift; sourceTree = "<group>"; };
 		2F1116C47EADDC017996AE76 /* SensorReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorReading.swift; sourceTree = "<group>"; };
 		3117A8FBF982E76F973AEF0F /* KeyboardExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KeyboardExtension.entitlements; sourceTree = "<group>"; };
+		36132E6B52B74289A9A8A80F /* IMUTempClassifier_V5_250.mlpackage */ = {isa = PBXFileReference; path = IMUTempClassifier_V5_250.mlpackage; sourceTree = "<group>"; };
 		379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3C32124BFF5E901A8663AE77 /* Medication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Medication.swift; sourceTree = "<group>"; };
 		3CE1DE713251384FA69CF92E /* DailyReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyReportView.swift; sourceTree = "<group>"; };
+		3CF2776BEA9A2F44319CE59E /* PedometerHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedometerHistoryService.swift; sourceTree = "<group>"; };
 		410B546D30D439C6B4DE48D1 /* ActiveTestsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTestsView.swift; sourceTree = "<group>"; };
 		45430F02B73F6AD368333557 /* HandTurningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandTurningView.swift; sourceTree = "<group>"; };
 		48F1ED50F27D20344A3C400B /* MedicationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationEvent.swift; sourceTree = "<group>"; };
@@ -151,38 +160,54 @@
 		4A969032422A83265ADED2A3 /* Outfit.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Outfit.ttf; sourceTree = "<group>"; };
 		4B695E6A88B41A4C62473A13 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateReading.swift; sourceTree = "<group>"; };
+		55B51F03BD185EA820CA329C /* KeyboardSetupRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSetupRow.swift; sourceTree = "<group>"; };
 		568A3FA9B3C6E347FFFF7BCC /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		57169E2A60B139FA3B1AA983 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeystrokeEvent.swift; sourceTree = "<group>"; };
+		5F92FEF2E136CF03FCC68E77 /* MotionActivitySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivitySample.swift; sourceTree = "<group>"; };
+		6998DC05D7E5F43F5BC06119 /* PostureCalibrationProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureCalibrationProfile.swift; sourceTree = "<group>"; };
 		6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassiveSensorService.swift; sourceTree = "<group>"; };
 		6FCDAC414ADF66D0189ADC10 /* BeanieTemperatureReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieTemperatureReading.swift; sourceTree = "<group>"; };
 		77182DDAF6CD9E8FD28907BE /* DataExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportView.swift; sourceTree = "<group>"; };
 		7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchLogger.swift; sourceTree = "<group>"; };
 		80A99C46B3B91911EA3D1EEC /* DataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
 		863F45179A7EDC27F9EF7FC7 /* SpiralTracingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiralTracingView.swift; sourceTree = "<group>"; };
+		89FE4E8238B2D5981C0470B0 /* ImportedActivityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedActivityStore.swift; sourceTree = "<group>"; };
 		933DFCA5B942B1896E1B9173 /* ProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSetupView.swift; sourceTree = "<group>"; };
 		963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieBluetoothService.swift; sourceTree = "<group>"; };
+		9CEA195DB4C2AC612CE4635C /* SetupVerificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupVerificationManager.swift; sourceTree = "<group>"; };
+		9FBE2C6BE36A39C686DEAB3B /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		A7D1631060A55B7FAFCCBE3C /* PostureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureState.swift; sourceTree = "<group>"; };
+		AAFE9E40C353B8B4CD6657D2 /* BeaniePostureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaniePostureEngine.swift; sourceTree = "<group>"; };
 		ABE8ED11086C03259EBB5042 /* PDCollectiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDCollectiOSApp.swift; sourceTree = "<group>"; };
 		ACC60822020660C887787231 /* CoreMotionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMotionManager.swift; sourceTree = "<group>"; };
 		AE6D71D118D7706233B8123C /* BeanieRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieRegistry.swift; sourceTree = "<group>"; };
+		AE94C5C5BA89D0845D3F0464 /* SensorKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorKitManager.swift; sourceTree = "<group>"; };
 		AED736E4394B92F29688FF60 /* BluetoothDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothDevicesView.swift; sourceTree = "<group>"; };
+		B17922E3B917766BD5115F69 /* BeanieActivityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieActivityEngine.swift; sourceTree = "<group>"; };
+		B2B07748303CBDC194A3A8FB /* FirebaseSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseSyncManager.swift; sourceTree = "<group>"; };
+		B301564D0412C7F81F746377 /* MotionActivityHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivityHistoryService.swift; sourceTree = "<group>"; };
 		B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityEvent.swift; sourceTree = "<group>"; };
-		44FE1B0CFABD710141D338E6 /* SleepEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepEvent.swift; sourceTree = "<group>"; };
 		B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HRBluetoothService.swift; sourceTree = "<group>"; };
 		B4C449467AA1D76AA68591CB /* PDCollectKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PDCollectKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B558683D2B3A2F9C59388E3C /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
 		B751887CCB41F899D53CA430 /* QuestionnaireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireView.swift; sourceTree = "<group>"; };
 		B7B4D82052D07EC9D4C4D202 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B8876A74BE1382206826BA88 /* GazeSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazeSample.swift; sourceTree = "<group>"; };
 		BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireResponse.swift; sourceTree = "<group>"; };
 		BE7F96C7CA690AA371902185 /* CloudUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploader.swift; sourceTree = "<group>"; };
 		BEC0CD58496F5F46414D1507 /* AppEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEvent.swift; sourceTree = "<group>"; };
+		BEFFB2246859697F5AB08F58 /* StravaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StravaManager.swift; sourceTree = "<group>"; };
 		BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceDistanceSample.swift; sourceTree = "<group>"; };
-		F0E1D2C3B4A5968778695A4B /* GazeSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazeSample.swift; sourceTree = "<group>"; };
 		C3081E4BFBCEB41B97984E56 /* PDCollectiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PDCollectiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		CE537F928BE88E3762FAB657 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
 		D29757E221F20ECE18EED954 /* GaitMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GaitMetric.swift; sourceTree = "<group>"; };
 		D7F066A9149E34A73FFB1790 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D81DE7E2C62A5D8CFF370444 /* SleepEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepEvent.swift; sourceTree = "<group>"; };
 		D8D557F15CDC697364C00987 /* Rajdhani-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rajdhani-Medium.ttf"; sourceTree = "<group>"; };
+		DD5339E158559F26256FEAAB /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		E1FC3C2B888419A082CA4DF1 /* VoiceSampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSampleView.swift; sourceTree = "<group>"; };
 		E21A7978B22683611141966E /* PDAlgorithms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDAlgorithms.swift; sourceTree = "<group>"; };
 		E27B7721269E2B99709286E6 /* Rajdhani-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rajdhani-Bold.ttf"; sourceTree = "<group>"; };
 		E58F3171B3CADF5F9C7BB4BD /* MedicationLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationLogView.swift; sourceTree = "<group>"; };
@@ -192,25 +217,6 @@
 		EF15356AF268639E2BC13B82 /* ConsentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentView.swift; sourceTree = "<group>"; };
 		F53D80EB594E436DA599ABC3 /* Rajdhani-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Rajdhani-Regular.ttf"; sourceTree = "<group>"; };
 		FA79D7166D406F24993CF624 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		DDBBDF974353EFE9F34BCD5F /* PedometerSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedometerSample.swift; sourceTree = "<group>"; };
-		1C6B440D08040066E0D21731 /* PedometerHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PedometerHistoryService.swift; sourceTree = "<group>"; };
-		9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StravaManager.swift; sourceTree = "<group>"; };
-		51278D034C42F24620D0F7A3 /* MotionActivitySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivitySample.swift; sourceTree = "<group>"; };
-		382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivityHistoryService.swift; sourceTree = "<group>"; };
-		D39DB9A041A37F94A87C544D /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
-		5D8CC19119896440748BC696 /* BeanieActivityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieActivityEngine.swift; sourceTree = "<group>"; };
-		F1C5CB4468F45CB1CAF77D89 /* BeaniePostureEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaniePostureEngine.swift; sourceTree = "<group>"; };
-		D420AE0103A52D1C2579ADE8 /* FirebaseSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseSyncManager.swift; sourceTree = "<group>"; };
-		D7902EB12E70BD7F2B2B3374 /* ImportedActivityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportedActivityStore.swift; sourceTree = "<group>"; };
-		9F1D84235F71E26CE4C7E4CD /* MadgwickFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MadgwickFilter.swift; sourceTree = "<group>"; };
-		BFDB33DD0AC1DF7C9D8AF65D /* PostureCalibrationProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureCalibrationProfile.swift; sourceTree = "<group>"; };
-		605D39B86635FFAD2754F93E /* PostureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureState.swift; sourceTree = "<group>"; };
-		DCBE16D1BB54BF49B81E4806 /* TskinSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TskinSynthesizer.swift; sourceTree = "<group>"; };
-		A41962FA7124BE2C9BDDF027 /* Medication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Medication.swift; sourceTree = "<group>"; };
-		97A2F2FE45DD319FCA65978A /* KeyboardSetupRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardSetupRow.swift; sourceTree = "<group>"; };
-		0F7BD916E315F0435BC65708 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		DA41BD0DAF1C304BBDF0F34E /* PostureCalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureCalibrationView.swift; sourceTree = "<group>"; };
-		3C9C4FC4C3A57FB74322AD4E /* VoiceSampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSampleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -219,11 +225,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				CABE3DFE9C55F943324B523C /* ZIPFoundation in Frameworks */,
-				FB20A0000000000000000001 /* FirebaseAuth in Frameworks */,
-				FB20A0000000000000000002 /* FirebaseFirestore in Frameworks */,
-				FB20A0000000000000000003 /* FirebaseFirestoreSwift in Frameworks */,
-				FB20A0000000000000000004 /* GoogleSignIn in Frameworks */,
-				FB20A0000000000000000005 /* GoogleSignInSwift in Frameworks */,
+				3ECF551E0ABC13B4C1966CC1 /* FirebaseAuth in Frameworks */,
+				575DD0E70175292E4F48A344 /* FirebaseFirestore in Frameworks */,
+				7E807DFA22736DE09D015619 /* FirebaseFirestoreSwift in Frameworks */,
+				93DEEBB6E8CA4C070F0F1FE4 /* GoogleSignIn in Frameworks */,
+				40F0F402100792161AE9E7AE /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -248,18 +254,19 @@
 				6FCDAC414ADF66D0189ADC10 /* BeanieTemperatureReading.swift */,
 				BF795633272B2FDF584A3452 /* FaceDistanceSample.swift */,
 				D29757E221F20ECE18EED954 /* GaitMetric.swift */,
-				F0E1D2C3B4A5968778695A4B /* GazeSample.swift */,
+				B8876A74BE1382206826BA88 /* GazeSample.swift */,
 				4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */,
+				36132E6B52B74289A9A8A80F /* IMUTempClassifier_V5_250.mlpackage */,
 				5DF4C9EA700E909C40413185 /* KeystrokeEvent.swift */,
+				3C32124BFF5E901A8663AE77 /* Medication.swift */,
 				48F1ED50F27D20344A3C400B /* MedicationEvent.swift */,
+				5F92FEF2E136CF03FCC68E77 /* MotionActivitySample.swift */,
+				0DC034C991B7F12FEF8F67AE /* PedometerSample.swift */,
 				B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */,
-				44FE1B0CFABD710141D338E6 /* SleepEvent.swift */,
-				DDBBDF974353EFE9F34BCD5F /* PedometerSample.swift */,
-				51278D034C42F24620D0F7A3 /* MotionActivitySample.swift */,
 				BE5CC6F0B52143258BBE05D5 /* QuestionnaireResponse.swift */,
 				2F1116C47EADDC017996AE76 /* SensorReading.swift */,
+				D81DE7E2C62A5D8CFF370444 /* SleepEvent.swift */,
 				0E6D44892BAE88E8C6F8CAB3 /* TouchEvent.swift */,
-				A41962FA7124BE2C9BDDF027 /* Medication.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -290,17 +297,17 @@
 				3CE1DE713251384FA69CF92E /* DailyReportView.swift */,
 				568A3FA9B3C6E347FFFF7BCC /* DashboardView.swift */,
 				77182DDAF6CD9E8FD28907BE /* DataExportView.swift */,
+				55B51F03BD185EA820CA329C /* KeyboardSetupRow.swift */,
+				57169E2A60B139FA3B1AA983 /* LoginView.swift */,
 				0F479B8C6B9A865318EC7678 /* MainTabView.swift */,
 				E58F3171B3CADF5F9C7BB4BD /* MedicationLogView.swift */,
 				262FA521A0E402933B29D470 /* PhysicalActivityLogView.swift */,
+				2298F5AE2E19A1C14406B881 /* PostureCalibrationView.swift */,
 				933DFCA5B942B1896E1B9173 /* ProfileSetupView.swift */,
 				B751887CCB41F899D53CA430 /* QuestionnaireView.swift */,
 				379DDAC9A4C480F2EEC3AF2D /* SettingsView.swift */,
+				E1FC3C2B888419A082CA4DF1 /* VoiceSampleView.swift */,
 				A046451CE221CE650B291599 /* Tests */,
-				97A2F2FE45DD319FCA65978A /* KeyboardSetupRow.swift */,
-				0F7BD916E315F0435BC65708 /* LoginView.swift */,
-				DA41BD0DAF1C304BBDF0F34E /* PostureCalibrationView.swift */,
-				3C9C4FC4C3A57FB74322AD4E /* VoiceSampleView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -309,36 +316,37 @@
 			isa = PBXGroup;
 			children = (
 				269FF147A286D9ED721528EB /* AppEventLogger.swift */,
+				9FBE2C6BE36A39C686DEAB3B /* AuthManager.swift */,
 				EB9D8E88266B96CA5FC25AD5 /* BackgroundCollectionManager.swift */,
+				B17922E3B917766BD5115F69 /* BeanieActivityEngine.swift */,
 				963F18A45A3740D3525F7EB5 /* BeanieBluetoothService.swift */,
 				05F42555E81C60211FCFFB2A /* BeaniePacketParser.swift */,
+				AAFE9E40C353B8B4CD6657D2 /* BeaniePostureEngine.swift */,
 				AE6D71D118D7706233B8123C /* BeanieRegistry.swift */,
 				CE537F928BE88E3762FAB657 /* BluetoothManager.swift */,
 				BE7F96C7CA690AA371902185 /* CloudUploader.swift */,
 				ACC60822020660C887787231 /* CoreMotionManager.swift */,
 				80A99C46B3B91911EA3D1EEC /* DataManager.swift */,
 				1AAEC12DE6C92EE0F4ACD428 /* FaceDistanceManager.swift */,
+				B2B07748303CBDC194A3A8FB /* FirebaseSyncManager.swift */,
 				E7AC3AD42DAF623C4191CF3A /* GamificationManager.swift */,
 				07443C111E6DE2BF2E2EF3A3 /* HealthKitManager.swift */,
-				99A1B2C3D4E5F67890123456 /* SensorKitManager.swift */,
 				B3F5CAB96509BFE734D91943 /* HRBluetoothService.swift */,
+				89FE4E8238B2D5981C0470B0 /* ImportedActivityStore.swift */,
+				1A23BF136B75AB77FEDABB1E /* KeychainHelper.swift */,
 				26219CFA974662F0772A8E8E /* KeystrokeSync.swift */,
-				BF795633272B2FDF584A3458 /* SetupVerificationManager.swift */,
+				019C0A28F271B2689519483E /* MadgwickFilter.swift */,
+				B301564D0412C7F81F746377 /* MotionActivityHistoryService.swift */,
 				6A096055AE30AD0C9CAE4D45 /* PassiveSensorService.swift */,
-				1C6B440D08040066E0D21731 /* PedometerHistoryService.swift */,
-				382051932C1040A1EAE9C9D9 /* MotionActivityHistoryService.swift */,
-				9023C73BF0ABBF25156E0DB8 /* StravaManager.swift */,
+				3CF2776BEA9A2F44319CE59E /* PedometerHistoryService.swift */,
+				6998DC05D7E5F43F5BC06119 /* PostureCalibrationProfile.swift */,
+				A7D1631060A55B7FAFCCBE3C /* PostureState.swift */,
+				AE94C5C5BA89D0845D3F0464 /* SensorKitManager.swift */,
+				9CEA195DB4C2AC612CE4635C /* SetupVerificationManager.swift */,
+				BEFFB2246859697F5AB08F58 /* StravaManager.swift */,
 				7D55B5F6C85C916D11B7F045 /* TouchLogger.swift */,
+				1DD8A89C867977AD6B6FDDBA /* TskinSynthesizer.swift */,
 				CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */,
-				D39DB9A041A37F94A87C544D /* AuthManager.swift */,
-				5D8CC19119896440748BC696 /* BeanieActivityEngine.swift */,
-				F1C5CB4468F45CB1CAF77D89 /* BeaniePostureEngine.swift */,
-				D420AE0103A52D1C2579ADE8 /* FirebaseSyncManager.swift */,
-				D7902EB12E70BD7F2B2B3374 /* ImportedActivityStore.swift */,
-				9F1D84235F71E26CE4C7E4CD /* MadgwickFilter.swift */,
-				BFDB33DD0AC1DF7C9D8AF65D /* PostureCalibrationProfile.swift */,
-				605D39B86635FFAD2754F93E /* PostureState.swift */,
-				DCBE16D1BB54BF49B81E4806 /* TskinSynthesizer.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -390,6 +398,7 @@
 			isa = PBXGroup;
 			children = (
 				29122AECD96E65493B8A5E3D /* Assets.xcassets */,
+				DD5339E158559F26256FEAAB /* GoogleService-Info.plist */,
 				B7B4D82052D07EC9D4C4D202 /* Info.plist */,
 				EE3A98217B290BECE22F6AEC /* PDCollectiOS.entitlements */,
 				ABE8ED11086C03259EBB5042 /* PDCollectiOSApp.swift */,
@@ -441,11 +450,11 @@
 			name = PDCollectiOS;
 			packageProductDependencies = (
 				CB18E99E2EED8D5C92402E8B /* ZIPFoundation */,
-				FB10A0000000000000000001 /* FirebaseAuth */,
-				FB10A0000000000000000002 /* FirebaseFirestore */,
-				FB10A0000000000000000003 /* FirebaseFirestoreSwift */,
-				FB10A0000000000000000004 /* GoogleSignIn */,
-				FB10A0000000000000000005 /* GoogleSignInSwift */,
+				FC4E8D782E0B08B1F5A41AA6 /* FirebaseAuth */,
+				13851280C42D9A56782C6F56 /* FirebaseFirestore */,
+				3BF715A1F29374D377F39C6D /* FirebaseFirestoreSwift */,
+				6A7ED2D237878F127E0DD933 /* GoogleSignIn */,
+				FD96A8E412F210A4C3E3253A /* GoogleSignInSwift */,
 			);
 			productName = PDCollectiOS;
 			productReference = C3081E4BFBCEB41B97984E56 /* PDCollectiOS.app */;
@@ -480,9 +489,9 @@
 			mainGroup = 33FE9B74A748BAFC5914F6E3;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				D50217C770471A66F776F955 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				DD53A81042DAEDB52C936E74 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				7AE74482320A1B5225F4CAB8 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
-				FB30A0000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				FB30A0000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1D66B0AB0EC9BC91A271D134 /* Products */;
@@ -501,6 +510,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C8C0E1B4AE04E74074DD9011 /* Assets.xcassets in Resources */,
+				32F8E86DE948AC8610DF1A24 /* GoogleService-Info.plist in Resources */,
 				116547EE8298A306D36D5320 /* Outfit.ttf in Resources */,
 				7B34C866055E0D5B3D46191A /* Rajdhani-Bold.ttf in Resources */,
 				CBB3ED519A7862EAC5AF9865 /* Rajdhani-Medium.ttf in Resources */,
@@ -527,10 +537,13 @@
 				88BFC8BABE7F924FC2B3F512 /* AppEvent.swift in Sources */,
 				7B095E70928AAE44474A5ED4 /* AppEventLogger.swift in Sources */,
 				866A13C77F5E5A2E78417ADB /* AppState.swift in Sources */,
+				B37C7A816EC85AF3DD3CAD3C /* AuthManager.swift in Sources */,
 				EFEE8EAE03ACD5794FDC82EF /* BackgroundCollectionManager.swift in Sources */,
+				C5604946F52F7C1BC642E837 /* BeanieActivityEngine.swift in Sources */,
 				EEBD77617A868B377DCEF3C5 /* BeanieBluetoothService.swift in Sources */,
 				70E00A8B330B3318C8062DFB /* BeanieIMUReading.swift in Sources */,
 				749F9252A67F105D34BD18BD /* BeaniePacketParser.swift in Sources */,
+				4EBB3603843581AD69B7597D /* BeaniePostureEngine.swift in Sources */,
 				3771022B1B1853F78DFCC05B /* BeanieRegistry.swift in Sources */,
 				B7F94D393BA111925C30620E /* BeanieTemperatureReading.swift in Sources */,
 				0E0D49DA346C1BAF53E32F5E /* BluetoothDevicesView.swift in Sources */,
@@ -547,58 +560,57 @@
 				0B2079CA1977261E10701E00 /* Extensions.swift in Sources */,
 				DD5320E6B151098F80D001D6 /* FaceDistanceManager.swift in Sources */,
 				A361B4AA5513779D444BABB4 /* FaceDistanceSample.swift in Sources */,
-				E7A1B2C3D4E5F60718293A4B /* GazeSample.swift in Sources */,
 				D95BB2D0B9A8F755A9947A15 /* FingerTappingView.swift in Sources */,
+				94DCD8B1B9618984E10CDBD9 /* FirebaseSyncManager.swift in Sources */,
 				35AA01C2FB7652E9B8CED696 /* GaitMetric.swift in Sources */,
 				5F62A13E03D4E6EBF8F472A1 /* GamificationManager.swift in Sources */,
+				047D161DDBEE5D2B3ECB8FEF /* GazeSample.swift in Sources */,
 				8C2788FF565DC54663694C89 /* HRBluetoothService.swift in Sources */,
 				B2CA4943BB2A0FD47C824444 /* HandTurningView.swift in Sources */,
 				28AD1CE01C8C6616C6EDD678 /* HealthKitManager.swift in Sources */,
-				88A1B2C3D4E5F67890123456 /* SensorKitManager.swift in Sources */,
 				2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */,
+				DFAAA39F799224DFE9CDB6EA /* IMUTempClassifier_V5_250.mlpackage in Sources */,
+				D17D2F3CE2D68D1B725A2B33 /* ImportedActivityStore.swift in Sources */,
+				3B5C38FA7B78B209440AED13 /* KeyboardSetupRow.swift in Sources */,
+				39B39FEABAC703FF720576FD /* KeychainHelper.swift in Sources */,
 				A7A7001026D9B57CE4E514AC /* KeystrokeEvent.swift in Sources */,
 				E49EA952DDC572D21A24DFC6 /* KeystrokeSync.swift in Sources */,
-				A211B4AA5513779D444BABB1 /* SetupVerificationManager.swift in Sources */,
 				79887FC9735E243684B1EC33 /* LegAgilityView.swift in Sources */,
+				689A7422675B744BE22B1E4A /* LoginView.swift in Sources */,
+				C6E81F8E56002D9F3331527D /* MadgwickFilter.swift in Sources */,
 				0A20ADB4C86A2846C097B5CD /* MainTabView.swift in Sources */,
+				C8181CC6D6E89E89713A02FC /* Medication.swift in Sources */,
 				57FE276D18C46A7CA9AD2C31 /* MedicationEvent.swift in Sources */,
 				C785910F8FA2F690D74355C9 /* MedicationLogView.swift in Sources */,
+				48F83DD41CECB2F141814488 /* MotionActivityHistoryService.swift in Sources */,
+				AC029017AC2686C1453E05EC /* MotionActivitySample.swift in Sources */,
 				CAD961BFA4B7982590B10FF2 /* PDAlgorithms.swift in Sources */,
 				6CD47DFF56E46D29883DD19D /* PDCollectiOSApp.swift in Sources */,
 				E48F30702EE977047022B202 /* PassiveSensorService.swift in Sources */,
+				5A6DA311D3B408B2DB82D5BB /* PedometerHistoryService.swift in Sources */,
+				9B44C0B22C5B77E165980E0D /* PedometerSample.swift in Sources */,
 				CB53A3EE995A01804FF74470 /* PhysicalActivityEvent.swift in Sources */,
-				FFCCF83B8412B71D1ABE8170 /* SleepEvent.swift in Sources */,
-				A0B4761A6BBB53D4A35D800E /* PedometerSample.swift in Sources */,
-				14B53669B1616E4FB739D6D4 /* PedometerHistoryService.swift in Sources */,
-				798B07D7DEA9E72DE37F8E06 /* StravaManager.swift in Sources */,
-				F667F2D674EB5B5F1AA6CA8D /* MotionActivitySample.swift in Sources */,
-				AFB4881DC55F17CBDACA37CB /* MotionActivityHistoryService.swift in Sources */,
 				91A282AB1DFF442B0514A4D7 /* PhysicalActivityLogView.swift in Sources */,
+				86978612CD8756CB7B18E524 /* PostureCalibrationProfile.swift in Sources */,
+				9BF036DE95A57BB2EB26AC6F /* PostureCalibrationView.swift in Sources */,
+				CE6810666EB9F205387E1F12 /* PostureState.swift in Sources */,
 				C0AFD9FA75913E6044F1FF72 /* ProfileSetupView.swift in Sources */,
 				E2055B4C5E8567B0661EDD19 /* QuestionnaireResponse.swift in Sources */,
 				3802AE5A866159350482457F /* QuestionnaireView.swift in Sources */,
+				34FC71B7C20DD31A1C66DDDC /* SensorKitManager.swift in Sources */,
 				977858DF39D1C4A8BF6370FB /* SensorReading.swift in Sources */,
 				93B40DE2C0FBB879893185D7 /* SettingsView.swift in Sources */,
+				CA3FCA41887CEB1BA0BB445B /* SetupVerificationManager.swift in Sources */,
+				FF28C88265F13F4057CD31B3 /* SleepEvent.swift in Sources */,
 				7B1493DAB8251D9B80369CC7 /* SpiralTracingView.swift in Sources */,
+				8B1FC8B437322535D3F8ECD6 /* StravaManager.swift in Sources */,
 				6349B8DD2AD0FDCEC5BACBDA /* Theme.swift in Sources */,
 				4CBB1245DEDAD1FAF3033049 /* TouchEvent.swift in Sources */,
 				914579E4A35D96D0D1750A8C /* TouchLogger.swift in Sources */,
 				6D4CDDDC59875727F2985DA5 /* TrailMakingTestView.swift in Sources */,
+				96DC85C00551E618AE4D29DB /* TskinSynthesizer.swift in Sources */,
 				7BE3FEA97BF565AD2B81A19F /* UserProfile.swift in Sources */,
-				783B1697648C806153377530 /* AuthManager.swift in Sources */,
-				05A282E4A6BE6A88EC57D341 /* BeanieActivityEngine.swift in Sources */,
-				FC4F25A1D357BE8B3019F180 /* BeaniePostureEngine.swift in Sources */,
-				2FBDF4A40354D00B21B83A70 /* FirebaseSyncManager.swift in Sources */,
-				1A3793B79F077267DB56AFBB /* ImportedActivityStore.swift in Sources */,
-				1165219E7C4980DE0AF68FF4 /* MadgwickFilter.swift in Sources */,
-				3B33444BE4DCD47764EEE861 /* PostureCalibrationProfile.swift in Sources */,
-				99182379CC38A75F843D7951 /* PostureState.swift in Sources */,
-				735D17B62A7DE02230616271 /* TskinSynthesizer.swift in Sources */,
-				2855E45D70D7DA0CEC1D3256 /* Medication.swift in Sources */,
-				AADE1F2145A7C96D85CA0BF8 /* KeyboardSetupRow.swift in Sources */,
-				7435D4A865FB42703CA05CAB /* LoginView.swift in Sources */,
-				E3A7D5F4683FE547D45DC0E7 /* PostureCalibrationView.swift in Sources */,
-				5202CF06B73EE8DADE404790 /* VoiceSampleView.swift in Sources */,
+				2F6C143B8577CCC0168ECFF5 /* VoiceSampleView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -717,6 +729,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1.keyboard;
 				PRODUCT_NAME = PDCollectKeyboard;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DISABLE_SENSORKIT;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -741,6 +754,7 @@
 				MARKETING_VERSION = 3.7.35;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DISABLE_SENSORKIT;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -763,6 +777,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1.keyboard;
 				PRODUCT_NAME = PDCollectKeyboard;
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DISABLE_SENSORKIT;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -865,7 +880,7 @@
 				minimumVersion = 0.9.19;
 			};
 		};
-		FB30A0000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+		D50217C770471A66F776F955 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
 			requirement = {
@@ -873,7 +888,7 @@
 				minimumVersion = 10.20.0;
 			};
 		};
-		FB30A0000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+		DD53A81042DAEDB52C936E74 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
 			requirement = {
@@ -884,34 +899,34 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		13851280C42D9A56782C6F56 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D50217C770471A66F776F955 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		3BF715A1F29374D377F39C6D /* FirebaseFirestoreSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D50217C770471A66F776F955 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestoreSwift;
+		};
+		6A7ED2D237878F127E0DD933 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DD53A81042DAEDB52C936E74 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
 		CB18E99E2EED8D5C92402E8B /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7AE74482320A1B5225F4CAB8 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
 			productName = ZIPFoundation;
 		};
-		FB10A0000000000000000001 /* FirebaseAuth */ = {
+		FC4E8D782E0B08B1F5A41AA6 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FB30A0000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			package = D50217C770471A66F776F955 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
 		};
-		FB10A0000000000000000002 /* FirebaseFirestore */ = {
+		FD96A8E412F210A4C3E3253A /* GoogleSignInSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FB30A0000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
-		FB10A0000000000000000003 /* FirebaseFirestoreSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FB30A0000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestoreSwift;
-		};
-		FB10A0000000000000000004 /* GoogleSignIn */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FB30A0000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignIn;
-		};
-		FB10A0000000000000000005 /* GoogleSignInSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FB30A0000000000000000002 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			package = DD53A81042DAEDB52C936E74 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */

@@ -26,6 +26,11 @@
 		<dict>
 			<key>IsASCIICapable</key>
 			<false/>
+			<key>Languages</key>
+			<array>
+				<string>en-US</string>
+				<string>he</string>
+			</array>
 			<key>PrefersRightToLeft</key>
 			<false/>
 			<key>PrimaryLanguage</key>

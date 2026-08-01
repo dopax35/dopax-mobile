@@ -31,6 +31,7 @@ echo " 2. Cleaning Xcode DerivedData & Provisioning Caches..."
 echo "============================================================"
 
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
+rm -rf ~/Library/Caches/org.swift.swiftpm/*
 rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*
 
 echo "============================================================"
@@ -56,6 +57,12 @@ EXPORT_OPTIONS_PLIST="$BUILD_DIR/ExportOptions.plist"
 mkdir -p "$BUILD_DIR"
 mkdir -p "$EXPORT_PATH"
 
+echo "Resolving Swift Package Dependencies..."
+xcodebuild -resolvePackageDependencies \
+  -project "$PROJECT" \
+  -scheme "$SCHEME" \
+  -scmProvider system
+
 cat <<EOF > "$EXPORT_OPTIONS_PLIST"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -80,6 +87,7 @@ xcodebuild archive \
   -configuration "$CONFIGURATION" \
   -sdk iphoneos \
   -archivePath "$ARCHIVE_PATH" \
+  -scmProvider system \
   -allowProvisioningUpdates || {
     echo "Ad-Hoc archive failed. Attempting development export fallback..."
     cat <<EOF > "$EXPORT_OPTIONS_PLIST"
@@ -104,6 +112,7 @@ EOF
       -configuration "$CONFIGURATION" \
       -sdk iphoneos \
       -archivePath "$ARCHIVE_PATH" \
+      -scmProvider system \
       -allowProvisioningUpdates
   }
 
