@@ -11,6 +11,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "============================================================"
+echo " 0. Pulling Latest Changes from Git..."
+echo "============================================================"
+git pull origin feature/sensorkit-ad-hoc-ipa || git pull || true
+
+echo "============================================================"
 echo " 1. Installing Apple WWDR Intermediate Certificates..."
 echo "============================================================"
 
