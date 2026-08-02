@@ -20,9 +20,8 @@ project_yml_path = os.path.join(ios_app_dir, 'project.yml')
 
 if len(sys.argv) < 2:
     print("Usage:")
-    print("  python toggle_sensorkit.py testflight      # Strip SensorKit for TestFlight submission")
-    print("  python toggle_sensorkit.py full            # Restore SensorKit for Ad-Hoc / Research build")
-    print("  python toggle_sensorkit.py no-app-groups   # Strip App Groups if not enabled in Developer Portal")
+    print("  python toggle_sensorkit.py testflight   # Clean entitlements for TestFlight / Automatic Signing")
+    print("  python toggle_sensorkit.py full         # Add SensorKit entitlement for Research build")
     sys.exit(1)
 
 mode = sys.argv[1].lower()
@@ -45,59 +44,37 @@ if os.path.exists(project_yml_path):
     with open(project_yml_path, 'r', encoding='utf-8') as f:
         project_yml_content = f.read()
 
-if mode == 'no-app-groups':
-    print("Stripping App Group entitlement from iOS project...")
+if mode == 'testflight' or mode == 'no-sensorkit' or mode == 'no-app-groups':
+    print("Configuring iOS App for TestFlight / Clean Automatic Signing...")
 
-    # 1. Remove App Group from main entitlements
-    ent_clean = re.sub(
-        r'\s*<key>com\.apple\.security\.application-groups</key>\s*<array>.*?</array>',
-        '',
-        entitlements_content,
-        flags=re.DOTALL
-    )
+    # 1. Clean main entitlements
+    clean_entitlements = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>com.apple.developer.healthkit</key>
+\t<true/>
+\t<key>com.apple.developer.healthkit.access</key>
+\t<array/>
+</dict>
+</plist>"""
     with open(entitlements_path, 'w', encoding='utf-8') as f:
-        f.write(ent_clean)
+        f.write(clean_entitlements)
+    print(" -> Reset PDCollectiOS.entitlements to standard HealthKit only.")
 
-    # 2. Remove App Group from keyboard entitlements
+    # 2. Clean keyboard extension entitlements
     if os.path.exists(keyboard_entitlements_path):
-        with open(keyboard_entitlements_path, 'r', encoding='utf-8') as f:
-            kb_ent = f.read()
-        kb_clean = re.sub(
-            r'\s*<key>com\.apple\.security\.application-groups</key>\s*<array>.*?</array>',
-            '',
-            kb_ent,
-            flags=re.DOTALL
-        )
+        clean_kb = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+</dict>
+</plist>"""
         with open(keyboard_entitlements_path, 'w', encoding='utf-8') as f:
-            f.write(kb_clean)
+            f.write(clean_kb)
+        print(" -> Reset KeyboardExtension.entitlements.")
 
-    # 3. Remove App Group from project.yml
-    if project_yml_content:
-        py_clean = re.sub(
-            r'\s*com\.apple\.security\.application-groups:\n(\s+-[^\n]+\n?)+',
-            '',
-            project_yml_content
-        )
-        with open(project_yml_path, 'w', encoding='utf-8') as f:
-            f.write(py_clean)
-
-    print("SUCCESS: App Group entitlements removed for standard signing!")
-
-elif mode == 'testflight' or mode == 'no-sensorkit':
-    print("Configuring iOS App for TestFlight Submission (No SensorKit)...")
-
-    # 1. Remove SensorKit entitlement from .entitlements
-    entitlements_clean = re.sub(
-        r'\s*<key>com\.apple\.developer\.sensorkit\.reader\.allow</key>\s*<array>.*?</array>',
-        '',
-        entitlements_content,
-        flags=re.DOTALL
-    )
-    with open(entitlements_path, 'w', encoding='utf-8') as f:
-        f.write(entitlements_clean)
-    print(" -> Removed 'com.apple.developer.sensorkit.reader.allow' from PDCollectiOS.entitlements.")
-
-    # 2. Remove NSSensorKitUsageDescription keys from Info.plist
+    # 3. Remove NSSensorKitUsageDescription keys from Info.plist
     info_clean = re.sub(
         r'\s*<key>NSSensorKitUsageDescription.*?</string>',
         '',
@@ -114,7 +91,7 @@ elif mode == 'testflight' or mode == 'no-sensorkit':
         f.write(info_clean)
     print(" -> Removed NSSensorKitUsageDescription keys from Info.plist.")
 
-    # 3. Update project.yml cleanly for main target only
+    # 4. Update project.yml
     if project_yml_content:
         project_yml_clean = re.sub(
             r'\s*com\.apple\.developer\.sensorkit\.reader\.allow:\n(\s+-[^\n]+\n?)+',
@@ -134,9 +111,9 @@ elif mode == 'testflight' or mode == 'no-sensorkit':
             )
         with open(project_yml_path, 'w', encoding='utf-8') as f:
             f.write(project_yml_clean)
-        print(" -> Removed SensorKit entitlement and added DISABLE_SENSORKIT to project.yml.")
+        print(" -> Added DISABLE_SENSORKIT flag to project.yml.")
 
-    print("\nSUCCESS: iOS project is now configured for TESTFLIGHT distribution!")
+    print("\nSUCCESS: iOS project is now configured for clean automatic signing!")
 
 elif mode == 'full' or mode == 'with-sensorkit':
     print("Restoring iOS App for Full Research Build (With SensorKit)...")

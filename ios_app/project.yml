@@ -31,7 +31,8 @@ targets:
       path: PDCollectiOS/Info.plist
       properties:
         CFBundleURLTypes:
-          - CFBundleURLSchemes:
+          - CFBundleTypeRole: Editor
+            CFBundleURLSchemes:
               - com.googleusercontent.apps.225458522869-ipigbhk8f1a3abgp3b4favs94g4f4hm5
         NSCameraUsageDescription: "This app uses the camera to scan documents"
         NSHealthShareUsageDescription: "This app uses Health data to monitor Parkinson's symptoms"
@@ -60,13 +61,8 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
-        com.apple.developer.applesignin:
-          - Default
-        com.apple.security.application-groups:
-          - group.com.oriw.pdcollect.ios1.shared    capabilities:
+    capabilities:
       healthKit:
-        enabled: true
-      signInWithApple:
         enabled: true
       backgroundModes:
         modes:
@@ -88,6 +84,7 @@ targets:
       - target: PDCollectKeyboard
     settings:
       base:
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT
         PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
@@ -99,9 +96,10 @@ targets:
       configs:
         Debug:
           DEBUG_INFORMATION_FORMAT: dwarf
-          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+          DEVELOPMENT_TEAM: YD2UPLT5JG
         Release:
           DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+          DEVELOPMENT_TEAM: YD2UPLT5JG
           SWIFT_OPTIMIZATION_LEVEL: "-O"
 
   # Keyboard Extension — logs keystroke types (never actual characters)
@@ -129,12 +127,6 @@ targets:
           NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).KeyboardViewController"
     entitlements:
       path: PDCollectiOS/KeyboardExtension/KeyboardExtension.entitlements
-      properties:
-        # Declared explicitly so `xcodegen generate` can never regress this to an
-        # empty dict — without the App Group the extension's containerURL(...) is
-        # nil and every keystroke-metrics write silently no-ops.
-        com.apple.security.application-groups:
-          - group.com.oriw.pdcollect.ios1.shared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.keyboard
@@ -143,3 +135,8 @@ targets:
         DEVELOPMENT_TEAM: YD2UPLT5JG
         CODE_SIGN_STYLE: Automatic
         PRODUCT_NAME: PDCollectKeyboard
+      configs:
+        Debug:
+          DEVELOPMENT_TEAM: YD2UPLT5JG
+        Release:
+          DEVELOPMENT_TEAM: YD2UPLT5JG
