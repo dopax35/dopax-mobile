@@ -63,13 +63,7 @@ targets:
         com.apple.developer.applesignin:
           - Default
         com.apple.security.application-groups:
-          - group.com.oriw.pdcollect.ios1.shared
-        com.apple.developer.sensorkit.reader.allow:
-          - accelerometer
-          - rotation-rate
-          - keyboard-metrics
-          - device-usage
-    capabilities:
+          - group.com.oriw.pdcollect.ios1.shared    capabilities:
       healthKit:
         enabled: true
       signInWithApple:
@@ -141,11 +135,6 @@ targets:
         # nil and every keystroke-metrics write silently no-ops.
         com.apple.security.application-groups:
           - group.com.oriw.pdcollect.ios1.shared
-        com.apple.developer.sensorkit.reader.allow:
-          - accelerometer
-          - rotation-rate
-          - keyboard-metrics
-          - device-usage
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.keyboard
