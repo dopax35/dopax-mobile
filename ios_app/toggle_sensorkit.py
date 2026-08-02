@@ -76,7 +76,7 @@ if mode == 'testflight' or mode == 'no-sensorkit':
         f.write(info_clean)
     print(" -> Removed NSSensorKitUsageDescription keys from Info.plist.")
 
-    # 3. Remove SensorKit from project.yml and add DISABLE_SENSORKIT condition
+    # 3. Update project.yml
     if project_yml_content:
         project_yml_clean = re.sub(
             r'\s*com\.apple\.developer\.sensorkit\.reader\.allow:\n(\s+-[^\n]+\n?)+',
@@ -89,10 +89,9 @@ if mode == 'testflight' or mode == 'no-sensorkit':
             project_yml_clean
         )
         if 'DISABLE_SENSORKIT' not in project_yml_clean:
-            project_yml_clean = re.sub(
-                r'(settings:\n\s+base:\n)',
-                r'\1        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT\n',
-                project_yml_clean
+            project_yml_clean = project_yml_clean.replace(
+                "      base:\n",
+                "      base:\n        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT\n"
             )
         with open(project_yml_path, 'w', encoding='utf-8') as f:
             f.write(project_yml_clean)
@@ -135,5 +134,15 @@ elif mode == 'full' or mode == 'with-sensorkit':
         with open(info_plist_path, 'w', encoding='utf-8') as f:
             f.write(info_plist_content)
     print(" -> Restored SensorKit keys in Info.plist.")
+
+    # 3. Clean project.yml DISABLE_SENSORKIT if present
+    if project_yml_content and 'DISABLE_SENSORKIT' in project_yml_content:
+        project_yml_clean = project_yml_content.replace(
+            "        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT\n",
+            ""
+        )
+        with open(project_yml_path, 'w', encoding='utf-8') as f:
+            f.write(project_yml_clean)
+        print(" -> Removed DISABLE_SENSORKIT flag from project.yml.")
 
     print("\nSUCCESS: iOS project is now restored to FULL SENSORKIT mode!")
