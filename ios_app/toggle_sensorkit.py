@@ -25,6 +25,12 @@ if len(sys.argv) < 2:
 
 mode = sys.argv[1].lower()
 
+def replace_last_dict_tag(content, insertion):
+    idx = content.rfind('</dict>')
+    if idx != -1:
+        return content[:idx] + insertion + '\n' + content[idx:]
+    return content
+
 # Read entitlements
 with open(entitlements_path, 'r', encoding='utf-8') as f:
     entitlements_content = f.read()
@@ -106,7 +112,7 @@ elif mode == 'full' or mode == 'with-sensorkit':
 \t\t<string>keyboard-metrics</string>
 \t\t<string>device-usage</string>
 \t</array>"""
-        entitlements_content = entitlements_content.replace('</dict>', f'{sensorkit_entitlement}\n</dict>')
+        entitlements_content = replace_last_dict_tag(entitlements_content, sensorkit_entitlement)
         with open(entitlements_path, 'w', encoding='utf-8') as f:
             f.write(entitlements_content)
     print(" -> Restored SensorKit entitlement in PDCollectiOS.entitlements.")
@@ -125,31 +131,9 @@ elif mode == 'full' or mode == 'with-sensorkit':
 \t<string>Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease.</string>
 \t<key>NSSensorKitUsageDescriptionDeviceUsage</key>
 \t<string>Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease.</string>"""
-        info_plist_content = info_plist_content.replace('</dict>', f'{sensorkit_plist_keys}\n</dict>')
+        info_plist_content = replace_last_dict_tag(info_plist_content, sensorkit_plist_keys)
         with open(info_plist_path, 'w', encoding='utf-8') as f:
             f.write(info_plist_content)
     print(" -> Restored SensorKit keys in Info.plist.")
-
-    # 3. Restore project.yml
-    if project_yml_content:
-        project_yml_content = re.sub(
-            r'\s*SWIFT_ACTIVE_COMPILATION_CONDITIONS:\s*DISABLE_SENSORKIT\n?',
-            '',
-            project_yml_content
-        )
-        if 'com.apple.developer.sensorkit.reader.allow' not in project_yml_content:
-            sensorkit_yml = """        com.apple.developer.sensorkit.reader.allow:
-          - accelerometer
-          - rotation-rate
-          - keyboard-metrics
-          - device-usage"""
-            project_yml_content = re.sub(
-                r'(group\.com\.oriw\.pdcollect\.ios1\.shared\n)',
-                r'\1' + sensorkit_yml + '\n',
-                project_yml_content
-            )
-        with open(project_yml_path, 'w', encoding='utf-8') as f:
-            f.write(project_yml_content)
-        print(" -> Restored SensorKit entitlement in project.yml.")
 
     print("\nSUCCESS: iOS project is now restored to FULL SENSORKIT mode!")

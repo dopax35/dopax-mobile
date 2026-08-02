@@ -43,6 +43,9 @@ struct PDCollectiOSApp: App {
                 // consistent with the explicitly-tinted ones throughout the
                 // app. (July 2026 color-consistency pass.)
                 .tint(.dopaxBlue)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
                 .onAppear {
                     // Wire touch logger's data manager after the environment is available
                     if let loggingApp = UIApplication.shared as? LoggingApplication {
