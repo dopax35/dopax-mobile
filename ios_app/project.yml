@@ -147,7 +147,8 @@ targets:
           - keyboard-metrics
           - device-usage
     settings:
-      base:        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.keyboard
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.keyboard
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0
         DEVELOPMENT_TEAM: YD2UPLT5JG
