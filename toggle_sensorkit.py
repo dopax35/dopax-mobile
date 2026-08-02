@@ -3,7 +3,7 @@ import os
 import re
 
 print("==========================================================================")
-print("  iOS SensorKit Mode Switcher (TestFlight vs Full Research Build)")
+print("  iOS SensorKit & Entitlement Switcher (TestFlight vs Research Build)")
 print("==========================================================================")
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,13 +14,15 @@ else:
 
 ios_dir = os.path.join(ios_app_dir, 'PDCollectiOS')
 entitlements_path = os.path.join(ios_dir, 'PDCollectiOS.entitlements')
+keyboard_entitlements_path = os.path.join(ios_dir, 'KeyboardExtension', 'KeyboardExtension.entitlements')
 info_plist_path = os.path.join(ios_dir, 'Info.plist')
 project_yml_path = os.path.join(ios_app_dir, 'project.yml')
 
 if len(sys.argv) < 2:
     print("Usage:")
-    print("  python toggle_sensorkit.py testflight   # Strip SensorKit for TestFlight submission")
-    print("  python toggle_sensorkit.py full         # Restore SensorKit for Ad-Hoc / Research build")
+    print("  python toggle_sensorkit.py testflight      # Strip SensorKit for TestFlight submission")
+    print("  python toggle_sensorkit.py full            # Restore SensorKit for Ad-Hoc / Research build")
+    print("  python toggle_sensorkit.py no-app-groups   # Strip App Groups if not enabled in Developer Portal")
     sys.exit(1)
 
 mode = sys.argv[1].lower()
@@ -31,21 +33,57 @@ def replace_last_dict_tag(content, insertion):
         return content[:idx] + insertion + '\n' + content[idx:]
     return content
 
-# Read entitlements
+# Read files
 with open(entitlements_path, 'r', encoding='utf-8') as f:
     entitlements_content = f.read()
 
-# Read Info.plist
 with open(info_plist_path, 'r', encoding='utf-8') as f:
     info_plist_content = f.read()
 
-# Read project.yml
 project_yml_content = ""
 if os.path.exists(project_yml_path):
     with open(project_yml_path, 'r', encoding='utf-8') as f:
         project_yml_content = f.read()
 
-if mode == 'testflight' or mode == 'no-sensorkit':
+if mode == 'no-app-groups':
+    print("Stripping App Group entitlement from iOS project...")
+
+    # 1. Remove App Group from main entitlements
+    ent_clean = re.sub(
+        r'\s*<key>com\.apple\.security\.application-groups</key>\s*<array>.*?</array>',
+        '',
+        entitlements_content,
+        flags=re.DOTALL
+    )
+    with open(entitlements_path, 'w', encoding='utf-8') as f:
+        f.write(ent_clean)
+
+    # 2. Remove App Group from keyboard entitlements
+    if os.path.exists(keyboard_entitlements_path):
+        with open(keyboard_entitlements_path, 'r', encoding='utf-8') as f:
+            kb_ent = f.read()
+        kb_clean = re.sub(
+            r'\s*<key>com\.apple\.security\.application-groups</key>\s*<array>.*?</array>',
+            '',
+            kb_ent,
+            flags=re.DOTALL
+        )
+        with open(keyboard_entitlements_path, 'w', encoding='utf-8') as f:
+            f.write(kb_clean)
+
+    # 3. Remove App Group from project.yml
+    if project_yml_content:
+        py_clean = re.sub(
+            r'\s*com\.apple\.security\.application-groups:\n(\s+-[^\n]+\n?)+',
+            '',
+            project_yml_content
+        )
+        with open(project_yml_path, 'w', encoding='utf-8') as f:
+            f.write(py_clean)
+
+    print("SUCCESS: App Group entitlements removed for standard signing!")
+
+elif mode == 'testflight' or mode == 'no-sensorkit':
     print("Configuring iOS App for TestFlight Submission (No SensorKit)...")
 
     # 1. Remove SensorKit entitlement from .entitlements

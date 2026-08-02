@@ -89,7 +89,11 @@ xcodebuild archive \
   -archivePath "$ARCHIVE_PATH" \
   -scmProvider system \
   -allowProvisioningUpdates || {
-    echo "Ad-Hoc archive failed. Attempting development export fallback..."
+    echo "Archive failed on entitlement/provisioning mismatch. Stripping unassigned App Groups and retrying..."
+    python ../toggle_sensorkit.py no-app-groups || python toggle_sensorkit.py no-app-groups || true
+    if command -v xcodegen &> /dev/null; then
+        xcodegen generate
+    fi
     cat <<EOF > "$EXPORT_OPTIONS_PLIST"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
