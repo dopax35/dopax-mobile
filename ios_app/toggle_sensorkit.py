@@ -113,6 +113,21 @@ if mode == 'testflight' or mode == 'no-sensorkit' or mode == 'no-app-groups':
             f.write(project_yml_clean)
         print(" -> Added DISABLE_SENSORKIT flag to project.yml.")
 
+    # 5. Direct update to project.pbxproj if xcodegen is not installed
+    pbxproj_path = os.path.join(ios_app_dir, 'PDCollectiOS.xcodeproj', 'project.pbxproj')
+    if os.path.exists(pbxproj_path):
+        with open(pbxproj_path, 'r', encoding='utf-8') as f:
+            pbx_content = f.read()
+        if 'DISABLE_SENSORKIT' not in pbx_content:
+            pbx_content = re.sub(
+                r'(\s+SWIFT_ACTIVE_COMPILATION_CONDITIONS = )([^;\n]+);',
+                r'\1"\2 DISABLE_SENSORKIT";',
+                pbx_content
+            )
+            with open(pbxproj_path, 'w', encoding='utf-8') as f:
+                f.write(pbx_content)
+            print(" -> Updated project.pbxproj with DISABLE_SENSORKIT.")
+
     print("\nSUCCESS: iOS project is now configured for clean automatic signing!")
 
 elif mode == 'full' or mode == 'with-sensorkit':
@@ -160,5 +175,16 @@ elif mode == 'full' or mode == 'with-sensorkit':
         with open(project_yml_path, 'w', encoding='utf-8') as f:
             f.write(project_yml_clean)
         print(" -> Removed DISABLE_SENSORKIT flag from project.yml.")
+
+    # 4. Remove DISABLE_SENSORKIT from project.pbxproj
+    pbxproj_path = os.path.join(ios_app_dir, 'PDCollectiOS.xcodeproj', 'project.pbxproj')
+    if os.path.exists(pbxproj_path):
+        with open(pbxproj_path, 'r', encoding='utf-8') as f:
+            pbx_content = f.read()
+        if 'DISABLE_SENSORKIT' in pbx_content:
+            pbx_content = pbx_content.replace('DISABLE_SENSORKIT;', '').replace('DISABLE_SENSORKIT', '')
+            with open(pbxproj_path, 'w', encoding='utf-8') as f:
+                f.write(pbx_content)
+            print(" -> Removed DISABLE_SENSORKIT flag from project.pbxproj.")
 
     print("\nSUCCESS: iOS project is now restored to FULL SENSORKIT mode!")

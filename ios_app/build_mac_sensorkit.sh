@@ -26,12 +26,14 @@ SCHEME="PDCollectiOS"
 PROJECT="PDCollectiOS.xcodeproj"
 CONFIGURATION="Release"
 BUILD_DIR="$SCRIPT_DIR/build_sensorkit"
-ARCHIVE_PATH="$BUILD_DIR/PDCollectiOS_SensorKit.xcarchive"
 EXPORT_PATH="$BUILD_DIR/ipa"
 EXPORT_OPTIONS_PLIST="$BUILD_DIR/ExportOptions.plist"
 
 mkdir -p "$BUILD_DIR"
 mkdir -p "$EXPORT_PATH"
+
+echo "Cleaning SPM derived cache..."
+rm -rf ~/Library/Developer/Xcode/DerivedData/PDCollectiOS-* 2>/dev/null || true
 
 xcodebuild -resolvePackageDependencies \
   -project "$PROJECT" \
