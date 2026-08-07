@@ -68,9 +68,13 @@ class GamificationManager: ObservableObject {
             isNewPB = currentPB == 0 || score < currentPB
         }
         if isNewPB { ud.set(score, forKey: pbKey) }
-
         // Refresh published state
         refresh()
+    }
+
+    /// Convenience alias for tests that don't compute a numerical score.
+    func markCompleted(testType: String) {
+        recordCompletion(testType: testType, score: 1.0)
     }
 
     // MARK: - Queries

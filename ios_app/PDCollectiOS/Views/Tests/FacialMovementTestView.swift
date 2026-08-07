@@ -162,11 +162,13 @@ struct FacialMovementTestView: View {
 
     private func recordFacialTestSummary() {
         let sample = FaceDistanceSample(
-            timestamp: Date(),
-            faceX: 0, faceY: 0, faceZ: 0.45,
-            eyeLeftOpenness: 0.85, eyeRightOpenness: 0.85,
-            blinkCount: trackedBlinks,
-            roll: 0, pitch: 0, yaw: 0
+            timestampMs: Int64(Date().timeIntervalSince1970 * 1000),
+            distanceRatio: 0.45,
+            faceX: 0.5,
+            faceY: 0.5,
+            confidence: 1.0,
+            roll: 0.0,
+            yaw: 0.0
         )
         appState.dataManager.writeFaceSample(sample)
     }

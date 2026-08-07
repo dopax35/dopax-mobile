@@ -3,6 +3,7 @@ import Combine
 
 #if canImport(SensorKit) && !DISABLE_SENSORKIT
 import SensorKit
+import CoreMotion
 #endif
 
 /// Manages SensorKit reader access for Parkinson's Disease research.
@@ -29,7 +30,7 @@ class SensorKitManager: NSObject, ObservableObject {
         .accelerometer,
         .rotationRate,
         .keyboardMetrics,
-        .deviceUsage
+        .deviceUsageReport
     ]
     #endif
 
@@ -117,8 +118,8 @@ class SensorKitManager: NSObject, ObservableObject {
 
             fetchGroup.enter()
             let request = SRFetchRequest()
-            request.from = SRAbsoluteTime(from: startDate)
-            request.to = SRAbsoluteTime(from: endDate)
+            request.from = SRAbsoluteTime(startDate.timeIntervalSinceReferenceDate)
+            request.to = SRAbsoluteTime(endDate.timeIntervalSinceReferenceDate)
 
             reader.fetch(request)
         }
@@ -135,7 +136,7 @@ class SensorKitManager: NSObject, ObservableObject {
 extension SensorKitManager: SRSensorReaderDelegate {
     func sensorReader(_ reader: SRSensorReader,
                       fetching request: SRFetchRequest,
-                      didFetch result: SRFetchResult) -> Bool {
+                      didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
         guard let dm = dataManager else { return true }
 
         let timestampMs = Int64(result.timestamp.date.timeIntervalSince1970 * 1000)
@@ -143,12 +144,12 @@ extension SensorKitManager: SRSensorReaderDelegate {
 
         switch reader.sensor {
         case .accelerometer:
-            if let accelData = sample as? CRAcceleration {
+            if let accelData = sample as? CMAccelerometerData {
                 dm.writeSensorKitAccelerometerRow(timestampMs: timestampMs, x: accelData.acceleration.x, y: accelData.acceleration.y, z: accelData.acceleration.z)
                 incrementCount("accelerometer")
             }
         case .rotationRate:
-            if let gyroData = sample as? CRRotationRate {
+            if let gyroData = sample as? CMRotationRateData {
                 dm.writeSensorKitRotationRateRow(timestampMs: timestampMs, x: gyroData.rotationRate.x, y: gyroData.rotationRate.y, z: gyroData.rotationRate.z)
                 incrementCount("rotationRate")
             }
@@ -161,7 +162,7 @@ extension SensorKitManager: SRSensorReaderDelegate {
                 dm.writeSensorKitKeyboardRow(timestampMs: timestampMs, totalWords: totalWords, deleteCount: deleteCount, pauseCount: pauseCount, typingSpeed: typingSpeed)
                 incrementCount("keyboardMetrics")
             }
-        case .deviceUsage:
+        case .deviceUsageReport:
             if let usageReport = sample as? SRDeviceUsageReport {
                 let duration = usageReport.duration
                 let totalUnlocks = usageReport.totalScreenWakes
