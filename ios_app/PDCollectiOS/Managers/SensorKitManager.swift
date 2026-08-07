@@ -52,10 +52,16 @@ class SensorKitManager: NSObject, ObservableObject {
         }
 
         var statuses: [String: String] = [:]
+        var createdAny = false
         for sensor in approvedSensors {
-            let reader = SRSensorReader(sensor: sensor)
+            let safeReader = SRSafetyHelper.safeCreateSensorReader(forSensorName: sensor.rawValue) as? SRSensorReader
+            guard let reader = safeReader else {
+                statuses[sensor.rawValue] = "Not Supported / Unentitled"
+                continue
+            }
             reader.delegate = self
             readers[sensor] = reader
+            createdAny = true
 
             let statusStr: String
             switch reader.authorizationStatus {
@@ -73,7 +79,7 @@ class SensorKitManager: NSObject, ObservableObject {
 
         DispatchQueue.main.async {
             self.authorizationStatuses = statuses
-            self.isAvailable = true
+            self.isAvailable = createdAny
         }
         #else
         DispatchQueue.main.async {
