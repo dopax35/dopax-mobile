@@ -40,6 +40,9 @@
 		689A7422675B744BE22B1E4A /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57169E2A60B139FA3B1AA983 /* LoginView.swift */; };
 		6CD47DFF56E46D29883DD19D /* PDCollectiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE8ED11086C03259EBB5042 /* PDCollectiOSApp.swift */; };
 		6D4CDDDC59875727F2985DA5 /* TrailMakingTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */; };
+		8F7CDDDC59875727F2985DA5 /* FacialMovementTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9EF8C2CF9D8BFDCC4BAC53 /* FacialMovementTestView.swift */; };
+		9F7CDDDC59875727F2985DA5 /* FingersTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F9EF8C2CF9D8BFDCC4BAC53 /* FingersTestView.swift */; };
+		AF7CDDDC59875727F2985DA5 /* VoiceTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F9EF8C2CF9D8BFDCC4BAC53 /* VoiceTestView.swift */; };
 		70E00A8B330B3318C8062DFB /* BeanieIMUReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A8B02E21783F5E4E98BF55B /* BeanieIMUReading.swift */; };
 		749F9252A67F105D34BD18BD /* BeaniePacketParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05F42555E81C60211FCFFB2A /* BeaniePacketParser.swift */; };
 		79887FC9735E243684B1EC33 /* LegAgilityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6DC17477E60268A9078B93 /* LegAgilityView.swift */; };
@@ -139,6 +142,9 @@
 		1CB6732CCB96F2806CC08ACD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1DD8A89C867977AD6B6FDDBA /* TskinSynthesizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TskinSynthesizer.swift; sourceTree = "<group>"; };
 		1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailMakingTestView.swift; sourceTree = "<group>"; };
+		2F9EF8C2CF9D8BFDCC4BAC53 /* FacialMovementTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacialMovementTestView.swift; sourceTree = "<group>"; };
+		3F9EF8C2CF9D8BFDCC4BAC53 /* FingersTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingersTestView.swift; sourceTree = "<group>"; };
+		4F9EF8C2CF9D8BFDCC4BAC53 /* VoiceTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTestView.swift; sourceTree = "<group>"; };
 		2291E97313FB912D275C98D8 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		2298F5AE2E19A1C14406B881 /* PostureCalibrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostureCalibrationView.swift; sourceTree = "<group>"; };
 		26219CFA974662F0772A8E8E /* KeystrokeSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeystrokeSync.swift; sourceTree = "<group>"; };
@@ -381,6 +387,9 @@
 				2D6DC17477E60268A9078B93 /* LegAgilityView.swift */,
 				863F45179A7EDC27F9EF7FC7 /* SpiralTracingView.swift */,
 				1F9EF8C2CF9D8BFDCC4BAC53 /* TrailMakingTestView.swift */,
+				2F9EF8C2CF9D8BFDCC4BAC53 /* FacialMovementTestView.swift */,
+				3F9EF8C2CF9D8BFDCC4BAC53 /* FingersTestView.swift */,
+				4F9EF8C2CF9D8BFDCC4BAC53 /* VoiceTestView.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -608,6 +617,9 @@
 				4CBB1245DEDAD1FAF3033049 /* TouchEvent.swift in Sources */,
 				914579E4A35D96D0D1750A8C /* TouchLogger.swift in Sources */,
 				6D4CDDDC59875727F2985DA5 /* TrailMakingTestView.swift in Sources */,
+				8F7CDDDC59875727F2985DA5 /* FacialMovementTestView.swift in Sources */,
+				9F7CDDDC59875727F2985DA5 /* FingersTestView.swift in Sources */,
+				AF7CDDDC59875727F2985DA5 /* VoiceTestView.swift in Sources */,
 				96DC85C00551E618AE4D29DB /* TskinSynthesizer.swift in Sources */,
 				7BE3FEA97BF565AD2B81A19F /* UserProfile.swift in Sources */,
 				2F6C143B8577CCC0168ECFF5 /* VoiceSampleView.swift in Sources */,
@@ -632,7 +644,7 @@
 				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 121;
+				CURRENT_PROJECT_VERSION = 127;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = YD2UPLT5JG;
 				INFOPLIST_FILE = PDCollectiOS/Info.plist;
@@ -641,7 +653,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.7.35;
+				MARKETING_VERSION = 3.7.39;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -742,7 +754,7 @@
 				CODE_SIGN_ENTITLEMENTS = PDCollectiOS/PDCollectiOS.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 121;
+				CURRENT_PROJECT_VERSION = 127;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = YD2UPLT5JG;
 				INFOPLIST_FILE = PDCollectiOS/Info.plist;
@@ -751,7 +763,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.7.35;
+				MARKETING_VERSION = 3.7.39;
 				PRODUCT_BUNDLE_IDENTIFIER = com.oriw.pdcollect.ios1;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DISABLE_SENSORKIT;

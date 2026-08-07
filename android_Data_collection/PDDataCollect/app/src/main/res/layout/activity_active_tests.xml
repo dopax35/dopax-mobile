@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -15,103 +16,188 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
-            android:paddingTop="88dp">
+            android:paddingTop="48dp">
 
-            <!-- Asymmetrical Headline -->
-            <!-- Active Tests Content -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Select Assessment"
-                android:textSize="20sp"
+                android:text="Active Assessments"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="24dp" />
+
+            <!-- Category 1: Cognitive -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🧠  Cognitive &amp; Executive"
+                android:textSize="16sp"
+                android:textStyle="bold"
                 android:textColor="@color/secondary"
                 android:layout_marginBottom="8dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Movements"
-                android:textSize="42sp"
-                android:textStyle="bold"
-                android:textColor="@color/on_surface"
-                android:layout_marginBottom="32dp" />
-
-            <!-- Test Grid / List -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnTmt"
                 android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:text="🧠  Trail Making Test"
-                android:textSize="18sp"
+                android:layout_height="64dp"
+                android:text="Trail Making Test"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
                 android:backgroundTint="@color/white"
                 app:strokeColor="@color/primary"
-                app:strokeWidth="2dp"
+                app:strokeWidth="1.5dp"
                 app:cornerRadius="16dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category 2: Voice -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🗣️  Voice &amp; Speech Dynamics"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnVoice"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="Voice Sample (Story Reading)"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:backgroundTint="@color/white"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1.5dp"
+                app:cornerRadius="16dp"
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnVoiceTest"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="Voice Acoustic Test (Sustained /a/ &amp; DDK)"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:backgroundTint="@color/white"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1.5dp"
+                app:cornerRadius="16dp"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category 3: Motor -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🖐️  Motor &amp; Movement"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnFingerTapping"
                 android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:text="✋  Finger Tapping"
-                android:textSize="18sp"
+                android:layout_height="64dp"
+                android:text="Touchscreen Finger Tapping"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
                 android:backgroundTint="@color/white"
                 app:strokeColor="@color/primary"
-                app:strokeWidth="2dp"
+                app:strokeWidth="1.5dp"
                 app:cornerRadius="16dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="12dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFingersTest"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="Free-Space Camera Fingers Test"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:backgroundTint="@color/white"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1.5dp"
+                app:cornerRadius="16dp"
+                android:layout_marginBottom="12dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnPronationSupination"
                 android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:text="🔄  Pronation-Supination"
-                android:textSize="18sp"
+                android:layout_height="64dp"
+                android:text="Pronation - Supination"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
                 android:backgroundTint="@color/white"
                 app:strokeColor="@color/primary"
-                app:strokeWidth="2dp"
+                app:strokeWidth="1.5dp"
                 app:cornerRadius="16dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="12dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSpiralTracing"
                 android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:text="🌀  Spiral Tracing"
-                android:textSize="18sp"
+                android:layout_height="64dp"
+                android:text="Spiral Tracing Test"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
                 android:backgroundTint="@color/white"
                 app:strokeColor="@color/primary"
-                app:strokeWidth="2dp"
+                app:strokeWidth="1.5dp"
                 app:cornerRadius="16dp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="12dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLegAgility"
                 android:layout_width="match_parent"
-                android:layout_height="72dp"
-                android:text="🦵  Leg Agility Test"
-                android:textSize="18sp"
+                android:layout_height="64dp"
+                android:text="Leg Agility Test"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
                 android:backgroundTint="@color/white"
                 app:strokeColor="@color/primary"
-                app:strokeWidth="2dp"
+                app:strokeWidth="1.5dp"
                 app:cornerRadius="16dp"
-                android:layout_marginBottom="48dp" />
+                android:layout_marginBottom="20dp" />
+
+            <!-- Category 4: Facial Expressions -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="😊  Facial Expressions"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/secondary"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnFacialMovement"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="Facial Movement Test"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:backgroundTint="@color/white"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1.5dp"
+                app:cornerRadius="16dp"
+                android:layout_marginBottom="32dp" />
 
             <!-- Final Action -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnBack"
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
+                android:layout_height="56dp"
                 android:text="Return Home"
                 app:cornerRadius="16dp"
                 android:backgroundTint="@color/surface_container_high"

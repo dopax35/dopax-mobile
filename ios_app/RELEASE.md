@@ -2,6 +2,25 @@
 
 ---
 
+## 3.7.38 (build 126) — 2026-08-07
+
+### Active Tests Suite Integration & UI Redesign
+
+- **Integrated `face_test`, `fingers_test`, `voice_test` repositories**:
+  - Added 5-step guided **Facial Movement Test** (`FacialMovementTestView.swift`) measuring resting hypomimia, smile amplitude, eyebrow elevation, mouth pucker, and rapid blink frequency.
+  - Enhanced **Finger Tapping** with hand-size normalized tapping analytics and pinch interval metrics.
+  - Enhanced **Voice Recording** with sustained `/a/` phonation and speech dynamics quality tracking.
+- **Active Tests Redesign**: Reorganized the Active Tests view into 4 distinct categories:
+  1. 🧠 **Cognitive & Executive**: Trail Making Test A & B
+  2. 🗣️ **Voice & Speech Dynamics**: Voice Sample Recording
+  3. 🖐️ **Motor & Movement**: Finger Tapping, Hand Turning, Spiral Tracing, Leg Agility
+  4. 😊 **Facial Expressions**: Facial Movement Test
+- **Dedicated Mac Build Scripts**:
+  - `build_mac_sensorkit.sh`: Archive and export `.ipa` with full SensorKit entitlements.
+  - `build_mac_nosensorkit.sh`: Archive and export `.ipa` for TestFlight / standard App Store signing without SensorKit.
+
+---
+
 ## 3.8.0 (build 122) — 2026-07-30
 
 ### Apple SensorKit Reader Access Integration & Ad-Hoc Downloadable Build

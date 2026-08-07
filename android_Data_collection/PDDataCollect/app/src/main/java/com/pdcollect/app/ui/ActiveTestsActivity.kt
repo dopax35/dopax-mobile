@@ -5,14 +5,11 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.Button
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.pdcollect.app.R
 
 class ActiveTestsActivity : AppCompatActivity() {
 
-    // Set to the name of the test when the user deliberately launches it; cleared in onResume
-    // so the questionnaire prompt fires once each time they return from a test.
     private var launchedTestName: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,9 +21,24 @@ class ActiveTestsActivity : AppCompatActivity() {
             startActivity(Intent(this, TrailMakingTestActivity::class.java))
         }
 
+        findViewById<Button>(R.id.btnVoice).setOnClickListener {
+            launchedTestName = "Voice Sample Recording"
+            startActivity(Intent(this, VoiceSampleActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnVoiceTest).setOnClickListener {
+            launchedTestName = "Voice Acoustic Test"
+            startActivity(Intent(this, VoiceTestActivity::class.java))
+        }
+
         findViewById<Button>(R.id.btnFingerTapping).setOnClickListener {
             launchedTestName = "Finger Tapping Test"
             startActivity(Intent(this, FingerTappingActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnFingersTest).setOnClickListener {
+            launchedTestName = "Free-Space Fingers Test"
+            startActivity(Intent(this, FingersTestActivity::class.java))
         }
 
         findViewById<Button>(R.id.btnPronationSupination).setOnClickListener {
@@ -44,6 +56,11 @@ class ActiveTestsActivity : AppCompatActivity() {
             startActivity(Intent(this, LegAgilityActivity::class.java))
         }
 
+        findViewById<Button>(R.id.btnFacialMovement).setOnClickListener {
+            launchedTestName = "Facial Movement Test"
+            startActivity(Intent(this, FacialMovementTestActivity::class.java))
+        }
+
         findViewById<Button>(R.id.btnBack).setOnClickListener {
             finish()
         }
@@ -54,7 +71,7 @@ class ActiveTestsActivity : AppCompatActivity() {
         if (launchedTestName != null) {
             val testName = launchedTestName!!
             launchedTestName = null
-            
+
             Handler(Looper.getMainLooper()).postDelayed({
                 if (!isFinishing && !isDestroyed) {
                     com.pdcollect.app.util.NudgeGenerator.showNudgeAfterTest(this, testName) {

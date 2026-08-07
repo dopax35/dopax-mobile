@@ -67,17 +67,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSSensorKitUsageDescription</key>
-	<string>PDCollect accesses SensorKit data streams to generate digital markers for Parkinson's Disease research.</string>
-	<key>NSSensorKitPrivacyPolicyURL</key>
-	<string>https://pdcollect.web.app/privacy.html</string>
-	<key>NSSensorKitUsageDescriptionAccelerometer</key>
-	<string>Used to record passive high-resolution accelerometer data for Parkinson's Disease motion analysis.</string>
-	<key>NSSensorKitUsageDescriptionRotationRate</key>
-	<string>Used to record passive gyroscope rotation rate data for Parkinson's Disease tremor and movement analysis.</string>
-	<key>NSSensorKitUsageDescriptionKeyboardMetrics</key>
-	<string>Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease.</string>
-	<key>NSSensorKitUsageDescriptionDeviceUsage</key>
-	<string>Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease.</string>
 </dict>
 </plist>

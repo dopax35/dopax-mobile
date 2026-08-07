@@ -13,13 +13,11 @@ struct ActiveTestsView: View {
                     // Due today banner
                     dueTodaySection
 
-                    // Test groups — each test gets one of the 4 Dopa-X brand
-                    // hues as a distinct legend color (was a mix of brand and
-                    // non-brand system colors: indigo/green/red).
-                    testGroup(title: "🧠 Cognitive", tests: [
+                    // 1. Cognitive Category
+                    testGroup(title: "🧠 Cognitive & Executive", tests: [
                         TestConfig(
                             title: "Trail Making A",
-                            subtitle: "Connect numbers 1–10 in order",
+                            subtitle: "Connect numbers 1–10 sequentially",
                             icon: "number.circle",
                             color: .dopaxBlue,
                             testType: "trail_making_A",
@@ -27,7 +25,7 @@ struct ActiveTestsView: View {
                         ),
                         TestConfig(
                             title: "Trail Making B",
-                            subtitle: "Alternate numbers and letters",
+                            subtitle: "Alternate numbers and letters (1-A-2-B)",
                             icon: "character.cursor.ibeam",
                             color: .dopaxPurple,
                             testType: "trail_making_B",
@@ -35,7 +33,28 @@ struct ActiveTestsView: View {
                         ),
                     ])
 
-                    testGroup(title: "💪 Motor", tests: [
+                    // 2. Voice Category
+                    testGroup(title: "🗣️ Voice & Speech Dynamics", tests: [
+                        TestConfig(
+                            title: "Voice Recording",
+                            subtitle: "Story reading voice sample",
+                            icon: "waveform.and.mic",
+                            color: .dopaxTeal,
+                            testType: "voice_recording",
+                            destination: AnyView(VoiceSampleView())
+                        ),
+                        TestConfig(
+                            title: "Voice Acoustic Test",
+                            subtitle: "Sustained /a/ hold & DDK speech rate",
+                            icon: "mic.fill",
+                            color: .dopaxTeal,
+                            testType: "voice_test",
+                            destination: AnyView(VoiceTestView())
+                        ),
+                    ])
+
+                    // 3. Motor Category
+                    testGroup(title: "🖐️ Motor & Movement", tests: [
                         TestConfig(
                             title: "Finger Tapping",
                             subtitle: "Alternate taps · 10 s per hand",
@@ -45,8 +64,16 @@ struct ActiveTestsView: View {
                             destination: AnyView(FingerTappingView())
                         ),
                         TestConfig(
+                            title: "Free-Space Fingers Test",
+                            subtitle: "Camera hand-tracking in free space",
+                            icon: "hand.point.up.left.fill",
+                            color: .dopaxBlue,
+                            testType: "fingers_test",
+                            destination: AnyView(FingersTestView())
+                        ),
+                        TestConfig(
                             title: "Hand Turning",
-                            subtitle: "Pronation/supination · 10 s",
+                            subtitle: "Pronation/supination speed · 10 s",
                             icon: "arrow.clockwise",
                             color: .dopaxPurple,
                             testType: "hand_turning",
@@ -54,7 +81,7 @@ struct ActiveTestsView: View {
                         ),
                         TestConfig(
                             title: "Spiral Tracing",
-                            subtitle: "Trace the spiral accurately",
+                            subtitle: "Trace spiral for tremor analysis",
                             icon: "tornado",
                             color: .dopaxOrange,
                             testType: "spiral_tracing",
@@ -67,6 +94,18 @@ struct ActiveTestsView: View {
                             color: .dopaxDarkBlue,
                             testType: "leg_agility",
                             destination: AnyView(LegAgilityView())
+                        ),
+                    ])
+
+                    // 4. Facial Category
+                    testGroup(title: "😊 Facial Expressions", tests: [
+                        TestConfig(
+                            title: "Facial Movement",
+                            subtitle: "5-task battery (rest, smile, brow, pucker, blink)",
+                            icon: "face.smiling",
+                            color: .dopaxRose,
+                            testType: "facial_movement",
+                            destination: AnyView(FacialMovementTestView())
                         ),
                     ])
                 }
@@ -104,7 +143,8 @@ struct ActiveTestsView: View {
                 HStack(spacing: 8) {
                     let types = ["finger_tapping", "hand_turning",
                                  "spiral_tracing", "leg_agility",
-                                 "trail_making_A", "trail_making_B"]
+                                 "trail_making_A", "trail_making_B",
+                                 "voice_recording", "facial_movement"]
                     let done = types.filter { appState.gamification.isCompletedToday(testType: $0) }.count
                     Text("\(done)/\(types.count) today")
                         .font(.caption).foregroundStyle(.secondary)
@@ -130,6 +170,8 @@ struct ActiveTestsView: View {
             ("leg_agility", "Leg Agility"),
             ("trail_making_A", "Trail Making A"),
             ("trail_making_B", "Trail Making B"),
+            ("voice_recording", "Voice"),
+            ("facial_movement", "Facial Movement"),
         ].filter { !appState.gamification.isCompletedToday(testType: $0.0) }
 
         if !overdue.isEmpty {
@@ -193,7 +235,6 @@ private struct TestRow: View {
             HStack(spacing: 14) {
                 // Icon with completion ring overlay
                 ZStack {
-                    // Completion ring
                     let done = appState.gamification.isCompletedToday(testType: config.testType)
                     let days = appState.gamification.daysSinceLastCompleted(testType: config.testType)
                     Circle()

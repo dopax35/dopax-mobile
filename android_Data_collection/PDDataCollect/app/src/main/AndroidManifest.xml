@@ -234,8 +234,14 @@
         <receiver android:name=".receiver.BatteryReminderReceiver"
             android:exported="false" />
 
-        <!-- Voice Sample -->
+        <!-- Voice & Facial Tests -->
         <activity android:name=".ui.VoiceSampleActivity"
+            android:exported="false" />
+        <activity android:name=".ui.VoiceTestActivity"
+            android:exported="false" />
+        <activity android:name=".ui.FacialMovementTestActivity"
+            android:exported="false" />
+        <activity android:name=".ui.FingersTestActivity"
             android:exported="false" />
 
         <!-- Evening Reminder -->

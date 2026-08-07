@@ -52,10 +52,12 @@ class DataManager: ObservableObject {
                 (Constants.CSV.beanieImuFile,         Constants.CSV.beanieImuHeader),
                 // Active test files
                 (Constants.CSV.fingerTappingFile,    Constants.CSV.fingerTappingHeader),
+                (Constants.CSV.fingersTestFile,      Constants.CSV.fingersTestHeader),
                 (Constants.CSV.handTurningFile,      Constants.CSV.handTurningHeader),
                 (Constants.CSV.legAgilityFile,       Constants.CSV.legAgilityHeader),
                 (Constants.CSV.spiralTracingFile,    Constants.CSV.spiralTracingHeader),
                 (Constants.CSV.tmtResultsFile,       Constants.CSV.tmtResultsHeader),
+                (Constants.CSV.voiceTestFile,        Constants.CSV.voiceTestHeader),
                 // Daily profile and questionnaire
                 (Constants.CSV.profileFile,          Constants.CSV.profileHeader),
                 (Constants.CSV.questionnaireFile,    Constants.CSV.questionnaireHeader),
@@ -104,6 +106,18 @@ class DataManager: ObservableObject {
         let row = "\(wallMs),\(elapsedMs),\(event),\(buttonId),\(side),\(profile.dominantHand),\(profile.affectedSide)\n"
         append(row, to: todayDir, filename: Constants.CSV.fingerTappingFile,
                header: Constants.CSV.fingerTappingHeader)
+    }
+
+    // MARK: Free-Space Fingers Test
+    func writeFingersTestData(_ row: String) {
+        append(row, to: todayDir, filename: Constants.CSV.fingersTestFile,
+               header: Constants.CSV.fingersTestHeader)
+    }
+
+    // MARK: Acoustic Voice Test
+    func writeVoiceTestData(_ row: String) {
+        append(row, to: todayDir, filename: Constants.CSV.voiceTestFile,
+               header: Constants.CSV.voiceTestHeader)
     }
 
     // MARK: Hand Turning

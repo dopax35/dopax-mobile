@@ -92,10 +92,12 @@ class DataManager(private val context: Context, private val userProfile: UserPro
         getWriter(Constants.BEANIE_IMU_FILE, Constants.BEANIE_IMU_HEADER)
         // Active test files
         getWriter(Constants.TEST_FINGER_TAPPING_FILE, Constants.FINGER_TAPPING_HEADER)
+        getWriter(Constants.FINGERS_TEST_FILE, Constants.FINGERS_TEST_HEADER)
         getWriter(Constants.TEST_HAND_TURNING_FILE, Constants.HAND_TURNING_HEADER)
         getWriter(Constants.TEST_SPIRAL_FILE, Constants.SPIRAL_HEADER)
         getWriter(Constants.TEST_LEG_AGILITY_FILE, Constants.LEG_AGILITY_HEADER)
         getWriter(Constants.TMT_RESULTS_FILE, Constants.TMT_HEADER)
+        getWriter(Constants.VOICE_TEST_FILE, Constants.VOICE_TEST_HEADER)
         // Daily profile and questionnaire
         getWriter(Constants.PROFILE_FILE, Constants.PROFILE_HEADER)
         getWriter(Constants.QUESTIONNAIRE_FILE, Constants.QUESTIONNAIRE_HEADER)
@@ -206,6 +208,8 @@ class DataManager(private val context: Context, private val userProfile: UserPro
 
     fun writeFingerTappingData(row: String) = postWrite(Constants.TEST_FINGER_TAPPING_FILE, Constants.FINGER_TAPPING_HEADER, row)
 
+    fun writeFingersTestData(row: String) = postWrite(Constants.FINGERS_TEST_FILE, Constants.FINGERS_TEST_HEADER, row)
+
     fun writeHandTurningData(row: String) = postWrite(Constants.TEST_HAND_TURNING_FILE, Constants.HAND_TURNING_HEADER, row)
 
     fun writeSpiralData(row: String) = postWrite(Constants.TEST_SPIRAL_FILE, Constants.SPIRAL_HEADER, row)
@@ -219,6 +223,8 @@ class DataManager(private val context: Context, private val userProfile: UserPro
     fun writeSleepData(row: String) = postWrite(Constants.SLEEP_FILE, Constants.SLEEP_HEADER, row, flush = true)
 
     fun writeVoiceLogData(row: String) = postWrite(Constants.VOICE_LOG_FILE, Constants.VOICE_LOG_HEADER, row, flush = true)
+
+    fun writeVoiceTestData(row: String) = postWrite(Constants.VOICE_TEST_FILE, Constants.VOICE_TEST_HEADER, row, flush = true)
 
     fun writeBlinkData(row: String) = postWrite(Constants.BLINK_FILE, Constants.BLINK_HEADER, row, flush = true)
 

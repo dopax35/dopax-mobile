@@ -60,6 +60,10 @@ object Constants {
     // trailer (matching the other motor-test schemas) so MotorTestSession
     // can format every test the same way.
     const val FINGER_TAPPING_HEADER = "timestamp_ms,elapsed_ms,event,button_id,side,dominant_hand,affected_side"
+    const val FINGERS_TEST_FILE = "fingers_test.csv"
+    const val FINGERS_TEST_HEADER = "timestamp_ms,elapsed_ms,event,hand,thumb_x,thumb_y,thumb_z,index_x,index_y,index_z,pinch_distance_hl,speed_hls"
+    const val VOICE_TEST_FILE = "voice_test.csv"
+    const val VOICE_TEST_HEADER = "timestamp_ms,task,duration_ms,f0_mean_hz,jitter_pct,shimmer_db,hnr_db,ddk_rate_hz,decibel_decay"
     const val HAND_TURNING_HEADER = "timestamp_ms,elapsed_ms,event,gx,gy,gz,ax,ay,az,side,dominant_hand,affected_side"
     const val SPIRAL_HEADER = "timestamp_ms,elapsed_ms,event,x,y,action,side,dominant_hand,affected_side"
     const val LEG_AGILITY_HEADER = "timestamp_ms,elapsed_ms,event,gx,gy,gz,ax,ay,az,side,dominant_hand,affected_side"

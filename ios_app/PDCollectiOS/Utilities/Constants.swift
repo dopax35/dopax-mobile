@@ -16,10 +16,12 @@ enum Constants {
 
         // ── Active test files (match Android filenames) ──────────────────
         static let fingerTappingFile    = "finger_tapping.csv"
+        static let fingersTestFile      = "fingers_test.csv"
         static let handTurningFile      = "hand_turning.csv"
         static let legAgilityFile       = "leg_agility.csv"
         static let spiralTracingFile    = "spiral_tracing.csv"
         static let tmtResultsFile       = "tmt_results.csv"
+        static let voiceTestFile        = "voice_test.csv"
 
         // ── Active test headers (match Android exactly) ───────────────────
         /// timestamp_ms, elapsed_ms, event, button_id, side, dominant_hand, affected_side
@@ -41,6 +43,8 @@ enum Constants {
         /// wrong-target touches instead — same column name, two different
         /// meanings across platforms).
         static let tmtResultsHeader     = "start_time_ms,timestamp_ms,test_type,total_time_ms,wrong_target_errors,lift_off_errors,segment_timings_json,finger_path_json,path_data_json\n"
+        static let fingersTestHeader    = "timestamp_ms,elapsed_ms,event,hand,thumb_x,thumb_y,thumb_z,index_x,index_y,index_z,pinch_distance_hl,speed_hls\n"
+        static let voiceTestHeader      = "timestamp_ms,task,duration_ms,f0_mean_hz,jitter_pct,shimmer_db,hnr_db,ddk_rate_hz,decibel_decay\n"
 
         // ── Passive / sensor files ─────────────────────────────────────────
         static let questionnaireFile    = "questionnaire.csv"
