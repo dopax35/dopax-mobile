@@ -5,6 +5,7 @@ extension Color {
     static let dopaxBlue = Color(hex: 0x2828C6)
     static let dopaxOrange = Color(hex: 0xFF5C35)
     static let dopaxPurple = Color(hex: 0x5B34A4)
+    static let dopaxRose = Color(hex: 0xE63946)
     static let dopaxTeal = Color(hex: 0x00A896)
     static let dopaxWarmGray = Color(hex: 0xF0F4F8)
 
@@ -35,6 +36,7 @@ extension ShapeStyle where Self == Color {
     static var dopaxBlue: Color { .dopaxBlue }
     static var dopaxOrange: Color { .dopaxOrange }
     static var dopaxPurple: Color { .dopaxPurple }
+    static var dopaxRose: Color { .dopaxRose }
     static var dopaxTeal: Color { .dopaxTeal }
     static var dopaxWarmGray: Color { .dopaxWarmGray }
 
