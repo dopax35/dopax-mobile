@@ -44,6 +44,12 @@
 	<string>This app uses Health data to monitor Parkinson's symptoms</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>This app writes Health data to track Parkinson's symptoms</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>PDCollect records movement and gait patterns in the background to analyze Parkinson's symptoms.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app records short voice samples of you reading a story aloud during the Voice Sample task, used to analyze speech patterns related to Parkinson's symptoms.</string>
 	<key>NSMotionUsageDescription</key>
@@ -55,6 +61,8 @@
 		<string>fetch</string>
 		<string>processing</string>
 		<string>bluetooth-central</string>
+		<string>location</string>
+		<string>audio</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>

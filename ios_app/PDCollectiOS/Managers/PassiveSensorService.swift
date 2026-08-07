@@ -78,9 +78,11 @@ class PassiveSensorService: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.flushTimer?.invalidate()
-            self.flushTimer = Timer.scheduledTimer(withTimeInterval: self.flushInterval, repeats: true) { [weak self] _ in
+            let timer = Timer(timeInterval: self.flushInterval, repeats: true) { [weak self] _ in
                 self?.flush()
             }
+            RunLoop.main.add(timer, forMode: .common)
+            self.flushTimer = timer
         }
     }
 
@@ -94,18 +96,21 @@ class PassiveSensorService: ObservableObject {
     }
 
     private func setupObservers() {
+        // Continuous background sensor recording is kept alive by BackgroundKeepAliveManager
+        // (Location + Silent Audio loop background modes). On background transition, we
+        // flush the current buffer without stopping CoreMotion updates.
         tokens.append(
             NotificationCenter.default.addObserver(
                 forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil
             ) { [weak self] _ in
-                self?.stopMotionUpdates()
+                self?.flush()
             }
         )
         tokens.append(
             NotificationCenter.default.addObserver(
                 forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil
             ) { [weak self] _ in
-                guard let self, self.isCollectingActive else { return }
+                guard let self, self.isCollectingActive, !self.motion.isDeviceMotionActive else { return }
                 self.startMotionUpdates()
             }
         )

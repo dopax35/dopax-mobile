@@ -20,6 +20,7 @@ class AppState: ObservableObject {
     let appEventLogger = AppEventLogger()
     let sensorKitManager = SensorKitManager()
     let bgCollection   = BackgroundCollectionManager.shared
+    let keepAliveManager = BackgroundKeepAliveManager.shared
 
     // MARK: - Bluetooth
     let bluetoothManager = BluetoothManager.shared
@@ -159,6 +160,7 @@ class AppState: ObservableObject {
         // DataManager.initializeAllDailyLogs() called from PDCollectService.onStartCommand().
         dataManager.initializeDailyFiles()
         passiveSensor.start(dataManager: dataManager)
+        keepAliveManager.start()
         appEventLogger.start(dataManager: dataManager)
         bgCollection.scheduleAll()
         // Wire Bluetooth so HR and Beanie data gets written to disk
@@ -178,12 +180,9 @@ class AppState: ObservableObject {
 
     func stopCollection() {
         passiveSensor.stop()
+        keepAliveManager.stop()
         appEventLogger.stop()
         faceDistance.stop()
-        // Was previously missing — startCollection() wires up bluetoothManager, but
-        // stopCollection() never tore it down, so toggling "Data Collection" off in
-        // Settings left HR/Beanie BLE data being written indefinitely, contradicting
-        // what the toggle told the participant was happening.
         bluetoothManager.stop()
     }
 

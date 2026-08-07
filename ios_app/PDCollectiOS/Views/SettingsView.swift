@@ -76,14 +76,27 @@ struct SettingsView: View {
                 // MARK: - Passive Sensors Status
                 Section {
                     HStack {
-                        Label("Passive Sensors (100 Hz)", systemImage: "wave.3.right")
+                        Label("Passive Sensors (50 Hz)", systemImage: "wave.3.right")
                         Spacer()
                         statusBadge(running: appState.passiveSensor.isRunning)
                     }
                     LabeledContent("Readings today",
                                    value: "\(appState.passiveSensor.totalReadingsToday)")
+                    HStack {
+                        Label("Location Keep-Alive", systemImage: "location.fill")
+                        Spacer()
+                        statusBadge(running: appState.keepAliveManager.isLocationKeepAliveActive)
+                    }
+                    HStack {
+                        Label("Silent Audio Keep-Alive", systemImage: "speaker.wave.2.fill")
+                        Spacer()
+                        statusBadge(running: appState.keepAliveManager.isAudioKeepAliveActive)
+                    }
                 } header: {
-                    Label("Sensor Service", systemImage: "gyroscope")
+                    Label("Sensor Service & Background Keep-Alive", systemImage: "gyroscope")
+                } footer: {
+                    Text("Uses Background Location Updates and Silent Audio playback to prevent iOS from suspending CoreMotion, enabling continuous 50 Hz sensor recording when locked or backgrounded.")
+                        .font(.caption)
                 }
 
                 // MARK: - PDCollect Keyboard Setup
