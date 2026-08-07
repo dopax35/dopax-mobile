@@ -37,6 +37,9 @@ targets:
         NSCameraUsageDescription: "This app uses the camera to scan documents"
         NSHealthShareUsageDescription: "This app uses Health data to monitor Parkinson's symptoms"
         NSHealthUpdateUsageDescription: "This app writes Health data to track Parkinson's symptoms"
+        NSLocationWhenInUseUsageDescription: "PDCollect records movement and gait patterns in the background to analyze Parkinson's symptoms."
+        NSLocationAlwaysAndWhenInUseUsageDescription: "PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research."
+        NSLocationAlwaysUsageDescription: "PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research."
         NSMicrophoneUsageDescription: "This app records short voice samples of you reading a story aloud during the Voice Sample task, used to analyze speech patterns related to Parkinson's symptoms."
         NSBluetoothAlwaysUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
         NSBluetoothPeripheralUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
@@ -56,6 +59,8 @@ targets:
           - fetch
           - processing
           - bluetooth-central
+          - location
+          - audio
     entitlements:
       path: PDCollectiOS/PDCollectiOS.entitlements
       properties:
