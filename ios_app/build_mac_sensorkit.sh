@@ -26,6 +26,7 @@ SCHEME="PDCollectiOS"
 PROJECT="PDCollectiOS.xcodeproj"
 CONFIGURATION="Release"
 BUILD_DIR="$SCRIPT_DIR/build_sensorkit"
+ARCHIVE_PATH="$BUILD_DIR/PDCollectiOS_SensorKit.xcarchive"
 EXPORT_PATH="$BUILD_DIR/ipa"
 EXPORT_OPTIONS_PLIST="$BUILD_DIR/ExportOptions.plist"
 
