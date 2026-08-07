@@ -65,7 +65,8 @@ xcodebuild archive \
   -sdk iphoneos \
   -archivePath "$ARCHIVE_PATH" \
   -scmProvider system \
-  -allowProvisioningUpdates
+  -allowProvisioningUpdates \
+  SWIFT_ACTIVE_COMPILATION_CONDITIONS="DISABLE_SENSORKIT"
 
 xcodebuild -exportArchive \
   -archivePath "$ARCHIVE_PATH" \

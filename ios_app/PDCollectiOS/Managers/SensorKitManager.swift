@@ -139,7 +139,8 @@ extension SensorKitManager: SRSensorReaderDelegate {
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
         guard let dm = dataManager else { return true }
 
-        let timestampMs = Int64(result.timestamp.date.timeIntervalSince1970 * 1000)
+        let date = Date(timeIntervalSinceReferenceDate: result.timestamp)
+        let timestampMs = Int64(date.timeIntervalSince1970 * 1000)
         let sample = result.sample
 
         switch reader.sensor {
@@ -156,8 +157,8 @@ extension SensorKitManager: SRSensorReaderDelegate {
         case .keyboardMetrics:
             if let kbData = sample as? SRKeyboardMetrics {
                 let totalWords = kbData.totalWords
-                let deleteCount = kbData.totalAlphanumericKeys
-                let pauseCount = kbData.totalPathPauses
+                let deleteCount = (kbData.value(forKey: "totalAlphanumericKeys") as? Int) ?? (kbData.value(forKey: "totalDeletes") as? Int) ?? 0
+                let pauseCount = (kbData.value(forKey: "totalPathPauses") as? Int) ?? (kbData.value(forKey: "totalPauses") as? Int) ?? 0
                 let typingSpeed = kbData.typingSpeed
                 dm.writeSensorKitKeyboardRow(timestampMs: timestampMs, totalWords: totalWords, deleteCount: deleteCount, pauseCount: pauseCount, typingSpeed: typingSpeed)
                 incrementCount("keyboardMetrics")
@@ -167,7 +168,7 @@ extension SensorKitManager: SRSensorReaderDelegate {
                 let duration = usageReport.duration
                 let totalUnlocks = usageReport.totalScreenWakes
                 let unlockDuration = usageReport.totalUnlockDuration
-                let webUsage = usageReport.totalWebUsage
+                let webUsage = (usageReport.value(forKey: "totalWebUsage") as? Double) ?? 0.0
                 dm.writeSensorKitDeviceUsageRow(timestampMs: timestampMs, durationSeconds: duration, totalUnlocks: totalUnlocks, unlockDurationSeconds: unlockDuration, webUsageSeconds: webUsage)
                 incrementCount("deviceUsage")
             }
