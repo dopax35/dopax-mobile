@@ -70,11 +70,9 @@ xcodebuild archive \
   -derivedDataPath "$BUILD_DIR/DerivedData" \
   -scmProvider system \
   -allowProvisioningUpdates \
-  SWIFT_ENABLE_EXPLICIT_MODULES=NO \
   CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES \
-  COMPILER_INDEX_STORE_ENABLE=NO \
-  GCC_WARN_INHIBIT_ALL_WARNINGS=YES \
-  SWIFT_SUPPRESS_WARNINGS=YES
+  CLANG_ENABLE_MODULES=YES \
+  COMPILER_INDEX_STORE_ENABLE=NO
 
 xcodebuild -exportArchive \
   -archivePath "$ARCHIVE_PATH" \
