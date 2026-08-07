@@ -139,7 +139,7 @@ extension SensorKitManager: SRSensorReaderDelegate {
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
         guard let dm = dataManager else { return true }
 
-        let date = Date(timeIntervalSinceReferenceDate: result.timestamp)
+        let date = Date(timeIntervalSinceReferenceDate: result.timestamp.rawValue)
         let timestampMs = Int64(date.timeIntervalSince1970 * 1000)
         let sample = result.sample
 
