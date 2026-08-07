@@ -35,11 +35,13 @@ mkdir -p "$EXPORT_PATH"
 
 echo "Cleaning SPM derived cache..."
 rm -rf ~/Library/Developer/Xcode/DerivedData/PDCollectiOS-* 2>/dev/null || true
+rm -rf ~/Library/Caches/org.swift.swiftpm 2>/dev/null || true
 
 xcodebuild -resolvePackageDependencies \
   -project "$PROJECT" \
   -scheme "$SCHEME" \
-  -scmProvider system
+  -scmProvider system \
+  CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES
 
 cat <<EOF > "$EXPORT_OPTIONS_PLIST"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -65,7 +67,9 @@ xcodebuild archive \
   -sdk iphoneos \
   -archivePath "$ARCHIVE_PATH" \
   -scmProvider system \
-  -allowProvisioningUpdates
+  -allowProvisioningUpdates \
+  CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES \
+  COMPILER_INDEX_STORE_ENABLE=NO
 
 xcodebuild -exportArchive \
   -archivePath "$ARCHIVE_PATH" \
