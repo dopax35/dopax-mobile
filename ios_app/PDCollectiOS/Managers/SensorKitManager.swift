@@ -36,12 +36,15 @@ class SensorKitManager: NSObject, ObservableObject {
 
     override init() {
         super.init()
-        checkAvailabilityAndStatus()
+        #if canImport(SensorKit) && !DISABLE_SENSORKIT
+        if #available(iOS 14.0, *) {
+            self.isAvailable = true
+        }
+        #endif
     }
 
     func configure(dataManager: DataManager) {
         self.dataManager = dataManager
-        checkAvailabilityAndStatus()
     }
 
     func checkAvailabilityAndStatus() {
