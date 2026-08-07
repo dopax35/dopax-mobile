@@ -136,7 +136,7 @@ class SensorKitManager: NSObject, ObservableObject {
 extension SensorKitManager: SRSensorReaderDelegate {
     func sensorReader(_ reader: SRSensorReader,
                       fetching request: SRFetchRequest,
-                      didFetchResult result: SRFetchResult) -> Bool {
+                      didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
         guard let dm = dataManager else { return true }
 
         let date = Date(timeIntervalSinceReferenceDate: result.timestamp)
