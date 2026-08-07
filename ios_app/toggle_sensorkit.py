@@ -182,7 +182,7 @@ elif mode == 'full' or mode == 'with-sensorkit':
         with open(pbxproj_path, 'r', encoding='utf-8') as f:
             pbx_content = f.read()
         if 'DISABLE_SENSORKIT' in pbx_content:
-            pbx_content = pbx_content.replace('DISABLE_SENSORKIT;', '').replace('DISABLE_SENSORKIT', '')
+            pbx_content = re.sub(r'\s*SWIFT_ACTIVE_COMPILATION_CONDITIONS = [^;\n]*DISABLE_SENSORKIT[^;\n]*;', '', pbx_content)
             with open(pbxproj_path, 'w', encoding='utf-8') as f:
                 f.write(pbx_content)
             print(" -> Removed DISABLE_SENSORKIT flag from project.pbxproj.")
