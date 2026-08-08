@@ -158,11 +158,10 @@ android {
         // AND the scan binder thread, and read on the BLE binder thread with no
         // synchronisation; ignoreStaleGattCallback() closes whatever it judges stale, so a
         // stale read closed the live connection. All GATT/scan callbacks are now pinned to
-        // v3.7.39 (vc 127): Dedicated CSV outputs for fingers_test and voice_test,
-        // Active tests suite integration (face_test, fingers_test, voice_test)
-        // and Active Tests UI redesign with 4 categories.
-        versionCode = 127
-        versionName = "3.7.39"
+        // v3.7.40 (vc 128): Camera tests (face_test, fingers_test) with live Vision/ARKit landmark overlays,
+        // positioning guidance banners, and SensorKit launch crash / ITMS-90683 resolution.
+        versionCode = 128
+        versionName = "3.7.40"
     }
 
     signingConfigs {

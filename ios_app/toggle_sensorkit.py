@@ -176,7 +176,7 @@ elif mode == 'full' or mode == 'with-sensorkit':
 \t\t\t<key>Description</key>
 \t\t\t<string>Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease.</string>
 \t\t</dict>
-\t\t<key>SRSensorUsageDeviceUsage</key>
+\t\t<key>SRSensorUsageDeviceUsageReport</key>
 \t\t<dict>
 \t\t\t<key>Description</key>
 \t\t\t<string>Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease.</string>
@@ -192,6 +192,9 @@ elif mode == 'full' or mode == 'with-sensorkit':
         project_yml_clean = project_yml_content.replace(
             "        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT\n",
             ""
+        ).replace(
+            "        GCC_PREPROCESSOR_DEFINITIONS: \"DISABLE_SENSORKIT=1 $(inherited)\"\n",
+            ""
         )
         with open(project_yml_path, 'w', encoding='utf-8') as f:
             f.write(project_yml_clean)
@@ -204,6 +207,7 @@ elif mode == 'full' or mode == 'with-sensorkit':
             pbx_content = f.read()
         if 'DISABLE_SENSORKIT' in pbx_content:
             pbx_content = re.sub(r'\s*SWIFT_ACTIVE_COMPILATION_CONDITIONS = [^;\n]*DISABLE_SENSORKIT[^;\n]*;', '', pbx_content)
+            pbx_content = re.sub(r'\s*GCC_PREPROCESSOR_DEFINITIONS = [^;\n]*DISABLE_SENSORKIT[^;\n]*;', '', pbx_content)
             with open(pbxproj_path, 'w', encoding='utf-8') as f:
                 f.write(pbx_content)
             print(" -> Removed DISABLE_SENSORKIT flag from project.pbxproj.")
