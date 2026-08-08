@@ -158,10 +158,9 @@ android {
         // AND the scan binder thread, and read on the BLE binder thread with no
         // synchronisation; ignoreStaleGattCallback() closes whatever it judges stale, so a
         // stale read closed the live connection. All GATT/scan callbacks are now pinned to
-        // v3.7.40 (vc 128): Camera tests (face_test, fingers_test) with live Vision/ARKit landmark overlays,
-        // positioning guidance banners, and SensorKit launch crash / ITMS-90683 resolution.
-        versionCode = 128
-        versionName = "3.7.40"
+        // v3.7.41 (vc 129): Integrated CameraX live video preview stream into Android FingersTestActivity & FacialMovementTestActivity.
+        versionCode = 129
+        versionName = "3.7.41"
     }
 
     signingConfigs {
@@ -237,6 +236,7 @@ dependencies {
     implementation("androidx.camera:camera-core:1.3.0")
     implementation("androidx.camera:camera-camera2:1.3.0")
     implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
 
     // ML Kit Face Detection
     implementation("com.google.mlkit:face-detection:16.1.5")

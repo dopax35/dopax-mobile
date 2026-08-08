@@ -8,6 +8,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import com.pdcollect.app.R
 import com.pdcollect.app.data.DataManager
 import com.pdcollect.app.data.UserProfile
@@ -17,6 +22,7 @@ class FingersTestActivity : AppCompatActivity() {
     private lateinit var dataManager: DataManager
     private lateinit var profile: UserProfile
 
+    private lateinit var viewFinder: PreviewView
     private lateinit var tvTimer: TextView
     private lateinit var tvTapCount: TextView
     private lateinit var btnStart: Button
@@ -34,6 +40,7 @@ class FingersTestActivity : AppCompatActivity() {
         profile = UserProfile(this)
         dataManager = DataManager(this, profile)
 
+        viewFinder = findViewById(R.id.viewFinder)
         findViewById<TextView>(R.id.tvTaskTitle).text = "Free-Space Fingers Test"
         findViewById<TextView>(R.id.tvTaskInstruction).text = "Bring hand into front camera view. Tap thumb and index fingertip repeatedly in free space as fast and wide as possible."
         findViewById<TextView>(R.id.tvProgress).text = "Camera Hand Tracking"
@@ -42,6 +49,8 @@ class FingersTestActivity : AppCompatActivity() {
         tvTimer = findViewById(R.id.tvTimer)
         tvTapCount = findViewById(R.id.tvTaskInstruction)
         btnStart = findViewById(R.id.btnStart)
+
+        startCameraPreview()
 
         btnStart.text = "Start Free-Space Fingers Test"
         btnStart.setOnClickListener {
@@ -98,6 +107,23 @@ class FingersTestActivity : AppCompatActivity() {
                 finish()
             }
         }, 1500)
+    }
+
+    private fun startCameraPreview() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(viewFinder.surfaceProvider)
+                }
+                val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
     private fun writeFingersTestData() {

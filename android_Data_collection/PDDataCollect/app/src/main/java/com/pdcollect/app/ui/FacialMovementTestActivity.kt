@@ -9,6 +9,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import com.pdcollect.app.R
 import com.pdcollect.app.data.DataManager
 import com.pdcollect.app.data.UserProfile
@@ -18,6 +23,7 @@ class FacialMovementTestActivity : AppCompatActivity() {
     private lateinit var dataManager: DataManager
     private lateinit var profile: UserProfile
 
+    private lateinit var viewFinder: PreviewView
     private lateinit var tvTaskTitle: TextView
     private lateinit var tvTaskInstruction: TextView
     private lateinit var tvTimer: TextView
@@ -49,6 +55,7 @@ class FacialMovementTestActivity : AppCompatActivity() {
         profile = UserProfile(this)
         dataManager = DataManager(this, profile)
 
+        viewFinder = findViewById(R.id.viewFinder)
         tvTaskTitle = findViewById(R.id.tvTaskTitle)
         tvTaskInstruction = findViewById(R.id.tvTaskInstruction)
         tvTimer = findViewById(R.id.tvTimer)
@@ -56,6 +63,8 @@ class FacialMovementTestActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         btnStart = findViewById(R.id.btnStart)
         ivIcon = findViewById(R.id.ivIcon)
+
+        startCameraPreview()
 
         updateStepUi()
 
@@ -126,6 +135,23 @@ class FacialMovementTestActivity : AppCompatActivity() {
                 finish()
             }
         }, 1500)
+    }
+
+    private fun startCameraPreview() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(viewFinder.surfaceProvider)
+                }
+                val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
     override fun onDestroy() {
