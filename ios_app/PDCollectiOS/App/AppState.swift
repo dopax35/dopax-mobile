@@ -204,7 +204,6 @@ class AppState: ObservableObject {
 
     /// Call after AVCaptureDevice.requestAccess returns .authorized
     func startFaceDistance() {
-        guard isCollecting else { return }
         faceDistance.start(dataManager: dataManager)
     }
 }

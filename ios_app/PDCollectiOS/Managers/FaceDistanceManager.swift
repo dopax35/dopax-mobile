@@ -44,16 +44,34 @@ class FaceDistanceManager: NSObject, ObservableObject, AVCaptureVideoDataOutputS
 
     func start(dataManager: DataManager) {
         guard !isRunning else { return }
-        guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { return }
-
         self.dataManager = dataManager
+
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        if status == .authorized {
+            performStart()
+        } else if status == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                if granted {
+                    DispatchQueue.main.async {
+                        self.performStart()
+                    }
+                }
+            }
+        }
+    }
+
+    private func performStart() {
+        setupAVSession()
+        captureQueue.async { self.avSession.startRunning() }
 
         if ARFaceTrackingConfiguration.isSupported {
             useARKit = true
             setupARKitSession()
+            let config = ARFaceTrackingConfiguration()
+            config.isLightEstimationEnabled = true
+            arSession.run(config, options: [.resetTracking, .removeExistingAnchors])
         } else {
             useARKit = false
-            setupAVSession()
         }
 
         tokens.append(
@@ -67,23 +85,14 @@ class FaceDistanceManager: NSObject, ObservableObject, AVCaptureVideoDataOutputS
             ) { [weak self] _ in self?.resumeSession() }
         )
 
-        if useARKit {
-            let config = ARFaceTrackingConfiguration()
-            config.isLightEstimationEnabled = true
-            arSession.run(config, options: [.resetTracking, .removeExistingAnchors])
-        } else {
-            captureQueue.async { self.avSession.startRunning() }
-        }
-
         DispatchQueue.main.async { self.isRunning = true }
     }
 
     func stop() {
         if useARKit {
             arSession.pause()
-        } else {
-            captureQueue.async { self.avSession.stopRunning() }
         }
+        captureQueue.async { self.avSession.stopRunning() }
         tokens.forEach { NotificationCenter.default.removeObserver($0) }
         tokens = []
         DispatchQueue.main.async { self.isRunning = false }

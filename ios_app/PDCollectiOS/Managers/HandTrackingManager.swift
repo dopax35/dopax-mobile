@@ -66,8 +66,22 @@ class HandTrackingManager: NSObject, ObservableObject, AVCaptureVideoDataOutputS
 
     func startTracking() {
         guard !isRunning else { return }
-        guard AVCaptureDevice.authorizationStatus(for: .video) == .authorized else { return }
 
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        if status == .authorized {
+            performStartTracking()
+        } else if status == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                if granted {
+                    DispatchQueue.main.async {
+                        self.performStartTracking()
+                    }
+                }
+            }
+        }
+    }
+
+    private func performStartTracking() {
         setupCaptureSession()
         captureQueue.async {
             self.session.startRunning()
