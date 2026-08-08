@@ -83,6 +83,7 @@ targets:
       base:
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT
         SWIFT_OBJC_BRIDGING_HEADER: PDCollectiOS/PDCollectiOS-Bridging-Header.h
+        OTHER_LDFLAGS: "-weak_framework SensorKit"
         PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
         SWIFT_VERSION: 5.9
         IPHONEOS_DEPLOYMENT_TARGET: 16.0

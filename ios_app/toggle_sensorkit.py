@@ -74,7 +74,7 @@ if mode == 'testflight' or mode == 'no-sensorkit' or mode == 'no-app-groups':
             f.write(clean_kb)
         print(" -> Reset KeyboardExtension.entitlements.")
 
-    # 3. Remove NSSensorKitUsageDescription keys from Info.plist
+    # 3. Remove NSSensorKit keys and NSSensorKitUsageDetail dict from Info.plist
     info_clean = re.sub(
         r'\s*<key>NSSensorKitUsageDescription.*?</string>',
         '',
@@ -87,9 +87,15 @@ if mode == 'testflight' or mode == 'no-sensorkit' or mode == 'no-app-groups':
         info_clean,
         flags=re.DOTALL
     )
+    info_clean = re.sub(
+        r'\s*<key>NSSensorKitUsageDetail.*?</dict>\s*</dict>',
+        '',
+        info_clean,
+        flags=re.DOTALL
+    )
     with open(info_plist_path, 'w', encoding='utf-8') as f:
         f.write(info_clean)
-    print(" -> Removed NSSensorKitUsageDescription keys from Info.plist.")
+    print(" -> Removed NSSensorKit keys from Info.plist.")
 
     # 4. Update project.yml
     if project_yml_content:
@@ -153,14 +159,29 @@ elif mode == 'full' or mode == 'with-sensorkit':
 \t<string>PDCollect accesses SensorKit data streams to generate digital markers for Parkinson's Disease research.</string>
 \t<key>NSSensorKitPrivacyPolicyURL</key>
 \t<string>https://pdcollect.web.app/privacy.html</string>
-\t<key>NSSensorKitUsageDescriptionAccelerometer</key>
-\t<string>Used to record passive high-resolution accelerometer data for Parkinson's Disease motion analysis.</string>
-\t<key>NSSensorKitUsageDescriptionRotationRate</key>
-\t<string>Used to record passive gyroscope rotation rate data for Parkinson's Disease tremor and movement analysis.</string>
-\t<key>NSSensorKitUsageDescriptionKeyboardMetrics</key>
-\t<string>Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease.</string>
-\t<key>NSSensorKitUsageDescriptionDeviceUsage</key>
-\t<string>Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease.</string>"""
+\t<key>NSSensorKitUsageDetail</key>
+\t<dict>
+\t\t<key>SRSensorUsageAccelerometer</key>
+\t\t<dict>
+\t\t\t<key>Description</key>
+\t\t\t<string>Used to record passive high-resolution accelerometer data for Parkinson's Disease motion analysis.</string>
+\t\t</dict>
+\t\t<key>SRSensorUsageRotationRate</key>
+\t\t<dict>
+\t\t\t<key>Description</key>
+\t\t\t<string>Used to record passive gyroscope rotation rate data for Parkinson's Disease tremor and movement analysis.</string>
+\t\t</dict>
+\t\t<key>SRSensorUsageKeyboardMetrics</key>
+\t\t<dict>
+\t\t\t<key>Description</key>
+\t\t\t<string>Used to collect typing cadence and error metrics to evaluate motor and cognitive function in Parkinson's Disease.</string>
+\t\t</dict>
+\t\t<key>SRSensorUsageDeviceUsage</key>
+\t\t<dict>
+\t\t\t<key>Description</key>
+\t\t\t<string>Used to monitor daily smartphone usage patterns and digital activity markers related to Parkinson's Disease.</string>
+\t\t</dict>
+\t</dict>"""
         info_plist_content = replace_last_dict_tag(info_plist_content, sensorkit_plist_keys)
         with open(info_plist_path, 'w', encoding='utf-8') as f:
             f.write(info_plist_content)
