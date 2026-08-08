@@ -4,6 +4,7 @@ import Vision
 
 /// FacialMovementTestView drives a guided 5-task facial hypomimia assessment battery
 /// (Rest, Brow Raise, Smile, Mouth Pucker, Rapid Blink) inspired by `face_test`.
+/// Shows live camera feed preview with facial landmark mesh overlays and positioning guidance.
 struct FacialMovementTestView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
@@ -14,7 +15,6 @@ struct FacialMovementTestView: View {
     @State private var isTaskActive = false
     @State private var taskTimeRemaining = 5
     @State private var testCompleted = false
-    @State private var trackedBlinks = 0
 
     private let tasks = [
         (title: "Neutral Rest", instruction: "Keep face completely relaxed at rest.", icon: "face.smiling"),
@@ -26,8 +26,25 @@ struct FacialMovementTestView: View {
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
+    /// Computes real-time positioning status based on last detected face sample
+    private var facePositionStatus: FacePositionStatus {
+        guard let face = appState.faceDistance.lastSample else {
+            return .noFace
+        }
+
+        if face.distanceRatio < 0.22 {
+            return .tooFar
+        } else if face.distanceRatio > 0.72 {
+            return .tooClose
+        } else if face.faceX < 0.25 || face.faceX > 0.75 || face.faceY < 0.25 || face.faceY > 0.75 {
+            return .offCenter
+        } else {
+            return .good
+        }
+    }
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
             // Header Progress
             HStack {
                 Text("Facial Movement Test")
@@ -43,86 +60,119 @@ struct FacialMovementTestView: View {
                 .tint(.dopaxPurple)
                 .padding(.horizontal)
 
-            // Task Banner Card
-            let currentTask = tasks[currentStepIndex]
-            VStack(spacing: 16) {
-                Image(systemName: currentTask.icon)
-                    .font(.system(size: 48))
-                    .foregroundStyle(.dopaxPurple)
-                    .padding()
-                    .background(Color.dopaxPurple.opacity(0.12))
-                    .clipShape(Circle())
+            // Dynamic Positioning Guidance Banner
+            HStack(spacing: 10) {
+                Image(systemName: facePositionStatus.icon)
+                    .font(.title3)
+                    .foregroundStyle(facePositionStatus.color)
 
-                Text(currentTask.title)
-                    .font(.title3).bold()
+                Text(facePositionStatus.rawValue)
+                    .font(.subheadline).bold()
+                    .foregroundStyle(.primary)
 
-                Text(currentTask.instruction)
-                    .font(.body)
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal)
+                Spacer()
 
-                if isCountdownActive {
-                    Text("Get ready: \(countdownRemaining)s")
-                        .font(.largeTitle).bold()
-                        .foregroundStyle(.orange)
-                } else if isTaskActive {
-                    VStack(spacing: 4) {
-                        Text("\(taskTimeRemaining)s")
-                            .font(.system(size: 44, weight: .heavy, design: .rounded))
-                            .foregroundStyle(.dopaxPurple)
-                        Text("Recording facial metrics...")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
+                if isTaskActive {
+                    Text("\(taskTimeRemaining)s")
+                        .font(.title3).bold()
+                        .foregroundStyle(.dopaxPurple)
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(.ultraThinMaterial)
-            .cornerRadius(20)
+            .padding(.horizontal, 16).padding(.vertical, 12)
+            .background(facePositionStatus.color.opacity(0.15))
+            .cornerRadius(12)
+            .padding(.horizontal)
+
+            // Live Camera Preview Card with Face Mesh Landmarks Overlay
+            ZStack {
+                CameraPreviewView(session: appState.faceDistance.avSession)
+                    .cornerRadius(20)
+
+                FaceLandmarkOverlayView(
+                    sample: appState.faceDistance.lastSample,
+                    status: facePositionStatus
+                )
+
+                // Current Step Instruction Card overlay on camera
+                let currentTask = tasks[currentStepIndex]
+                VStack(spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: currentTask.icon)
+                            .font(.title2)
+                            .foregroundStyle(.dopaxPurple)
+                        Text(currentTask.title)
+                            .font(.headline).bold()
+                    }
+
+                    Text(currentTask.instruction)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .background(.ultraThinMaterial)
+                .cornerRadius(14)
+                .padding(.horizontal, 16)
+                .position(x: 180, y: 50)
+
+                // Countdown / Active Task timer overlay
+                if isCountdownActive {
+                    VStack {
+                        Text("Get Ready")
+                            .font(.headline).foregroundStyle(.white)
+                        Text("\(countdownRemaining)")
+                            .font(.system(size: 64, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.orange)
+                    }
+                    .padding(24)
+                    .background(Color.black.opacity(0.65))
+                    .cornerRadius(20)
+                }
+            }
+            .frame(height: 380)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(facePositionStatus.color, lineWidth: 2)
+            )
             .padding(.horizontal)
 
             Spacer()
 
-            // Live Camera Feedback Simulator / Face Tracking Indicator
-            VStack(spacing: 8) {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(appState.faceDistance.lastSample != nil ? Color.green : Color.yellow)
-                        .frame(width: 10, height: 10)
-                    Text(appState.faceDistance.lastSample != nil ? "Face Mesh Active" : "Positioning Camera...")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-
-                if testCompleted {
-                    VStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 56))
-                            .foregroundStyle(.dopaxStatusSuccess)
-                        Text("Facial Test Complete!")
-                            .font(.title3).bold()
-                        Button("Done") {
-                            appState.gamification.markCompleted(testType: "facial_movement")
-                            dismiss()
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.dopaxPurple)
+            // Completion Card or Start Step Button
+            if testCompleted {
+                VStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.dopaxStatusSuccess)
+                    Text("Facial Movement Test Complete!")
+                        .font(.title3).bold()
+                    Button("Done") {
+                        appState.gamification.markCompleted(testType: "facial_movement")
+                        dismiss()
                     }
-                } else if !isCountdownActive && !isTaskActive {
-                    Button(action: startStepCountdown) {
-                        Text("Start \(currentTask.title)")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.dopaxPurple)
-                            .foregroundColor(.white)
-                            .cornerRadius(14)
-                    }
-                    .padding(.horizontal)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.dopaxPurple)
                 }
+            } else if !isCountdownActive && !isTaskActive {
+                let currentTask = tasks[currentStepIndex]
+                Button(action: startStepCountdown) {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("Start Step \(currentStepIndex + 1): \(currentTask.title)")
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(facePositionStatus == .good ? Color.dopaxPurple : Color.gray)
+                    .foregroundColor(.white)
+                    .cornerRadius(14)
+                }
+                .disabled(facePositionStatus != .good)
+                .padding(.horizontal)
             }
-            .padding(.bottom, 24)
         }
+        .padding(.vertical)
         .onAppear {
             appState.startFaceDistance()
         }

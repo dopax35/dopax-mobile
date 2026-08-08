@@ -28,8 +28,8 @@ class FaceDistanceManager: NSObject, ObservableObject, AVCaptureVideoDataOutputS
 
     // MARK: - Private
 
-    private let arSession     = ARSession()
-    private let avSession     = AVCaptureSession()
+    let arSession     = ARSession()
+    private(set) var avSession = AVCaptureSession()
     private let videoOutput   = AVCaptureVideoDataOutput()
     private let captureQueue  = DispatchQueue(label: "com.pdcollect.face-capture", qos: .userInitiated)
     private var dataManager: DataManager?
