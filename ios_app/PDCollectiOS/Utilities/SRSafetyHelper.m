@@ -1,9 +1,13 @@
 #import "SRSafetyHelper.h"
+
+#ifndef DISABLE_SENSORKIT
 #import <SensorKit/SensorKit.h>
+#endif
 
 @implementation SRSafetyHelper
 
 + (nullable id)safeCreateSensorReaderForSensorName:(NSString *)sensorName {
+#ifndef DISABLE_SENSORKIT
     @try {
         if (@available(iOS 14.0, *)) {
             SRSensor sensor = nil;
@@ -26,6 +30,7 @@
     } @catch (NSException *exception) {
         NSLog(@"[SRSafetyHelper] Failed to create SRSensorReader for %@: %@", sensorName, exception.reason);
     }
+#endif
     return nil;
 }
 

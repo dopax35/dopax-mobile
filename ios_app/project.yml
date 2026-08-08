@@ -82,6 +82,7 @@ targets:
     settings:
       base:
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT
+        GCC_PREPROCESSOR_DEFINITIONS: "DISABLE_SENSORKIT=1 $(inherited)"
         SWIFT_OBJC_BRIDGING_HEADER: PDCollectiOS/PDCollectiOS-Bridging-Header.h
         OTHER_LDFLAGS: "-weak_framework SensorKit"
         PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1
