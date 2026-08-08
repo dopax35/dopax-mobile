@@ -124,15 +124,35 @@ if mode == 'testflight' or mode == 'no-sensorkit' or mode == 'no-app-groups':
     if os.path.exists(pbxproj_path):
         with open(pbxproj_path, 'r', encoding='utf-8') as f:
             pbx_content = f.read()
+
         if 'DISABLE_SENSORKIT' not in pbx_content:
             pbx_content = re.sub(
-                r'(\s+SWIFT_ACTIVE_COMPILATION_CONDITIONS = )([^;\n]+);',
-                r'\1"\2 DISABLE_SENSORKIT";\n\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = ("DISABLE_SENSORKIT=1", "$(inherited)");',
+                r'(\s+SWIFT_VERSION = [^;\n]+;)',
+                r'\1\n\t\t\t\tSWIFT_ACTIVE_COMPILATION_CONDITIONS = DISABLE_SENSORKIT;',
                 pbx_content
             )
-            with open(pbxproj_path, 'w', encoding='utf-8') as f:
-                f.write(pbx_content)
-            print(" -> Updated project.pbxproj with DISABLE_SENSORKIT.")
+
+        if 'DISABLE_SENSORKIT=1' not in pbx_content:
+            pbx_content = re.sub(
+                r'(\s+SWIFT_ACTIVE_COMPILATION_CONDITIONS = [^;\n]*DISABLE_SENSORKIT[^;\n]*;)',
+                r'\1\n\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = (\n\t\t\t\t\t"DISABLE_SENSORKIT=1",\n\t\t\t\t\t"$(inherited)",\n\t\t\t\t);',
+                pbx_content
+            )
+
+        if 'OTHER_LDFLAGS' not in pbx_content:
+            pbx_content = re.sub(
+                r'(\s+SWIFT_ACTIVE_COMPILATION_CONDITIONS = [^;\n]*DISABLE_SENSORKIT[^;\n]*;)',
+                r'\1\n\t\t\t\tOTHER_LDFLAGS = (\n\t\t\t\t\t"-weak_framework",\n\t\t\t\t\t"SensorKit",\n\t\t\t\t);',
+                pbx_content
+            )
+
+        # Update version numbers in project.pbxproj
+        pbx_content = re.sub(r'MARKETING_VERSION = [^;\n]+;', 'MARKETING_VERSION = 3.7.40;', pbx_content)
+        pbx_content = re.sub(r'CURRENT_PROJECT_VERSION = [^;\n]+;', 'CURRENT_PROJECT_VERSION = 128;', pbx_content)
+
+        with open(pbxproj_path, 'w', encoding='utf-8') as f:
+            f.write(pbx_content)
+        print(" -> Updated project.pbxproj with DISABLE_SENSORKIT, GCC_PREPROCESSOR_DEFINITIONS, and OTHER_LDFLAGS.")
 
     print("\nSUCCESS: iOS project is now configured for clean automatic signing!")
 
