@@ -112,7 +112,7 @@ if mode == 'testflight' or mode == 'no-sensorkit' or mode == 'no-app-groups':
         if 'DISABLE_SENSORKIT' not in project_yml_clean:
             project_yml_clean = project_yml_clean.replace(
                 "    settings:\n      base:\n",
-                "    settings:\n      base:\n        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT\n        GCC_PREPROCESSOR_DEFINITIONS: \"DISABLE_SENSORKIT=1 $(inherited)\"\n",
+                "    settings:\n      base:\n        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT\n        GCC_PREPROCESSOR_DEFINITIONS:\n          - \"DISABLE_SENSORKIT=1\"\n          - \"$(inherited)\"\n",
                 1
             )
         with open(project_yml_path, 'w', encoding='utf-8') as f:
@@ -127,7 +127,7 @@ if mode == 'testflight' or mode == 'no-sensorkit' or mode == 'no-app-groups':
         if 'DISABLE_SENSORKIT' not in pbx_content:
             pbx_content = re.sub(
                 r'(\s+SWIFT_ACTIVE_COMPILATION_CONDITIONS = )([^;\n]+);',
-                r'\1"\2 DISABLE_SENSORKIT";\n\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = "DISABLE_SENSORKIT=1 $(inherited)";',
+                r'\1"\2 DISABLE_SENSORKIT";\n\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = ("DISABLE_SENSORKIT=1", "$(inherited)");',
                 pbx_content
             )
             with open(pbxproj_path, 'w', encoding='utf-8') as f:
@@ -191,6 +191,9 @@ elif mode == 'full' or mode == 'with-sensorkit':
     if project_yml_content and 'DISABLE_SENSORKIT' in project_yml_content:
         project_yml_clean = project_yml_content.replace(
             "        SWIFT_ACTIVE_COMPILATION_CONDITIONS: DISABLE_SENSORKIT\n",
+            ""
+        ).replace(
+            "        GCC_PREPROCESSOR_DEFINITIONS:\n          - \"DISABLE_SENSORKIT=1\"\n          - \"$(inherited)\"\n",
             ""
         ).replace(
             "        GCC_PREPROCESSOR_DEFINITIONS: \"DISABLE_SENSORKIT=1 $(inherited)\"\n",
