@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+
+# Local dev stack: Postgres data volume, MinIO buckets, pg_dump output
+.tmp/
+backups/
+
+.env
+.env.*
+!.env.example
+secrets/
+
+*.log
+.DS_Store
