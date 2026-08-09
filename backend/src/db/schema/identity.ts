@@ -61,6 +61,9 @@ export const authIdentities = pgTable(
     passwordHash: text('password_hash'),
     passwordSalt: text('password_salt'),
     hashConfig: jsonb('hash_config'),
+    // A Firebase account can have several linked providers. The row keeps the
+    // primary one in provider/provider_uid; the full set is preserved here.
+    linkedProviders: jsonb('linked_providers').notNull().default(sql`'[]'::jsonb`),
     createdAt: timestamp('created_at', { withTimezone: true }),
     lastSignInAt: timestamp('last_sign_in_at', { withTimezone: true }),
   },
@@ -108,6 +111,23 @@ export const participantProfileHistory = pgTable(
   },
   (t) => [index('profile_history_participant_idx').on(t.participantId, t.revision)],
 );
+
+/**
+ * Production contains at least one participant code shared by two separate auth
+ * accounts (`pd_53a21c75`). Such a code must never be added to
+ * `participants.legacy_file_user_ids`, because upload resolution would then
+ * silently assign one person's research data to the other. It is recorded here
+ * instead so ingestion refuses to guess and a human resolves it.
+ */
+export const participantIdConflicts = pgTable('participant_id_conflicts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  legacyCode: text('legacy_code').notNull().unique(),
+  participantIds: uuid('participant_ids').array().notNull(),
+  firebaseUids: text('firebase_uids').array().notNull(),
+  detectedAt: timestamp('detected_at', { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  resolutionNote: text('resolution_note'),
+});
 
 /**
  * Consent is an append-only audit trail rather than the boolean the app stores

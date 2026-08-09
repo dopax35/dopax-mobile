@@ -130,9 +130,18 @@ Source: `users.json` (Firebase Auth export) and `correlated_users_files.csv`.
 - `KN3JT0d9PIX4ZtjKvbllQlpc3f53` — `hagaishtinberg@gmail.com`
 - `OA5r4jqkUNa38HoFHlLhiIJfP4b2` — `npj9hshw7f@privaterelay.appleid.com`
 
-Both match upload pattern `PDData_pd_53a21c75_*.zip`. **Must be disambiguated manually in
-Phase 0** (probably by upload date ranges and device platform) or their research data will be
-merged into one participant.
+Both match upload pattern `PDData_pd_53a21c75_*.zip`.
+
+**Handled defensively as of the auth import.** The two accounts are kept as separate participants
+keyed by their own Firebase UID, the ambiguous code is deliberately *excluded* from
+`participants.legacy_file_user_ids` so no upload can be misattributed, both are marked
+`status = 'needs_id_resolution'`, and the clash is recorded in `participant_id_conflicts`.
+Uploads matching that pattern will therefore fail to resolve loudly rather than silently going to
+the wrong person.
+
+**Still requires a human decision** before those ZIPs can be ingested: someone must split the
+uploads between the two accounts, most likely by upload date range and device platform, and then
+record the outcome in `participant_id_conflicts.resolution_note`.
 
 ### 3.3 Migration principle for IDs
 
