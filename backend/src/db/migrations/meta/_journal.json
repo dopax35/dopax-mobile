@@ -15,6 +15,13 @@
       "when": 1786290625672,
       "tag": "0001_participant_id_conflicts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786292329239,
+      "tag": "0002_migration_steps",
+      "breakpoints": true
     }
   ]
 }

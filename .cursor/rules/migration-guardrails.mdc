@@ -1,0 +1,45 @@
+---
+description: Non-negotiable guardrails for the backend migration (legacy Drive/CSV to PostgreSQL)
+alwaysApply: true
+---
+
+# Migration guardrails
+
+Full context in `backend/docs/MIGRATION_PLAN.md`. These three constraints outrank convenience,
+schedule, and elegance. If a change cannot satisfy all three, stop and escalate to the Management
+Agent rather than working around them.
+
+## 1. Never break a working scenario for an existing user
+
+43 production accounts and a live medical study depend on the current path. Every change is
+additive until proven otherwise.
+
+- Firebase Auth stays the identity provider. Never migrate, rewrite, or re-key a credential.
+- Never renumber a `participant_code`. All historical ID forms stay in `legacy_file_user_ids`.
+- Never invalidate a signed-in session, force a re-login, or trigger a re-consent.
+- A failure in the new backend must never make a legacy upload fail, retry, or be deleted early.
+- Ambiguous data fails loudly (`status = 'needs_id_resolution'`) instead of guessing.
+
+## 2. Both modes run in parallel until the tests pass
+
+`BOTH_ARCH=true` is the default and stays the default. The legacy CSV + Google Drive + Apps Script
+pipeline is authoritative; PostgreSQL runs alongside it and is reconciled nightly.
+
+- Clients dual-write with independent markers: `.uploaded` (legacy) and `.uploaded_v2` (backend).
+  On-device retention deletion keys off `.uploaded` only.
+- While `BOTH_ARCH=true`, legacy Drive wins any conflict.
+- Nothing on Drive is ever mutated or deleted, in any mode.
+- Flip to `BOTH_ARCH=false` only after 14 consecutive clean reconciliation runs, and keep the flip
+  reversible for a full phase afterwards.
+
+## 3. Production migrates its own data on first run
+
+Production must come up with the historical corpus already loaded, with no manual laptop step and
+no one connecting to the database by hand.
+
+- Every importer is idempotent and resumable. Running the whole thing twice changes nothing.
+- Completed steps are recorded, so a crash resumes at the failed step instead of replaying.
+- Take a `pg_advisory_lock` so two instances booting together cannot both migrate.
+- A step that cannot finish cleanly rolls back and aborts the run. Half-imported is worse than
+  not migrated.
+- Every run ends by reconciling counts against the source and exits non-zero on any mismatch.

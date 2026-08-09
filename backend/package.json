@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
+    "db:bootstrap": "tsx scripts/bootstrap.ts",
     "db:studio": "drizzle-kit studio",
     "stack:up": "docker compose up -d",
     "stack:down": "docker compose down",

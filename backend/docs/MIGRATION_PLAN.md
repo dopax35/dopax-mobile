@@ -1,16 +1,19 @@
 # DopaX Backend Migration Plan
 
-**Status:** Approved for Phase 0
+**Status:** Phase 0 in progress · Phase 1 foundation landed · Phase 2 auth import complete — see §13
 **Branch:** `newArch`
 **Author:** Management Agent → handoff to Backend Agent
 **Target stack:** Node.js (TypeScript) + PostgreSQL + object storage
 **Constraint:** 43 existing production users and all historical research data must be preserved.
+**Guardrails:** R1, R3, and R5 are restated as an always-applied project rule in
+`.cursor/rules/migration-guardrails.mdc`, so they are enforced during review without reading this
+document end to end.
 
 ---
 
 ## 0. Non-negotiable requirements
 
-Every design choice below traces back to one of these four.
+Every design choice below traces back to one of these five.
 
 | # | Requirement | How it is satisfied | Verified in |
 |---|---|---|---|
@@ -18,6 +21,7 @@ Every design choice below traces back to one of these four.
 | **R2** | **All existing data lands in PostgreSQL.** Auth accounts, Firestore profiles, and the full historical Google Drive corpus. | Idempotent, resumable importers plus a reconciliation report that must come back clean. | §8 Phase 2 |
 | **R3** | **Both architectures run side by side**, controlled by `BOTH_ARCH`. Legacy Google Drive + Apps Script + CSV/Excel keeps working untouched while the new backend runs in parallel. Flip to backend-only once proven. | `BOTH_ARCH` master switch (§4.2) + research export job that keeps the CSV/Excel workflow intact (§4.3). | §4.2, Phase 3 |
 | **R4** | **All development runs locally on the laptop.** Local PostgreSQL, local object storage, no cloud account required. | Docker Compose dev stack, `gdrive` storage passthrough so the corpus is never copied locally, documented device-to-laptop networking. | §5.3 |
+| **R5** | **Production migrates its own data on first run.** The historical corpus lands in the production database with no manual laptop step and nobody connecting by hand. | An ordered, idempotent, resumable bootstrap runner that records each completed step, holds an advisory lock, and reconciles counts before reporting success. | §4.4, Phase 6 |
 
 **The governing principle for R3: the legacy path must never be made worse.** At no point does a
 failure in the new backend cause a legacy upload to fail, retry, or be retained longer than it is
@@ -263,6 +267,44 @@ not as an afterthought:
 Acceptance: for any given participant-day, the export produced from PostgreSQL is byte-identical
 to the CSVs inside the original Drive ZIP. This doubles as the strongest possible proof that
 R2 succeeded.
+
+### 4.4 R5 — First-run data migration in production
+
+Everything through Phase 5 runs against the laptop's PostgreSQL. The day production comes up, it
+has to arrive with that same corpus already loaded — and it has to get there without anyone
+connecting to the database by hand or copying a dump around.
+
+The importers are already written to be re-runnable; `scripts/import-auth-users.ts` is the first of
+them. What R5 adds is a **bootstrap runner** that owns their order, their resumability, and the
+proof that they finished.
+
+| Step | Source | Target | State |
+|---|---|---|---|
+| 1 | Firebase Auth export | `participants`, `auth_identities`, `participant_id_conflicts` | implemented |
+| 2 | Firestore `users` / `user_mappings` | `participant_profiles`, `consents` | not started |
+| 3 | Drive folder inventory | `uploads` with `storage_backend='gdrive'` | not started |
+| 4 | Drive ZIP stream-parse | `upload_files`, `test_sessions`, `events`, `daily_summaries` | not started |
+| 5 | Reconciliation | `reconciliation_runs` | not started |
+
+**Rules the runner must obey:**
+
+- **Idempotent.** Every step upserts on a natural key. Running the whole thing twice changes nothing.
+- **Resumable.** Completed steps are recorded in a `migration_steps` table along with a checksum of
+  their input, so a crash during step 4 resumes at step 4 instead of replaying steps 1–3.
+- **Advisory-locked.** `pg_advisory_lock` wraps the run, so two application instances starting at
+  the same moment cannot both migrate.
+- **All-or-nothing per step.** A step that cannot finish cleanly rolls back and aborts the run.
+  A half-imported step is worse than an unmigrated database, because it looks finished.
+- **Self-verifying.** The run ends with the §6.3 reconciliation counts. A source count that does not
+  equal the database count is a non-zero exit, not a warning.
+- **Observable.** Each step logs its row counts, and the final report is readable in the deployment
+  log without a database client.
+
+**Trigger.** A dedicated entrypoint (`npm run db:bootstrap`) rather than an implicit hook in the
+API's boot path. A 1–2 GB Drive backfill must never sit between the container starting and its
+health check passing. Deployment runs it as a release/init task, and the API refuses `/v1/uploads`
+until `migration_steps` shows a completed run — which is safe precisely because R3 means the legacy
+Drive path is still carrying production traffic at that point.
 
 ---
 
@@ -817,6 +859,9 @@ usually forgotten and it is why nothing is deleted early.
 
 - Hosting decision (Azure / AWS / Railway), driven mainly by whether the study needs a HIPAA BAA
   or has a data-residency requirement.
+- **First production boot runs the §4.4 bootstrap (R5)** as a release task, seeding the corpus into
+  the production database and exiting non-zero if reconciliation does not match the source. The
+  runner itself is built during Phase 2, alongside the importers it orders, not improvised here.
 - One-time copy job moving raw objects from `gdrive` passthrough into the chosen blob store.
 - Staff web dashboard: enrolment and adherence, per-participant timelines from `events`, upload
   health and gap detection, data-quality flags, consent and withdrawal management, audit trail.
@@ -891,3 +936,67 @@ it needs no hosting decision and no code.
 Per `AGENTS.md`, every phase exits through the Code Reviewer before reaching the DevOps Agent.
 `AGENTS.md` itself must be updated in Phase 0: it currently names Firebase as the backend
 deployment target, which this plan supersedes.
+
+---
+
+## 13. Progress log
+
+Updated as work lands, so this document describes the repository rather than the intention.
+
+### Landed
+
+**Phase 1 — foundation, partial** (`5e64e5c`)
+
+- Fastify 5 + TypeScript on Node 22, with a Zod-validated environment that fails loudly at boot
+  rather than halfway through an ingestion run.
+- Drizzle schema v1 across identity, uploads, events, results, and compliance; `0000_init.sql`
+  applied by `npm run db:migrate`.
+- Docker Compose dev stack — Postgres 16 on **55432**, MinIO, Adminer.
+- `GET /v1/config` serving the `bothArch` runtime override, plus `/healthz` and `/readyz`.
+- Vitest covering environment validation and the config route.
+
+**Phase 2 — auth import, partial** (`96f7ee0`)
+
+- `src/domain/import/auth-users.ts`, a pure planner with no database or filesystem access, so the
+  judgement calls (test-account classification, contested participant codes) are unit-testable and
+  reviewable without running anything.
+- `scripts/import-auth-users.ts`, the idempotent applier, with guard rails that exit non-zero if
+  the account count drifts from the export or any participant ends up without an identity.
+- Migration `0001_participant_id_conflicts.sql`.
+
+Result: all **43** accounts are in PostgreSQL — 22 `password`, 18 `google.com`, 3 `apple.com`.
+19 are flagged `is_test_account`, 3 more are surfaced as *suspected* test accounts for a human
+rather than excluded automatically, and the two `pd_53a21c75` accounts are kept separate at
+`status = 'needs_id_resolution'` with the contested code excluded from upload routing.
+
+### Outstanding
+
+**Phase 0** — still gating the Drive half of Phase 2:
+
+- `hash_config` has not been exported. Per §10, that leaves 22 password accounts unrecoverable if
+  the Firebase project is ever lost.
+- No Drive inventory exists, so the corpus size is still unknown — and it is the input to every
+  Phase 2 estimate and to whether `gdrive` passthrough is a convenience or a necessity.
+- The Firestore export of `users` / `user_mappings` is still unpaginated.
+- The `pd_53a21c75` collision (§3.2) is handled defensively in code but has no human decision
+  recorded in `participant_id_conflicts.resolution_note`.
+- `AGENTS.md` still names Firebase as the backend deployment target.
+
+**Phase 1 remainder:** `firebase-admin` token verification and participant resolution through
+`legacy_file_user_ids`, `POST /v1/auth/session`, the `StorageAdapter` implementations, pg-boss
+wiring, the upload / event / profile / consent / device routes, and CI.
+
+**Phase 2 remainder:** Firestore → profiles and consents, Drive manifest → `uploads`, the ZIP
+stream-parse pipeline, the §4.3 exporter, and the nightly reconciler.
+
+**Phase 3 onward:** untouched. No client work has begun on either platform.
+
+### Next three
+
+1. **Close Phase 0.** Drive inventory, `hash_config` export, paginated Firestore export. Everything
+   in Phase 2 is estimated off numbers we do not have yet, and §11 items 1 and 2 (Drive service
+   account, Firebase CLI access) are the actual blockers.
+2. **Phase 1 auth path.** `POST /v1/auth/session` with the `legacy_file_user_ids` fallback, and the
+   five R1 acceptance tests in §4.1 running green — this is what proves R1 rather than asserting it.
+3. **R5 bootstrap runner** (§4.4), with the existing auth import registered as step 1 and the
+   remaining steps added as they are written.

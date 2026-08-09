@@ -1,3 +1,4 @@
+export * from './bootstrap.js';
 export * from './identity.js';
 export * from './uploads.js';
 export * from './events.js';

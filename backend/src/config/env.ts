@@ -42,6 +42,12 @@ const schema = z
     LEGACY_DRIVE_FOLDER_ID: z.string().optional(),
     LEGACY_APPS_SCRIPT_URL: z.string().url().optional().or(z.literal('')),
 
+    // R5 — where the first-run bootstrap reads the production exports from.
+    // Resolved against the process working directory, so the default reaches
+    // the repository root only because the npm scripts run from `backend/`.
+    // Production should set an absolute path to wherever they are mounted.
+    MIGRATION_SOURCE_DIR: z.string().default('..'),
+
     JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
     JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),
     JWT_REFRESH_TTL: z.coerce.number().int().positive().default(2_592_000),
