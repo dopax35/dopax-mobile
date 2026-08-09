@@ -327,14 +327,25 @@ Everything runs on the laptop. No cloud account is needed through Phase 5.
 
 **Dev stack** — `backend/docker-compose.yml`:
 
-| Service | Image | Purpose |
-|---|---|---|
-| `postgres` | `postgres:16` | System of record, volume-mounted to `backend/.tmp/pgdata` |
-| `minio` | `minio/minio` | S3-compatible object storage on `localhost:9000` |
-| `adminer` | `adminer` | Optional SQL browser |
+| Service | Image | Host port | Purpose |
+|---|---|---|---|
+| `postgres` | `postgres:16-alpine` | **55432** | System of record, on a named Docker volume |
+| `minio` | `minio/minio` | 9000 / 9001 | S3-compatible object storage |
+| `adminer` | `adminer` | 8081 | Optional SQL browser |
 
-Native Homebrew `postgresql@16` is a supported fallback; the `backend/.tmp/pgdata` path already
-exists in the working tree from an earlier attempt and is reused as the Docker volume mount.
+Postgres is published on **55432 rather than 5432 on purpose**. A native Postgres is already
+listening on `127.0.0.1:5432` on this machine, and because Docker binds the wildcard address the
+native instance wins for `localhost` connections — so the app would silently talk to the wrong
+database and fail with `role "dopax" does not exist`. Ports 5433–5435 are also taken by other
+containers.
+
+**Known local gotchas, already hit and documented:**
+
+- `~/.npmrc` points npm at the Amdocs corporate proxy (`genproxy.amdocs.com:8080`), which does not
+  resolve off the VPN. npm hangs indefinitely rather than failing. Installs run with
+  `npm install --userconfig ./.npmrc` plus `env -u http_proxy -u https_proxy`, which bypasses it;
+  direct registry access works fine.
+- The shell exports `http_proxy`/`https_proxy` without a scheme, which npm rejects outright.
 
 **The disk problem, and how we avoid it.** The Drive corpus is un-inventoried and daily ZIPs run
 1–2 GB, so it very likely does not fit on a laptop. We therefore do **not** mirror it locally.
@@ -374,7 +385,7 @@ PORT=8080
 BOTH_ARCH=true                      # R3 master switch
 LEGACY_DRIVE_DRAIN=true             # Phase 5 tail; keep on until old builds die out
 
-DATABASE_URL=postgres://dopax:dopax@localhost:5432/dopax
+DATABASE_URL=postgres://dopax:dopax@localhost:55432/dopax
 
 STORAGE_BACKEND=gdrive              # gdrive | minio | s3 | azure
 MINIO_ENDPOINT=http://localhost:9000
