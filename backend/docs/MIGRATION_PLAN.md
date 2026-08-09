@@ -1,6 +1,7 @@
 # DopaX Backend Migration Plan
 
-**Status:** Phase 0 in progress · Phase 1 foundation landed · Phase 2 auth import complete — see §13
+**Status:** Phase 0 in progress · Phase 1 foundation landed · Phase 2 auth import complete ·
+R5 bootstrap runner landed — see §13
 **Branch:** `newArch`
 **Author:** Management Agent → handoff to Backend Agent
 **Target stack:** Node.js (TypeScript) + PostgreSQL + object storage
@@ -969,7 +970,37 @@ Result: all **43** accounts are in PostgreSQL — 22 `password`, 18 `google.com`
 rather than excluded automatically, and the two `pd_53a21c75` accounts are kept separate at
 `status = 'needs_id_resolution'` with the contested code excluded from upload routing.
 
+**R5 — first-run bootstrap runner** (`5d54537`)
+
+- `src/domain/bootstrap/runner.ts`, the ordering, skip, replay, resume and abort semantics, with no
+  database or filesystem access so they are reviewable and testable without a container.
+- `src/domain/bootstrap/ledger.ts` — the `migration_steps` ledger behind a `StepLedger` port, plus a
+  session-scoped advisory lock covering both the schema migration and the data steps. Drizzle's
+  migrator takes no lock of its own, so without this two instances starting together both migrate.
+- `scripts/bootstrap.ts` (`npm run db:bootstrap`, `-- --dry-run`), a release task rather than an API
+  boot hook — an hours-long backfill must never sit between container start and health check.
+- Migration `0002_migration_steps.sql`; `/readyz` reports bootstrap state so a deployment can see
+  whether the release task actually ran.
+- The auth import is registered as step 1 and refactored onto shared `auth-users-source` /
+  `auth-users-repository` modules, so the hands-on script and the production path cannot drift.
+
+Verified against the live dev database: a repeat run skips and writes nothing, two concurrent runs
+leave one refused with exit 1, and the corpus is unchanged at 43 participants and 43 identities.
+
+**Review findings closed in the same change:** the advisory lock originally excluded the schema
+migration; the correlation CSV reader silently padded or truncated a ragged row, which could
+correlate a participant to the wrong file prefix, and now rejects it.
+
 ### Outstanding
+
+**Security — production credentials are in git.** `users.json`, `master_user_correlations.csv` and
+`users_export.csv` are tracked and pushed to `origin/main` and `origin/newArch` in commit `3f68211`:
+43 participants' emails, display names and Firebase UIDs, and **22 scrypt password hashes with
+salts**. The repository is private, which is the only reason this is not an incident, but it is a
+disclosure to every collaborator and every token holder, and it is permanent in history. There is
+also no root `.gitignore`. Cleaning it means rewriting pushed history, so it needs an explicit
+decision before Phase 6 hosting. Note that `MIGRATION_SOURCE_DIR` defaults to the repository root,
+which normalises keeping the exports there; production should mount them and set an absolute path.
 
 **Phase 0** — still gating the Drive half of Phase 2:
 
@@ -993,10 +1024,10 @@ stream-parse pipeline, the §4.3 exporter, and the nightly reconciler.
 
 ### Next three
 
-1. **Close Phase 0.** Drive inventory, `hash_config` export, paginated Firestore export. Everything
+1. **Decide on the exports in git.** Everything else is engineering that can proceed in parallel;
+   this one only gets more expensive as history grows, and it is the item an IRB would ask about.
+2. **Close Phase 0.** Drive inventory, `hash_config` export, paginated Firestore export. Everything
    in Phase 2 is estimated off numbers we do not have yet, and §11 items 1 and 2 (Drive service
    account, Firebase CLI access) are the actual blockers.
-2. **Phase 1 auth path.** `POST /v1/auth/session` with the `legacy_file_user_ids` fallback, and the
+3. **Phase 1 auth path.** `POST /v1/auth/session` with the `legacy_file_user_ids` fallback, and the
    five R1 acceptance tests in §4.1 running green — this is what proves R1 rather than asserting it.
-3. **R5 bootstrap runner** (§4.4), with the existing auth import registered as step 1 and the
-   remaining steps added as they are written.
