@@ -18,7 +18,7 @@ Every design choice below traces back to one of these five.
 
 | # | Requirement | How it is satisfied | Verified in |
 |---|---|---|---|
-| **R1** | **Existing users keep logging in.** No password resets, no re-authentication, no account re-linking. | Firebase Auth remains the identity provider. The backend only *verifies* Firebase ID tokens. No credential is ever moved. | §4.1, Phase 1 |
+| **R1** | **Existing users keep logging in.** No password resets, no re-authentication, no accoשפפunt re-linking. | Firebase Auth remains the identity provider. The backend only *verifies* Firebase ID tokens. No credential is ever moved. | §4.1, Phase 1 |
 | **R2** | **All existing data lands in PostgreSQL.** Auth accounts, Firestore profiles, and the full historical Google Drive corpus. | Idempotent, resumable importers plus a reconciliation report that must come back clean. | §8 Phase 2 |
 | **R3** | **Both architectures run side by side**, controlled by `BOTH_ARCH`. Legacy Google Drive + Apps Script + CSV/Excel keeps working untouched while the new backend runs in parallel. Flip to backend-only once proven. | `BOTH_ARCH` master switch (§4.2) + research export job that keeps the CSV/Excel workflow intact (§4.3). | §4.2, Phase 3 |
 | **R4** | **All development runs locally on the laptop.** Local PostgreSQL, local object storage, no cloud account required. | Docker Compose dev stack, `gdrive` storage passthrough so the corpus is never copied locally, documented device-to-laptop networking. | §5.3 |
