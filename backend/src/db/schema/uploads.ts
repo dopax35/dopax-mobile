@@ -61,6 +61,10 @@ export const uploads = pgTable(
     legacyDriveFileId: text('legacy_drive_file_id'),
     bytes: bigint('bytes', { mode: 'number' }),
     sha256: text('sha256'),
+    // Drive reports md5, not sha256. Kept in its own column rather than
+    // squeezed into sha256, because reconciliation compares it against Drive
+    // and a checksum recorded under the wrong algorithm is worse than none.
+    driveMd5: text('drive_md5'),
     uploadSessionId: text('upload_session_id'),
     source: text('source').notNull().default('api'), // api | drive_backfill | drive_drain
     status: text('status').notNull().default('pending'),
@@ -96,6 +100,39 @@ export const uploadFiles = pgTable(
   (t) => [
     index('upload_files_upload_idx').on(t.uploadId),
     index('upload_files_kind_idx').on(t.kind),
+  ],
+);
+
+/**
+ * Every Drive object the manifest import could not turn into an `uploads` row.
+ *
+ * This table exists so that the corpus always adds up: objects in the manifest
+ * equals uploads imported plus exceptions recorded. An object nobody can
+ * attribute — an unrecognised filename, a participant code that is not in the
+ * study, the contested `pd_53a21c75` — becomes a row here for a human instead
+ * of being skipped, which is what stops a missing participant-day from being
+ * discovered months later during analysis.
+ */
+export const driveManifestExceptions = pgTable(
+  'drive_manifest_exceptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    driveFileId: text('drive_file_id').notNull().unique(),
+    filename: text('filename').notNull(),
+    bytes: bigint('bytes', { mode: 'number' }),
+    driveMd5: text('drive_md5'),
+    reason: text('reason').notNull(),
+    // not_an_upload | malformed_date | unknown_participant |
+    // contested_participant_code | duplicate_participant_day
+    detail: jsonb('detail').notNull().default(sql`'{}'::jsonb`),
+    firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolutionNote: text('resolution_note'),
+  },
+  (t) => [
+    index('drive_manifest_exceptions_reason_idx').on(t.reason),
+    index('drive_manifest_exceptions_unresolved_idx').on(t.resolvedAt),
   ],
 );
 

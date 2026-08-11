@@ -283,7 +283,7 @@ proof that they finished.
 |---|---|---|---|
 | 1 | Firebase Auth export | `participants`, `auth_identities`, `participant_id_conflicts` | implemented |
 | 2 | Firestore `users` / `user_mappings` | `participant_profiles`, `consents` | not started |
-| 3 | Drive folder inventory | `uploads` with `storage_backend='gdrive'` | not started |
+| 3 | Drive folder inventory | `uploads` with `storage_backend='gdrive'`, `drive_manifest_exceptions` | implemented, awaiting a service account |
 | 4 | Drive ZIP stream-parse | `upload_files`, `test_sessions`, `events`, `daily_summaries` | not started |
 | 5 | Reconciliation | `reconciliation_runs` | not started |
 
@@ -987,6 +987,33 @@ rather than excluded automatically, and the two `pd_53a21c75` accounts are kept 
 Verified against the live dev database: a repeat run skips and writes nothing, two concurrent runs
 leave one refused with exit 1, and the corpus is unchanged at 43 participants and 43 identities.
 
+**Phase 0 / Phase 2 — Drive inventory and manifest import**
+
+- `npm run drive:inventory` walks the legacy folder with a `drive.readonly` service account and
+  writes `<MIGRATION_SOURCE_DIR>/drive/manifest.jsonl`, then prints the object count, byte volume,
+  participant codes, date range, and every unrecognised filename. That is the Phase 0 number every
+  Phase 2 estimate depends on. Read-only by scope, never by convention; the manifest is written to
+  a temporary file and renamed, because a half-written inventory is an under-count that a clean
+  reconciliation run would then certify as complete.
+- `src/domain/drive/filename.ts` — the only link between a Drive object and a person. The
+  participant-code group is greedy so `pd_53a21c75` survives; a naive split on `_` attributes those
+  days to a participant called `pd`.
+- `src/domain/drive/inventory.ts` — pure planner. Enforces the accounting identity
+  `manifest objects == uploads + exceptions`, so nothing is ever dropped: an unrecognised name, an
+  unknown code, the contested `pd_53a21c75`, or a second object for a participant-day all become
+  rows in the new `drive_manifest_exceptions` table for a human. Duplicate participant-days resolve
+  to the largest object, deterministically, and the loser is recorded rather than discarded.
+- Registered as bootstrap step 3, and added to `REQUIRED_BOOTSTRAP_STEPS`: a deployment without a
+  manifest now fails its release task instead of coming up and reporting itself migrated over an
+  empty corpus. Re-import never regresses a parsed upload, never overwrites an API upload's
+  provenance, and never clears a human's `resolution_note`.
+- Migration `0003_drive_manifest_exceptions.sql`, plus `uploads.drive_md5` — Drive reports md5, and
+  a checksum stored in a column named `sha256` would be worse than no checksum at all.
+
+Unit-tested end to end; not yet run against Drive, because no service account exists. Until one
+does, `npm run db:bootstrap` fails at step 3 with the command to run — which is the intended
+behaviour, not a regression.
+
 **Review findings closed in the same change:** the advisory lock originally excluded the schema
 migration; the correlation CSV reader silently padded or truncated a ragged row, which could
 correlate a participant to the wrong file prefix, and now rejects it.
@@ -1007,7 +1034,9 @@ which normalises keeping the exports there; production should mount them and set
 - `hash_config` has not been exported. Per §10, that leaves 22 password accounts unrecoverable if
   the Firebase project is ever lost.
 - No Drive inventory exists, so the corpus size is still unknown — and it is the input to every
-  Phase 2 estimate and to whether `gdrive` passthrough is a convenience or a necessity.
+  Phase 2 estimate and to whether `gdrive` passthrough is a convenience or a necessity. The
+  inventory tooling is written and tested; it needs the service account from §11 item 1 and
+  nothing else.
 - The Firestore export of `users` / `user_mappings` is still unpaginated.
 - The `pd_53a21c75` collision (§3.2) is handled defensively in code but has no human decision
   recorded in `participant_id_conflicts.resolution_note`.
@@ -1017,8 +1046,8 @@ which normalises keeping the exports there; production should mount them and set
 `legacy_file_user_ids`, `POST /v1/auth/session`, the `StorageAdapter` implementations, pg-boss
 wiring, the upload / event / profile / consent / device routes, and CI.
 
-**Phase 2 remainder:** Firestore → profiles and consents, Drive manifest → `uploads`, the ZIP
-stream-parse pipeline, the §4.3 exporter, and the nightly reconciler.
+**Phase 2 remainder:** Firestore → profiles and consents, the ZIP stream-parse pipeline, the §4.3
+exporter, and the nightly reconciler.
 
 **Phase 3 onward:** untouched. No client work has begun on either platform.
 
