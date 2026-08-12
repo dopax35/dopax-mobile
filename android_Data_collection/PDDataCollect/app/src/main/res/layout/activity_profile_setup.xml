@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface">
+    android:background="@drawable/bg_onboarding">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -16,33 +16,49 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
-            android:paddingTop="88dp">
+            android:paddingTop="56dp">
 
-            <!-- Asymmetrical Headline -->
+            <!-- Progress: profile setup cluster -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="7dp"
+                android:layout_marginBottom="20dp"
+                android:orientation="horizontal">
+                <View android:layout_width="7dp" android:layout_height="7dp" android:background="@drawable/onboarding_progress_past" />
+                <View android:layout_width="22dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_active" />
+                <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+                <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+                <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+                <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+                <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+            </LinearLayout>
+
+            <!-- Headline -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/title_start_your"
-                android:textSize="20sp"
-                android:textColor="@color/secondary"
-                android:layout_marginBottom="4dp" />
+                android:fontFamily="@font/lexend_bold"
+                android:text="About you"
+                android:textColor="@color/black_90"
+                android:textSize="26sp"
+                android:layout_marginBottom="8dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/title_journey"
-                android:textSize="42sp"
-                android:textStyle="bold"
-                android:textColor="@color/on_surface"
-                android:layout_marginBottom="48dp" />
+                android:fontFamily="@font/lexend"
+                android:text="This helps us read your tests correctly. Complete each section, then save."
+                android:textColor="@color/black_70"
+                android:textSize="14.5sp"
+                android:layout_marginBottom="28dp" />
 
             <!-- Personality & Basic Info Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="24dp"
+                app:cardCornerRadius="20dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/surface_container_low"
+                app:cardBackgroundColor="@color/white"
                 android:layout_marginBottom="24dp">
 
                 <LinearLayout
@@ -472,10 +488,13 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSave"
                 android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:text="@string/btn_continue_sanctuary"
+                android:layout_height="54dp"
+                android:text="Start my first session"
+                android:textAllCaps="false"
+                android:fontFamily="@font/lexend_bold"
+                android:textSize="16sp"
                 app:cornerRadius="16dp"
-                android:backgroundTint="@color/primary"
+                android:backgroundTint="@color/onboarding_accent"
                 android:textColor="@color/white"
                 android:layout_marginBottom="24dp" />
 

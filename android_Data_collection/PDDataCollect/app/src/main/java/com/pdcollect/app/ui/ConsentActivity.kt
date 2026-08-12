@@ -134,6 +134,7 @@ class ConsentActivity : AppCompatActivity() {
             profile.signatureName = name
             profile.consentTimestamp = System.currentTimeMillis()
             profile.consentGiven = true
+            com.pdcollect.app.data.BackendSyncManager.syncConsent(this, name)
             navigateNext()
         }
     }
@@ -145,7 +146,7 @@ class ConsentActivity : AppCompatActivity() {
     }
 
     private fun navigateNext() {
-        val target = if (profile.profileComplete) {
+        val target = if (profile.profileComplete && !profile.needsOnboardingV2) {
             MainActivity::class.java
         } else {
             ProfileSetupActivity::class.java

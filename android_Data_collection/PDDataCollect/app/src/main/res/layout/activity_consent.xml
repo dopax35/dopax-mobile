@@ -1,60 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface">
+    android:background="@drawable/bg_onboarding">
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="48dp">
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="56dp">
 
+        <!-- Progress: step 1 of 7 (consent) -->
         <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="7dp"
+            android:layout_marginBottom="20dp"
+            android:orientation="horizontal">
+            <View
+                android:layout_width="22dp"
+                android:layout_height="7dp"
+                android:background="@drawable/onboarding_progress_active" />
+            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend_bold"
+            android:text="Research consent"
+            android:textColor="@color/black_90"
+            android:textSize="26sp" />
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingTop="88dp">
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:fontFamily="@font/lexend"
+            android:text="Please read and sign."
+            android:textColor="@color/black_70"
+            android:textSize="14.5sp" />
 
-            <!-- Asymmetrical Headline -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Research"
-                android:textSize="20sp"
-                android:textColor="@color/secondary"
-                android:layout_marginBottom="4dp" />
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:fillViewport="true">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Consent"
-                android:textSize="42sp"
-                android:textStyle="bold"
-                android:textColor="@color/on_surface"
-                android:layout_marginBottom="48dp" />
-
-            <!-- Consent Content Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/surface_container_low"
-                android:layout_marginBottom="32dp">
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp">
+                    android:padding="20dp">
 
                     <LinearLayout
                         android:id="@+id/pdfContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="300dp"
+                        android:minHeight="240dp"
                         android:orientation="vertical"
                         android:layout_marginBottom="16dp" />
 
@@ -62,9 +80,14 @@
                         android:id="@+id/signatureLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Type your full name to electronically sign"
-                        android:layout_marginBottom="32dp">
-                        
+                        android:hint="Sign with your name"
+                        android:layout_marginBottom="16dp"
+                        app:boxBackgroundColor="@color/onboarding_cream"
+                        app:boxCornerRadiusBottomEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusTopStart="16dp">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/signatureInput"
                             android:layout_width="match_parent"
@@ -77,25 +100,26 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="I have read and understand the above. I voluntarily agree to participate."
+                        android:textColor="@color/black_70"
                         android:textSize="14sp"
-                        android:textColor="@color/secondary"
-                        app:buttonTint="@color/primary" />
+                        app:buttonTint="@color/onboarding_accent" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+        </androidx.core.widget.NestedScrollView>
 
-            <!-- Final Action -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/agreeButton"
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:text="I Agree - Continue"
-                android:enabled="false"
-                app:cornerRadius="16dp"
-                android:backgroundTint="@color/primary"
-                android:textColor="@color/white"
-                android:layout_marginBottom="24dp" />
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/agreeButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="28dp"
+            android:enabled="false"
+            android:fontFamily="@font/lexend_bold"
+            android:text="Continue"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            app:backgroundTint="@color/onboarding_accent"
+            app:cornerRadius="16dp" />
+    </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -157,6 +157,43 @@ class UserProfile(context: Context) {
         get() = prefs.getBoolean(Constants.PREF_HAS_SEEN_WALKTHROUGH, false)
         set(value) = prefs.edit().putBoolean(Constants.PREF_HAS_SEEN_WALKTHROUGH, value).apply()
 
+    // Onboarding v2 (Figma) — additive fields for legacy re-entry
+    var testTimeCustom: String
+        get() = prefs.getString("test_time_custom", "") ?: ""
+        set(value) = prefs.edit().putString("test_time_custom", value).apply()
+
+    var healthConnectStatus: String
+        get() = prefs.getString("health_connect_status", "skipped") ?: "skipped"
+        set(value) = prefs.edit().putString("health_connect_status", value).apply()
+
+    var healthGoogleFitStatus: String
+        get() = prefs.getString("health_google_fit_status", "skipped") ?: "skipped"
+        set(value) = prefs.edit().putString("health_google_fit_status", value).apply()
+
+    var healthStravaStatus: String
+        get() = prefs.getString("health_strava_status", "skipped") ?: "skipped"
+        set(value) = prefs.edit().putString("health_strava_status", value).apply()
+
+    var notificationsOptIn: Boolean
+        get() = prefs.getBoolean("notifications_opt_in", false)
+        set(value) = prefs.edit().putBoolean("notifications_opt_in", value).apply()
+
+    var usageAccessOptIn: Boolean
+        get() = prefs.getBoolean("usage_access_opt_in", false)
+        set(value) = prefs.edit().putBoolean("usage_access_opt_in", value).apply()
+
+    var exactAlarmOptIn: Boolean
+        get() = prefs.getBoolean("exact_alarm_opt_in", false)
+        set(value) = prefs.edit().putBoolean("exact_alarm_opt_in", value).apply()
+
+    var onboardingVersion: Int
+        get() = prefs.getInt("onboarding_version", 0)
+        set(value) = prefs.edit().putInt("onboarding_version", value).apply()
+
+    /** Legacy users who finished v1 still need v2 session-window fields. */
+    val needsOnboardingV2: Boolean
+        get() = onboardingVersion < 2 || testTimeCustom.isBlank()
+
     /**
      * Wipe every preference this app has stored. Used by the Withdraw flow.
      * Uses commit() (not apply()) so the caller can rely on the file being
@@ -190,7 +227,15 @@ class UserProfile(context: Context) {
             "beanieDeviceName" to beanieDeviceName,
             "dominantHand" to dominantHand,
             "affectedSide" to affectedSide,
-            "hasSeenWalkthrough" to hasSeenWalkthrough
+            "hasSeenWalkthrough" to hasSeenWalkthrough,
+            "testTimeCustom" to testTimeCustom,
+            "healthConnectStatus" to healthConnectStatus,
+            "healthGoogleFitStatus" to healthGoogleFitStatus,
+            "healthStravaStatus" to healthStravaStatus,
+            "notificationsOptIn" to notificationsOptIn,
+            "usageAccessOptIn" to usageAccessOptIn,
+            "exactAlarmOptIn" to exactAlarmOptIn,
+            "onboardingVersion" to onboardingVersion,
         )
     }
 

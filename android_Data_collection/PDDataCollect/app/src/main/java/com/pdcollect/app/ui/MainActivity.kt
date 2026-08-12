@@ -160,7 +160,7 @@ class MainActivity : AppCompatActivity() {
             finish()
             return
         }
-        if (!profile.profileComplete) {
+        if (!profile.profileComplete || profile.needsOnboardingV2) {
             startActivity(Intent(this, ProfileSetupActivity::class.java))
             finish()
             return

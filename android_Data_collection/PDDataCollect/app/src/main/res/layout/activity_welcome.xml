@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_onboarding">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="72dp"
+        android:paddingBottom="28dp">
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.35" />
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@null"
+            android:src="@drawable/onboarding_dopa" />
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@null"
+            android:src="@drawable/onboarding_helix" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:fontFamily="@font/lexend_bold"
+            android:gravity="center"
+            android:text="Welcome to dopa-X"
+            android:textColor="@color/black_90"
+            android:textSize="30sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:paddingHorizontal="12dp"
+            android:text="A few minutes a day to track how your Parkinson’s really behaves."
+            android:textColor="@color/black_70"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:paddingHorizontal="24dp"
+            android:text="Together, we’re working toward Levodopa timing that fits each person."
+            android:textColor="@color/onboarding_text_tertiary"
+            android:textSize="13sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.45" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnContinueGoogle"
+            style="@style/Widget.Material3.Button.ElevatedButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:fontFamily="@font/lexend_bold"
+            android:text="Continue with Google"
+            android:textAllCaps="false"
+            android:textColor="@color/black_90"
+            android:textSize="15.5sp"
+            app:backgroundTint="@color/white"
+            app:cornerRadius="16dp"
+            app:elevation="2dp"
+            app:icon="@drawable/google_g"
+            app:iconGravity="textStart"
+            app:iconPadding="14dp"
+            app:iconSize="22dp"
+            app:iconTint="@null" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnContinueEmail"
+            style="@style/Widget.Material3.Button.ElevatedButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/lexend_bold"
+            android:text="Use email instead"
+            android:textAllCaps="false"
+            android:textColor="@color/black_90"
+            android:textSize="15.5sp"
+            app:backgroundTint="@color/white"
+            app:cornerRadius="16dp"
+            app:elevation="2dp"
+            app:icon="@android:drawable/ic_dialog_email"
+            app:iconGravity="textStart"
+            app:iconPadding="14dp"
+            app:iconTint="@color/black_90" />
+
+        <TextView
+            android:id="@+id/btnPhoneSignIn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/lexend_medium"
+            android:padding="8dp"
+            android:text="Continue with phone"
+            android:textColor="@color/onboarding_accent"
+            android:textSize="14sp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.2" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/lexend"
+            android:gravity="center"
+            android:text="For research participants of dopa-x.org"
+            android:textColor="@color/onboarding_text_tertiary"
+            android:textSize="12sp" />
+    </LinearLayout>
+</FrameLayout>

@@ -177,6 +177,11 @@ class ProfileSetupActivity : AppCompatActivity() {
             
             profile.testTimeMorning = editMorning.text.toString()
             profile.testTimeNoon = editNoon.text.toString()
+            // Custom "your window" — use noon as the editable third window when
+            // the dedicated Figma field is not yet on this layout.
+            if (profile.testTimeCustom.isBlank()) {
+                profile.testTimeCustom = profile.testTimeNoon.ifBlank { "14:00" }
+            }
 
             // Persist body-side answers from radios. Defaults to "Unknown"
             // if the participant didn't pick — never fabricate handedness.
@@ -184,6 +189,7 @@ class ProfileSetupActivity : AppCompatActivity() {
             profile.affectedSide = readAffectedSideFromRadios()
 
             profile.profileComplete = true
+            profile.onboardingVersion = 2
 
             // Write to CSV. Use writeProfileSnapshot() instead of formatting
             // the row inline so any future column added to PROFILE_HEADER
@@ -194,9 +200,8 @@ class ProfileSetupActivity : AppCompatActivity() {
 
             lifecycleScope.launch {
                 com.pdcollect.app.data.FirebaseSyncManager.saveProfileToCloud(profile, dataManager)
-                // Release the background HandlerThread DataManager's constructor
-                // starts — nothing else in this Activity holds a reference to
-                // this instance once the cloud sync call above returns.
+                // Additive Postgres dual-write — must not block legacy path.
+                com.pdcollect.app.data.BackendSyncManager.syncProfile(this@ProfileSetupActivity)
                 dataManager.closeAll()
             }
 
