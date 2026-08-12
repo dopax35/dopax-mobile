@@ -1,0 +1,8 @@
+node_modules/
+.next/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Holds the session cookie secret and the backend URL.
+.env.local
+.env*.local
