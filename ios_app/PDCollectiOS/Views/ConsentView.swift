@@ -3,18 +3,34 @@ import SwiftUI
 struct ConsentView: View {
     @EnvironmentObject var appState: AppState
     @State private var scrolledToBottom = false
-    @State private var agreed = false
 
     var body: some View {
-        NavigationStack {
+        ZStack {
+            OnboardingBackground()
+
             VStack(spacing: 0) {
+                OnboardingProgressDots(total: 7, current: 0)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 12)
+                    .padding(.bottom, 20)
+
+                Text("Research consent")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundColor(.dopaxBlack90)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+
+                Text("Please read and sign. Scroll to the end to continue.")
+                    .font(.system(size: 14.5))
+                    .foregroundColor(.dopaxBlack70)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+                    .padding(.bottom, 16)
+
                 GeometryReader { outerGeo in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Research Consent")
-                                .font(.largeTitle).fontWeight(.bold)
-                                .padding(.top)
-
                             Group {
                                 consentSection("Study Purpose",
                                     "You are being invited to participate in a research study about Parkinson's disease. This app collects motor and cognitive test data to help researchers understand disease progression.")
@@ -35,63 +51,53 @@ struct ConsentView: View {
                                     "If you have questions about this study, please contact the research team at the institution conducting this study.")
                             }
 
-                            Spacer(minLength: 32)
-
-                            Text("By tapping 'I Agree', you confirm you have read and understood this consent form and agree to participate.")
+                            Text("By tapping Continue, you confirm you have read and understood this consent form and agree to participate.")
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
-                                .padding(.bottom)
+                                .padding(.top, 8)
+                                .padding(.bottom, 24)
                         }
-                        .padding(.horizontal)
+                        .padding(20)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .padding(.horizontal, 24)
                         .background(GeometryReader { geo in
-                            Color.clear.preference(key: ScrollOffsetKey.self,
-                                value: geo.frame(in: .named("scroll")).maxY)
+                            Color.clear.preference(
+                                key: ScrollOffsetKey.self,
+                                value: geo.frame(in: .named("scroll")).maxY
+                            )
                         })
                     }
                     .coordinateSpace(name: "scroll")
                     .onPreferenceChange(ScrollOffsetKey.self) { contentBottomY in
-                        // contentBottomY is the content's bottom edge position
-                        // relative to the scroll viewport; it decreases as the
-                        // user scrolls down. Once it reaches (near) the visible
-                        // viewport height, the participant has actually scrolled
-                        // through the whole consent document. Previously this
-                        // closure ignored the value entirely and always set
-                        // scrolledToBottom = true on the very first layout pass —
-                        // effectively immediately, before any scrolling — and
-                        // nothing even read scrolledToBottom afterwards, so the
-                        // Agree button was always enabled regardless of whether
-                        // the participant had read the document.
                         if contentBottomY <= outerGeo.size.height + 24 {
                             scrolledToBottom = true
                         }
                     }
                 }
 
-                Divider()
-
-                Button(action: {
+                OnboardingPrimaryButton(
+                    title: scrolledToBottom ? "Continue" : "Scroll to read the full consent form",
+                    enabled: scrolledToBottom
+                ) {
+                    let name = appState.userProfile.displayName.isEmpty
+                        ? "participant"
+                        : appState.userProfile.displayName
                     appState.userProfile.consentGiven = true
-                }) {
-                    Text(scrolledToBottom ? "I Agree & Continue" : "Scroll to read the full consent form")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(scrolledToBottom ? Color.dopaxBlue : Color.dopaxGray50)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .padding()
+                    BackendSyncManager.shared.syncConsent(signatureName: name)
                 }
-                .disabled(!scrolledToBottom)
+                .padding(.horizontal, 24)
+                .padding(.top, 16)
+                .padding(.bottom, 28)
             }
-            .navigationBarHidden(true)
         }
     }
 
     @ViewBuilder
     private func consentSection(_ title: String, _ body: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.headline)
-            Text(body).font(.body).foregroundColor(.secondary)
+            Text(title).font(.headline).foregroundColor(.dopaxBlack90)
+            Text(body).font(.body).foregroundColor(.dopaxBlack70)
         }
     }
 }

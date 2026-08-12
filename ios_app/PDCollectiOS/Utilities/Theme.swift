@@ -9,6 +9,14 @@ extension Color {
     static let dopaxTeal = Color(hex: 0x00A896)
     static let dopaxWarmGray = Color(hex: 0xF0F4F8)
 
+    // Onboarding (Figma Dopa-X user app)
+    static let onboardingCream = Color(hex: 0xFFF5F1)
+    static let onboardingAccent = Color(hex: 0x5B34A4)
+    static let onboardingAccentSoft = Color(hex: 0x6E56C8)
+    static let onboardingDotIdle = Color(hex: 0xE4DCE8)
+    static let onboardingDotPast = Color(hex: 0xB9AFE8)
+    static let onboardingTextTertiary = Color(hex: 0xA3A3A3)
+
     // Neutrals — mirror Android's colors.xml Dopa-X Brand Palette grays
     // (black_90/black_80/black_70/gray_50/gray_30), so both platforms draw
     // from the same named neutral scale instead of each picking its own
@@ -39,6 +47,13 @@ extension ShapeStyle where Self == Color {
     static var dopaxRose: Color { .dopaxRose }
     static var dopaxTeal: Color { .dopaxTeal }
     static var dopaxWarmGray: Color { .dopaxWarmGray }
+
+    static var onboardingCream: Color { .onboardingCream }
+    static var onboardingAccent: Color { .onboardingAccent }
+    static var onboardingAccentSoft: Color { .onboardingAccentSoft }
+    static var onboardingDotIdle: Color { .onboardingDotIdle }
+    static var onboardingDotPast: Color { .onboardingDotPast }
+    static var onboardingTextTertiary: Color { .onboardingTextTertiary }
 
     static var dopaxBlack90: Color { .dopaxBlack90 }
     static var dopaxBlack80: Color { .dopaxBlack80 }

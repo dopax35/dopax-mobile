@@ -15,7 +15,9 @@ struct ContentView: View {
                 LoginView()
             } else if !appState.userProfile.consentGiven {
                 ConsentView()
-            } else if !appState.userProfile.profileComplete {
+            } else if !appState.userProfile.profileComplete || appState.userProfile.needsOnboardingV2 {
+                // Legacy users who finished v1 still enter ProfileSetup to fill
+                // session windows / health / primers, then onboardingVersion=2.
                 ProfileSetupView()
             } else {
                 MainTabView()
@@ -24,6 +26,7 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.3), value: isAuthResolved)
         .animation(.easeInOut(duration: 0.3), value: appState.userProfile.consentGiven)
         .animation(.easeInOut(duration: 0.3), value: appState.userProfile.profileComplete)
+        .animation(.easeInOut(duration: 0.3), value: appState.userProfile.onboardingVersion)
     }
 }
 

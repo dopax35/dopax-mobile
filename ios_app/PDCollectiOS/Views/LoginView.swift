@@ -1,89 +1,76 @@
 import SwiftUI
-import GoogleSignInSwift
 
 struct LoginView: View {
     @EnvironmentObject var appState: AppState
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var showEmailHint = false
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 30) {
-                Spacer()
+        ZStack {
+            OnboardingBackground()
 
-                Image(systemName: "waveform.path.ecg")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
-                    .foregroundColor(.dopaxBlue)
+            VStack(spacing: 0) {
+                Spacer(minLength: 48)
 
-                Text("Welcome to PDCollect")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                OnboardingBrandMark()
+                    .padding(.bottom, 26)
 
-                Text("Sign in to back up your profile and sync across devices.")
-                    .font(.body)
+                Text("Welcome to dopa-X")
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundColor(.dopaxBlack90)
                     .multilineTextAlignment(.center)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal)
+
+                Text("A few minutes a day to track how your Parkinson’s really behaves.")
+                    .font(.system(size: 15))
+                    .foregroundColor(.dopaxBlack70)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 10)
+                    .padding(.horizontal, 36)
+
+                Text("Together, we’re working toward Levodopa timing that fits each person.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.onboardingTextTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 12)
+                    .padding(.horizontal, 48)
 
                 Spacer()
 
                 if isLoading {
                     ProgressView("Signing in…")
-                        .padding()
+                        .padding(.bottom, 24)
                 } else {
-                    VStack(spacing: 16) {
-                        Button(action: handleAppleSignIn) {
-                            HStack {
-                                Image(systemName: "apple.logo")
-                                    .font(.title2)
-                                Text("Sign in with Apple")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.black)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                        }
-                        .padding(.horizontal)
+                    VStack(spacing: 12) {
+                        OnboardingAuthCardButton(
+                            title: "Continue with Google",
+                            systemImage: nil,
+                            assetImage: "GoogleLogo",
+                            action: handleGoogleSignIn
+                        )
 
-                        Button(action: handleGoogleSignIn) {
-                            HStack {
-                                Image(systemName: "g.circle.fill")
-                                    .font(.title2)
-                                Text("Continue with Google")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.white)
-                            .foregroundColor(.black)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                            .cornerRadius(8)
-                        }
-                        .padding(.horizontal)
-
-                        // Escape hatch for users who already have a local profile
-                        // (e.g. updated from a version that didn't require sign-in).
-                        // Tapping this skips Firebase Auth entirely — local UserDefaults
-                        // and Keychain data are fully preserved.
-                        Button("Continue without signing in") {
-                            // No-op: ContentView already shows the next screen
-                            // based on consentGiven / profileComplete state.
-                            // Marking the user as having acknowledged the login screen
-                            // is handled implicitly by setting a flag so ContentView
-                            // can route past LoginView without a Firebase user.
-                            appState.skipSignIn()
-                        }
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .padding(.top, 4)
+                        OnboardingAuthCardButton(
+                            title: "Continue with Apple",
+                            systemImage: "apple.logo",
+                            assetImage: nil,
+                            action: handleAppleSignIn
+                        )
                     }
+                    .padding(.horizontal, 24)
+
+                    // Same escape hatch as before — skips Firebase Auth;
+                    // ContentView still gates on consentGiven / profileComplete.
+                    OnboardingSecondaryLink(title: "Continue without signing in") {
+                        appState.skipSignIn()
+                    }
+                    .padding(.top, 20)
+
+                    Button("Use email instead") {
+                        showEmailHint = true
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.onboardingAccent)
+                    .padding(.top, 8)
                 }
 
                 if let errorMessage {
@@ -92,21 +79,25 @@ struct LoginView: View {
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
+                        .padding(.top, 8)
                 }
 
-                Spacer()
+                Spacer(minLength: 24)
 
-                Text("By signing in, you agree to our Privacy Policy and Terms of Service.")
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                Text("For research participants of dopa-x.org")
+                    .font(.system(size: 12))
+                    .foregroundColor(.onboardingTextTertiary)
+                    .padding(.bottom, 28)
             }
-            .padding()
+        }
+        .alert("Email sign-in", isPresented: $showEmailHint) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Please continue with Google or Apple. Email/password sign-in is not enabled in this build.")
         }
     }
 
-    // MARK: - Sign-in Handlers
+    // MARK: - Sign-in Handlers (unchanged)
 
     private func handleGoogleSignIn() {
         isLoading = true
@@ -131,11 +122,12 @@ struct LoginView: View {
         switch result {
         case .success:
             FirebaseSyncManager.shared.syncProfileOnSignIn(profile: appState.userProfile) { _ in
-                DispatchQueue.main.async { isLoading = false }
+                BackendSyncManager.shared.ensureSession(preferredParticipantCode: appState.userProfile.userId) { _ in
+                    DispatchQueue.main.async { isLoading = false }
+                }
             }
         case .failure(let error):
             isLoading = false
-            // Don't show an error message when the user simply cancelled the sign-in sheet.
             if let authError = error as? AuthError, case .userCancelled = authError { return }
             errorMessage = error.localizedDescription
         }

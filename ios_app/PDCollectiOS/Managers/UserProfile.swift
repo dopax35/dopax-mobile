@@ -24,6 +24,24 @@ class UserProfile: ObservableObject {
     @Published var beanieDeviceIdentifier: String { didSet { save("beanieDeviceIdentifier", beanieDeviceIdentifier) } }
     @Published var beanieDeviceName: String     { didSet { save("beanieDeviceName", beanieDeviceName) } }
 
+    // MARK: - Onboarding v2 (Figma flow) — additive; legacy users fill these on upgrade
+    @Published var displayName: String         { didSet { save("displayName", displayName) } }
+    @Published var yearOfBirth: String         { didSet { save("yearOfBirth", yearOfBirth) } }
+    @Published var testTimeMorning: String     { didSet { save("testTimeMorning", testTimeMorning) } }
+    @Published var testTimeEvening: String     { didSet { save("testTimeEvening", testTimeEvening) } }
+    @Published var testTimeCustom: String      { didSet { save("testTimeCustom", testTimeCustom) } }
+    @Published var healthAppleStatus: String   { didSet { save("healthAppleStatus", healthAppleStatus) } }
+    @Published var healthStravaStatus: String  { didSet { save("healthStravaStatus", healthStravaStatus) } }
+    @Published var notificationsOptIn: Bool    { didSet { save("notificationsOptIn", notificationsOptIn) } }
+    @Published var keyboardOptIn: Bool         { didSet { save("keyboardOptIn", keyboardOptIn) } }
+    /// Set when the Figma onboarding flow (incl. session windows) finishes.
+    @Published var onboardingVersion: Int      { didSet { save("onboardingVersion", onboardingVersion) } }
+
+    /// Legacy users who completed v1 still need v2 fields (session windows).
+    var needsOnboardingV2: Bool {
+        onboardingVersion < 2 || testTimeCustom.isEmpty
+    }
+
     init() {
         let d = UserDefaults.standard
         self.consentGiven = d.bool(forKey: "consentGiven")
@@ -36,6 +54,16 @@ class UserProfile: ObservableObject {
         self.hrDeviceName = d.string(forKey: "hrDeviceName") ?? ""
         self.beanieDeviceIdentifier = d.string(forKey: "beanieDeviceIdentifier") ?? ""
         self.beanieDeviceName = d.string(forKey: "beanieDeviceName") ?? ""
+        self.displayName = d.string(forKey: "displayName") ?? ""
+        self.yearOfBirth = d.string(forKey: "yearOfBirth") ?? ""
+        self.testTimeMorning = d.string(forKey: "testTimeMorning") ?? "08:00-10:00"
+        self.testTimeEvening = d.string(forKey: "testTimeEvening") ?? "18:00-20:00"
+        self.testTimeCustom = d.string(forKey: "testTimeCustom") ?? ""
+        self.healthAppleStatus = d.string(forKey: "healthAppleStatus") ?? "skipped"
+        self.healthStravaStatus = d.string(forKey: "healthStravaStatus") ?? "skipped"
+        self.notificationsOptIn = d.object(forKey: "notificationsOptIn") as? Bool ?? false
+        self.keyboardOptIn = d.object(forKey: "keyboardOptIn") as? Bool ?? false
+        self.onboardingVersion = d.integer(forKey: "onboardingVersion")
 
         if let data = d.data(forKey: "medications") {
             if let meds = try? JSONDecoder().decode([Medication].self, from: data) {
@@ -72,16 +100,23 @@ class UserProfile: ObservableObject {
 
     func clearAll() {
         ["consentGiven","profileComplete","userId","age","gender","dominantHand","affectedSide","medications",
-         "hrDeviceIdentifier","hrDeviceName","beanieDeviceIdentifier","beanieDeviceName"]
+         "hrDeviceIdentifier","hrDeviceName","beanieDeviceIdentifier","beanieDeviceName",
+         "displayName","yearOfBirth","testTimeMorning","testTimeEvening","testTimeCustom",
+         "healthAppleStatus","healthStravaStatus","notificationsOptIn","keyboardOptIn","onboardingVersion"]
             .forEach { UserDefaults.standard.removeObject(forKey: $0) }
         UserProfile.deleteFromKeychain()
         consentGiven = false
         profileComplete = false
+        onboardingVersion = 0
         let newId = "pd_" + UUID().uuidString.prefix(8).lowercased()
         userId = newId
         age = ""; gender = ""; dominantHand = "Right"; affectedSide = "Left"; medications = []
         hrDeviceIdentifier = ""; hrDeviceName = ""
         beanieDeviceIdentifier = ""; beanieDeviceName = ""
+        displayName = ""; yearOfBirth = ""
+        testTimeMorning = "08:00-10:00"; testTimeEvening = "18:00-20:00"; testTimeCustom = ""
+        healthAppleStatus = "skipped"; healthStravaStatus = "skipped"
+        notificationsOptIn = false; keyboardOptIn = false
     }
 
     private func save(_ key: String, _ value: Any) {
@@ -145,7 +180,17 @@ class UserProfile: ObservableObject {
             "age": age,
             "gender": gender,
             "dominantHand": dominantHand,
-            "affectedSide": affectedSide
+            "affectedSide": affectedSide,
+            "displayName": displayName,
+            "yearOfBirth": yearOfBirth,
+            "testTimeMorning": testTimeMorning,
+            "testTimeEvening": testTimeEvening,
+            "testTimeCustom": testTimeCustom,
+            "healthAppleStatus": healthAppleStatus,
+            "healthStravaStatus": healthStravaStatus,
+            "notificationsOptIn": notificationsOptIn,
+            "keyboardOptIn": keyboardOptIn,
+            "onboardingVersion": onboardingVersion,
         ]
         
         let medsList = medications.map { ["name": $0.name, "dosage": $0.dosage] }
