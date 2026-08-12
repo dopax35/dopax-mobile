@@ -24,12 +24,17 @@ path keeps running until reconciliation proves the new one is complete.
 ```bash
 cp .env.example .env
 echo "JWT_SECRET=$(openssl rand -base64 48)" >> .env
+echo "ADMIN_JWT_SECRET=$(openssl rand -base64 48)" >> .env
 
 npm install
 npm run stack:up              # Postgres :55432, MinIO :9000, Adminer :8081
 npm run db:migrate
 npm run dev                   # API on :8080
 ```
+
+`db:migrate` refuses to run against a non-local host while `NODE_ENV=development`, so a production
+connection string pasted into `.env` cannot be migrated by accident. Use `npm run db:inspect` for
+read-only queries against a remote database instead.
 
 Postgres is published on **55432, not 5432**, because a native Postgres already holds
 `127.0.0.1:5432` on this machine. Docker binds the wildcard address, so the native instance wins
@@ -69,6 +74,42 @@ nothing on Drive is ever mutated or deleted.
 **The rule that governs dual-run: the legacy path must never be made worse.** Clients keep separate
 `.uploaded` (legacy) and `.uploaded_v2` (backend) markers with independent retry schedules, so an
 outage here cannot block a legacy upload or delay on-device retention cleanup.
+
+## The admin console API
+
+The staff-facing web console lives in [`../admin`](../admin) and talks to this service over
+`/v1/admin/**`. It is a separate route scope with its own identity rules, mounted only when
+`ADMIN_API_ENABLED=true`.
+
+| Setting | Meaning |
+|---|---|
+| `ADMIN_API_ENABLED` | Mounts `/v1/admin/**`. Leave it off wherever staff access is not wanted. |
+| `ADMIN_JWT_SECRET` | Signs staff sessions. Must differ from `JWT_SECRET`; boot fails if it does not. |
+| `ADMIN_SESSION_TTL` | Staff session lifetime, e.g. `12h`. |
+| `ADMIN_DEV_LOGIN` | Accepts `dev:<email>` instead of a Firebase token. Development only — boot fails if set with `NODE_ENV=production`. |
+
+Staff tokens are deliberately not participant tokens: a different secret and a different audience
+(`dopax-admin`), so neither can ever be replayed against the other's routes. Firebase is still the
+only identity provider; `staff_users` is an allowlist checked *after* the token verifies, so
+granting access is a database row and revoking it is a single `active = false`.
+
+Three roles, widening in what they can see:
+
+| Role | Sees |
+|---|---|
+| `viewer` | Aggregates, coverage, and queues. Participant codes only. |
+| `researcher` | The above plus per-participant activity and profile detail, with names, emails and Firebase UIDs withheld. |
+| `admin` | Everything, including identities and the audit trail. |
+
+Create the first account from the command line, so no open bootstrap endpoint has to exist:
+
+```bash
+npm run staff:add -- --email you@example.com --role admin --name "Your Name"
+```
+
+Every staff read of participant data writes an `audit_log` row with the actor, the route, the
+participant, and the role in force at the time. That is a study requirement, not a nicety, so the
+audit write happens in the route scope rather than being left to each handler to remember.
 
 ## Storage backends
 

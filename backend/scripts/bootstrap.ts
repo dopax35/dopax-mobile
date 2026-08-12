@@ -18,6 +18,7 @@ import { resolve } from 'node:path';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { env } from '../src/config/env.js';
 import { closeDatabase, createConnection, createDatabase, db } from '../src/db/client.js';
+import { guardMigrationTarget } from '../src/db/migration-target.js';
 import { BootstrapLockError, createStepLedger, withBootstrapLock } from '../src/domain/bootstrap/ledger.js';
 import { formatReport, runBootstrap, type BootstrapLogger } from '../src/domain/bootstrap/runner.js';
 import { bootstrapSteps } from '../src/domain/bootstrap/steps.js';
@@ -43,6 +44,9 @@ async function applySchemaMigrations(): Promise<void> {
 async function main(): Promise<number> {
   const config = env();
   const sourceDir = resolve(process.cwd(), config.MIGRATION_SOURCE_DIR);
+
+  // A dry run writes nothing, so it is allowed to look at a remote database.
+  if (!dryRun) guardMigrationTarget(config.DATABASE_URL, 'db:bootstrap');
 
   console.log(`[bootstrap] sources   ${sourceDir}`);
   console.log(`[bootstrap] database  ${config.DATABASE_URL.replace(/:[^:@/]*@/, ':***@')}`);

@@ -21,9 +21,14 @@ export function createDatabase(sql = createConnection()) {
 
 let cached: { sql: ReturnType<typeof createConnection>; db: Database } | undefined;
 
-export function db(): Database {
+/**
+ * `url` is read only when the shared pool is first constructed. Callers that
+ * already hold a parsed config should pass it, so an app built with an explicit
+ * config never falls back to the ambient process environment.
+ */
+export function db(url?: string): Database {
   if (!cached) {
-    const sql = createConnection();
+    const sql = createConnection(url);
     cached = { sql, db: createDatabase(sql) };
   }
   return cached.db;

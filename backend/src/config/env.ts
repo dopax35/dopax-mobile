@@ -25,6 +25,11 @@ const schema = z
 
     DATABASE_URL: z.string().url(),
 
+    // Inspected read-only by `npm run db:inspect -- --remote`. Never used by the
+    // running server, and never by a migration: R5 requires production to
+    // migrate itself.
+    RAILWAY_DATABASE_URL: z.string().url().optional().or(z.literal('')),
+
     STORAGE_BACKEND: z.enum(['gdrive', 'minio', 's3', 'azure']).default('gdrive'),
     S3_ENDPOINT: z.string().url().optional(),
     S3_REGION: z.string().default('us-east-1'),
@@ -51,6 +56,13 @@ const schema = z
     JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
     JWT_ACCESS_TTL: z.coerce.number().int().positive().default(900),
     JWT_REFRESH_TTL: z.coerce.number().int().positive().default(2_592_000),
+
+    // The staff console reads participant data, so it is opt-in per environment
+    // rather than on by default.
+    ADMIN_API_ENABLED: booleanish.default(false),
+    ADMIN_JWT_SECRET: z.string().optional(),
+    ADMIN_SESSION_TTL: z.coerce.number().int().positive().default(3_600),
+    ADMIN_DEV_LOGIN: booleanish.default(false),
   })
   .superRefine((env, ctx) => {
     if (env.AUTH_DEV_BYPASS && env.NODE_ENV !== 'development') {
@@ -58,6 +70,36 @@ const schema = z
         code: z.ZodIssueCode.custom,
         path: ['AUTH_DEV_BYPASS'],
         message: 'AUTH_DEV_BYPASS may only be enabled when NODE_ENV=development',
+      });
+    }
+
+    if (env.ADMIN_API_ENABLED) {
+      if (!env.ADMIN_JWT_SECRET || env.ADMIN_JWT_SECRET.length < 32) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['ADMIN_JWT_SECRET'],
+          message:
+            'ADMIN_JWT_SECRET must be at least 32 characters when ADMIN_API_ENABLED=true',
+        });
+      }
+
+      // Sharing the secret would make a participant token and a staff token
+      // interchangeable, which is the one failure this split is here to prevent.
+      if (env.ADMIN_JWT_SECRET && env.ADMIN_JWT_SECRET === env.JWT_SECRET) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['ADMIN_JWT_SECRET'],
+          message: 'ADMIN_JWT_SECRET must differ from JWT_SECRET',
+        });
+      }
+    }
+
+    if (env.ADMIN_DEV_LOGIN && !(env.NODE_ENV === 'development' && env.AUTH_DEV_BYPASS)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ADMIN_DEV_LOGIN'],
+        message:
+          'ADMIN_DEV_LOGIN requires NODE_ENV=development and AUTH_DEV_BYPASS=true',
       });
     }
 

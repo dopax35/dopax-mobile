@@ -1010,13 +1010,97 @@ leave one refused with exit 1, and the corpus is unchanged at 43 participants an
 - Migration `0003_drive_manifest_exceptions.sql`, plus `uploads.drive_md5` — Drive reports md5, and
   a checksum stored in a column named `sha256` would be worse than no checksum at all.
 
-Unit-tested end to end; not yet run against Drive, because no service account exists. Until one
-does, `npm run db:bootstrap` fails at step 3 with the command to run — which is the intended
-behaviour, not a regression.
+Unit-tested end to end. Since written, this *has* been run against Drive — see the Phase 0 figures
+under Outstanding for what it found.
 
 **Review findings closed in the same change:** the advisory lock originally excluded the schema
 migration; the correlation CSV reader silently padded or truncated a ragged row, which could
 correlate a participant to the wrong file prefix, and now rejects it.
+
+**Phase 6 (early) — staff monitoring console**
+
+Brought forward from Phase 6 because the migration itself is what most needs watching: the flip
+decision in §4.2 is a judgement about reconciliation history, and until now that history could only
+be read with `psql`.
+
+- `/v1/admin/**` on the same service, mounted only when `ADMIN_API_ENABLED=true`, with its own
+  identity path. Staff tokens use a separate secret and the `dopax-admin` audience, so a staff token
+  cannot be replayed on a participant route and a stolen participant token cannot read the study.
+- Firebase stays the only identity provider, per R1. `staff_users` is an allowlist checked *after*
+  the token verifies, so access is granted by inserting a row and revoked by one `active = false` —
+  no credential is created, migrated, or re-keyed. `ADMIN_DEV_LOGIN` covers laptop work and the
+  environment schema refuses to boot with it set in production.
+- Three roles. The backend redacts before responding rather than trusting the UI to omit a column,
+  so a `researcher` response contains no email address to leak. Legacy participant codes stay
+  visible to everyone: they are the study's own pseudonyms and correlating them to Drive filenames
+  is the work.
+- Every staff read of participant data writes an `audit_log` row in the route scope, not in each
+  handler, because a compliance guarantee that depends on remembering is not a guarantee.
+- `npm run staff:add` creates the first account, so no open bootstrap endpoint has to exist.
+- `admin/` — Next.js App Router, server components only, staff JWT in an httpOnly cookie that
+  client JavaScript cannot read. An XSS bug in the console cannot exfiltrate a token that reads the
+  whole study.
+- `npm run db:inspect` for read-only queries against a remote database, and `src/db/migration-target.ts`
+  refuses to migrate a non-local host while `NODE_ENV=development` — a production connection string
+  pasted into `.env` can no longer be migrated by accident.
+
+The console is a reader. The only two writes are the decisions the backend refuses to guess:
+resolving a contested participant code and resolving an unattributable Drive object.
+
+**Migration ledger repair** (`0004_drive_manifest_repair.sql`)
+
+Found by the console's own schema check on first run against the dev database.
+
+An **uncommitted** migration, `0003_drive_md5_and_consent_key`, had been applied to the dev database
+and survives only in the untracked `dist/db/migrations/` build output. Drizzle applies migrations
+strictly by journal timestamp, and that entry's timestamp is *newer* than the committed
+`0003_drive_manifest_exceptions`. The committed migration was therefore not pending — it was
+unreachable, permanently, on any database that recorded the other one. The result was a database
+with no `drive_manifest_exceptions` table and no `uploads.drive_md5`, while `src` expected both.
+
+The repair is additive and conditional rather than a renumbering, so it is a no-op on a database
+that applied the committed 0003 normally. All 87 Drive checksums were carried from the orphaned
+`legacy_drive_md5` into `drive_md5` rather than re-read from Drive, and nothing was dropped: the
+orphaned column stays until someone confirms nothing reads it.
+
+Two related weaknesses are *not* fixed here, because both change deployment behaviour and R5 says a
+half-measure is worse than none:
+
+- `migrationsFolder` is `'./src/db/migrations'` in both `src/db/migrate.ts` and `scripts/bootstrap.ts` —
+  resolved against the process working directory, so a deployment that ships only `dist` has no
+  migrations at all, and one that ships a stale `dist` could apply the wrong set. `npm run build`
+  does not copy migrations, which is why the stale copy went unnoticed.
+- `dist/db/migrations/` is untracked build output that no longer matches `src`. Nothing reads it
+  today, but it is the artefact that hid this for a day.
+
+**Phase 1 / Phase 3 (early) — participant auth and the onboarding write path**
+
+Brought forward because the redesigned onboarding collects fields the legacy pipeline has nowhere
+to put, so the screens could not be finished without somewhere to write them.
+
+- `POST /v1/auth/session` exchanges a Firebase ID token for a participant JWT. Resolution follows
+  R1 in three steps — `auth_identities.firebase_uid`, then `participants.legacy_file_user_ids`
+  containing the UID, then create — so a returning participant is matched by their historical ID
+  form rather than enrolled a second time. No path renumbers an existing `participant_code`; when a
+  device offers a code that another participant already holds, the new enrolment falls back to the
+  Firebase UID instead of taking it.
+- `GET /v1/participants/me`, `PUT /v1/participants/me/profile` (revision-checked, 409 on a stale
+  write) and append-only `POST /v1/participants/me/consent`. No schema change was needed: the new
+  onboarding fields — session windows, health-app links, permission grants, `onboardingVersion` —
+  go in the existing `settings` jsonb, and demographics in the columns that already exist.
+- Participant tokens use the `dopax-participant` audience against `JWT_SECRET`, so the audience
+  split introduced for staff now cuts both ways and neither token verifies on the other's routes.
+- Clients dual-write. Firestore stays authoritative while `BOTH_ARCH=true` and a backend failure is
+  swallowed rather than blocking onboarding, so the new path cannot make an existing user's
+  enrolment fail. Legacy participants are re-offered setup by an `onboardingVersion` gate that
+  collects the missing fields without clearing consent or touching their code.
+- Verified against a real PostgreSQL container rather than a mock, since resolution order and the
+  `legacy_file_user_ids` array containment are exactly what an in-memory fake would get wrong.
+
+**Review finding closed in the same change:** `buildApp` resolved the connection pool through the
+module-level `env()` even when it had been handed an explicit config, so an app constructed with a
+config still read the ambient process environment and failed where that environment was incomplete.
+`db()` now takes the URL the caller already parsed.
 
 ### Outstanding
 
@@ -1029,34 +1113,52 @@ also no root `.gitignore`. Cleaning it means rewriting pushed history, so it nee
 decision before Phase 6 hosting. Note that `MIGRATION_SOURCE_DIR` defaults to the repository root,
 which normalises keeping the exports there; production should mount them and set an absolute path.
 
-**Phase 0** — still gating the Drive half of Phase 2:
+**Phase 0** — mostly closed; the numbers below are read from the dev database, not estimated:
 
 - `hash_config` has not been exported. Per §10, that leaves 22 password accounts unrecoverable if
-  the Firebase project is ever lost.
-- No Drive inventory exists, so the corpus size is still unknown — and it is the input to every
-  Phase 2 estimate and to whether `gdrive` passthrough is a convenience or a necessity. The
-  inventory tooling is written and tested; it needs the service account from §11 item 1 and
-  nothing else.
-- The Firestore export of `users` / `user_mappings` is still unpaginated.
+  the Firebase project is ever lost. **This is now the only hard Phase 0 blocker.**
+- The Drive inventory *has* run, contrary to the Phase 2 note above: bootstrap steps `auth_users`,
+  `firestore_profiles`, `drive_manifest` and `drive_reconciliation` are all `completed`. The corpus
+  is **90 Drive objects / 21.9 GiB**, of which **87 became uploads across 24 participants**,
+  collected 2026-07-18 to 2026-07-20. So `gdrive` passthrough is a convenience at this size, not a
+  necessity — but the corpus covers three days, and the study is longitudinal.
+- **The 3-object gap needs a manifest re-import, not an investigation.** Reconciliation reports 90
+  Drive objects against 87 uploads and status `discrepancies`. The accounting identity says the
+  difference should be three `drive_manifest_exceptions` rows, and that table is empty — because it
+  did not exist when the manifest was imported (see the ledger repair above). The import is
+  idempotent and never regresses a parsed upload, so re-running it is the fix.
+- The Firestore export of `users` / `user_mappings` is still unpaginated, though profiles and
+  consents did import.
 - The `pd_53a21c75` collision (§3.2) is handled defensively in code but has no human decision
   recorded in `participant_id_conflicts.resolution_note`.
 - `AGENTS.md` still names Firebase as the backend deployment target.
 
-**Phase 1 remainder:** `firebase-admin` token verification and participant resolution through
-`legacy_file_user_ids`, `POST /v1/auth/session`, the `StorageAdapter` implementations, pg-boss
-wiring, the upload / event / profile / consent / device routes, and CI.
+**Phase 1 remainder:** the `StorageAdapter` implementations, pg-boss wiring, the upload / event /
+device routes, and CI. Auth, profile and consent have landed; note that `firebase-admin`
+verification has never run against a real token here, because org policy blocks service account key
+creation on this laptop — the dev verifier covers local work and the Firebase path is unexercised
+until it reaches an environment that has a credential.
 
-**Phase 2 remainder:** Firestore → profiles and consents, the ZIP stream-parse pipeline, the §4.3
-exporter, and the nightly reconciler.
+**Phase 2 remainder:** the ZIP stream-parse pipeline (its two unit tests are the suite's two known
+failures), the §4.3 exporter, and the nightly reconciler. Firestore profiles and consents imported.
 
-**Phase 3 onward:** untouched. No client work has begun on either platform.
+**Phase 3:** partially started ahead of schedule — both clients dual-write profile and consent, but
+no upload dual-write exists yet, so `.uploaded_v2` is still unimplemented and the reconciliation
+loop the flip decision depends on has nothing to compare. Android's onboarding is still one
+scrolling form rather than the redesigned step wizard, and its permission primer screens are
+missing; iOS has the full flow.
 
 ### Next three
 
 1. **Decide on the exports in git.** Everything else is engineering that can proceed in parallel;
    this one only gets more expensive as history grows, and it is the item an IRB would ask about.
-2. **Close Phase 0.** Drive inventory, `hash_config` export, paginated Firestore export. Everything
-   in Phase 2 is estimated off numbers we do not have yet, and §11 items 1 and 2 (Drive service
-   account, Firebase CLI access) are the actual blockers.
-3. **Phase 1 auth path.** `POST /v1/auth/session` with the `legacy_file_user_ids` fallback, and the
-   five R1 acceptance tests in §4.1 running green — this is what proves R1 rather than asserting it.
+2. **Close Phase 0.** Now just the `hash_config` export and paginating the Firestore export; the
+   Drive corpus is inventoried. Re-run the manifest import first, so the three unaccounted Drive
+   objects become rows a human can act on instead of a bare reconciliation discrepancy.
+3. **Prove R1 rather than assert it.** The auth path and the `legacy_file_user_ids` fallback are
+   written, but the five acceptance tests in §4.1 are not what is currently green. The suite covers
+   resolution, no-renumbering, and the profile/consent round trip; it does *not* yet cover the
+   second resolution path against a participant whose code differs from their UID, or the case that
+   matters most — `KN3JT0d9PIX4ZtjKvbllQlpc3f53` and `OA5r4jqkUNa38HoFHlLhiIJfP4b2` resolving to two
+   different participants despite sharing `pd_53a21c75`. Those two are testable today against the
+   container. The three that depend on real Firebase sign-in are blocked on a credential.

@@ -2,7 +2,9 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**', 'src/db/migrations/**'] },
+  // .tmp holds throwaway build output; linting it reports errors in generated
+  // JavaScript and hides the real ones.
+  { ignores: ['dist/**', '.tmp/**', 'node_modules/**', 'src/db/migrations/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
