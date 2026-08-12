@@ -107,6 +107,13 @@
                             android:layout_height="wrap_content"
                             android:text="@string/label_face_distance_tmt_only" />
                     </RadioGroup>
+
+                    <com.google.android.material.materialswitch.MaterialSwitch
+                        android:id="@+id/switchAutoUpload"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/label_auto_sync" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

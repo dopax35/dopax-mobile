@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingBottom="28dp">
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Title"
+        android:text="Your three daily sessions" />
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Subtitle"
+        android:text="Same times every day teach us fastest." />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="28dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/rowMorningWindow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_onboarding_surface"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_onboarding_clock" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend_medium"
+                        android:text="Morning window"
+                        android:textColor="@color/black_90"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/tvMorningWindow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="@color/black_70"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_onboarding_edit" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowNoonWindow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_onboarding_surface"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_onboarding_clock" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend_medium"
+                        android:text="Midday window"
+                        android:textColor="@color/black_90"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/tvNoonWindow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:textColor="@color/black_70"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_onboarding_edit" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.FieldLabel"
+                android:layout_marginTop="20dp"
+                android:text="Your window" />
+
+            <EditText
+                android:id="@+id/editTimeCustom"
+                style="@style/Widget.DopaX.Onboarding.Field"
+                android:hint="e.g. 14:00 or 14:00-15:00"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/lexend"
+                android:text="A reminder arrives when each window opens. Sessions take about 4 minutes."
+                android:textColor="@color/black_70"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnTimesContinue"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:text="Continue" />
+
+    <TextView
+        android:id="@+id/btnTimesBack"
+        style="@style/Widget.DopaX.Onboarding.SecondaryLink"
+        android:layout_marginTop="12dp"
+        android:text="Back" />
+</LinearLayout>

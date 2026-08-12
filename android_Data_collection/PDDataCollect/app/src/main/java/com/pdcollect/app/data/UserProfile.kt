@@ -158,6 +158,15 @@ class UserProfile(context: Context) {
         set(value) = prefs.edit().putBoolean(Constants.PREF_HAS_SEEN_WALKTHROUGH, value).apply()
 
     // Onboarding v2 (Figma) — additive fields for legacy re-entry
+    var displayName: String
+        get() = prefs.getString("display_name", "") ?: ""
+        set(value) = prefs.edit().putString("display_name", value).apply()
+
+    /** Optional; [age] stays the authoritative field the CSV and Firestore use. */
+    var yearOfBirth: String
+        get() = prefs.getString("year_of_birth", "") ?: ""
+        set(value) = prefs.edit().putString("year_of_birth", value).apply()
+
     var testTimeCustom: String
         get() = prefs.getString("test_time_custom", "") ?: ""
         set(value) = prefs.edit().putString("test_time_custom", value).apply()
@@ -195,6 +204,15 @@ class UserProfile(context: Context) {
         get() = onboardingVersion < 2 || testTimeCustom.isBlank()
 
     /**
+     * True once the participant has actually chosen a face-distance mode.
+     * [faceDistanceMode] falls back to ALWAYS when unset, so a caller that
+     * wants "off unless asked for" has to know whether the answer was ever
+     * given rather than reading that default as consent.
+     */
+    val faceDistanceConfigured: Boolean
+        get() = prefs.contains(Constants.PREF_FACE_DISTANCE_MODE)
+
+    /**
      * Wipe every preference this app has stored. Used by the Withdraw flow.
      * Uses commit() (not apply()) so the caller can rely on the file being
      * gone before continuing — the next read will produce defaults and a
@@ -228,6 +246,8 @@ class UserProfile(context: Context) {
             "dominantHand" to dominantHand,
             "affectedSide" to affectedSide,
             "hasSeenWalkthrough" to hasSeenWalkthrough,
+            "displayName" to displayName,
+            "yearOfBirth" to yearOfBirth,
             "testTimeCustom" to testTimeCustom,
             "healthConnectStatus" to healthConnectStatus,
             "healthGoogleFitStatus" to healthGoogleFitStatus,
@@ -264,6 +284,8 @@ class UserProfile(context: Context) {
         (map["dominantHand"] as? String)?.let { editor.putString(Constants.PREF_DOMINANT_HAND, it) }
         (map["affectedSide"] as? String)?.let { editor.putString(Constants.PREF_AFFECTED_SIDE, it) }
         (map["hasSeenWalkthrough"] as? Boolean)?.let { editor.putBoolean(Constants.PREF_HAS_SEEN_WALKTHROUGH, it) }
+        (map["displayName"] as? String)?.let { editor.putString("display_name", it) }
+        (map["yearOfBirth"] as? String)?.let { editor.putString("year_of_birth", it) }
         editor.apply()
     }
 }

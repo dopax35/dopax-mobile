@@ -33,6 +33,10 @@ class MainActivityStartupTest {
         profile.clearAll()
         profile.consentGiven = true
         profile.profileComplete = true
+        // A finished profile means finished onboarding v2 as well; without the
+        // session window MainActivity bounces straight back to ProfileSetup.
+        profile.onboardingVersion = 2
+        profile.testTimeCustom = "14:00"
         profile.userId = "TEST01"
         profile.passiveCollectionActive = false
         profile.keyloggingEnabled = false

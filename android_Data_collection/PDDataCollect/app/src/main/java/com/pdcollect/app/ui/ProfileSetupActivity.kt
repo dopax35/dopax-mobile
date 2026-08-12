@@ -1,54 +1,94 @@
 package com.pdcollect.app.ui
 
+import android.Manifest
+import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.util.TypedValue
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.AutoCompleteTextView
-import android.widget.ArrayAdapter
-import android.widget.Button
+import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
+import android.widget.ViewFlipper
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import com.google.android.material.button.MaterialButton
 import com.pdcollect.app.R
 import com.pdcollect.app.data.UserProfile
+import com.pdcollect.app.service.HealthConnectManager
+import com.pdcollect.app.service.StravaManager
+import com.pdcollect.app.util.Constants
+import com.pdcollect.app.util.PermissionUtils
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
-import android.util.Log
-import androidx.appcompat.app.AlertDialog
-import android.os.Build
-import android.widget.TextView
-import com.pdcollect.app.util.PermissionUtils
-import android.Manifest
+import java.util.Calendar
 
+/**
+ * Onboarding v2 (Figma) enrolment wizard — the Android counterpart of iOS's
+ * ProfileSetupView, step for step.
+ *
+ * Every answer is written to [UserProfile] as it is given rather than in one
+ * batch at the end, so a participant who is interrupted mid-enrolment resumes
+ * where they left off instead of starting over. The participant code is shown
+ * but never editable: renumbering one would orphan their historical files.
+ */
 class ProfileSetupActivity : AppCompatActivity() {
 
+    private companion object {
+        const val STEP_ABOUT = 0
+        const val STEP_MEDICATIONS = 1
+        const val STEP_TIMES = 2
+        const val STEP_HEALTH = 3
+        const val STEP_KEYBOARD = 4
+        const val STEP_REMINDERS = 5
+        const val STEP_READY = 6
+        const val STEP_COUNT = 7
+
+        /** Consent owns dot 0, so the wizard's steps start at the second dot. */
+        const val PROGRESS_DOTS = 7
+        const val STATE_STEP = "onboarding_step"
+
+        const val STATUS_CONNECTED = "connected"
+        const val STATUS_DENIED = "denied"
+        const val STATUS_SKIPPED = "skipped"
+        const val STATUS_UNAVAILABLE = "unavailable"
+
+        const val TAG = "ProfileSetup"
+    }
+
     private lateinit var profile: UserProfile
+    private lateinit var flipper: ViewFlipper
+    private lateinit var progressRow: LinearLayout
     private lateinit var medicationContainer: LinearLayout
-    private val medicationViews = mutableListOf<Triple<LinearLayout, EditText, EditText>>() // row, name, dose
-    
-    // Explicitly using MaterialSwitch to match activity_profile_setup.xml
-    private lateinit var switchKeylogging: com.google.android.material.materialswitch.MaterialSwitch
-    private lateinit var switchFaceDistance: com.google.android.material.materialswitch.MaterialSwitch
-    private lateinit var switchAutoUpload: com.google.android.material.materialswitch.MaterialSwitch
-    
-    private val requestPermissionLauncher = registerForActivityResult(
+
+    private val medicationRows = mutableListOf<MedicationRow>()
+    private var step = STEP_ABOUT
+
+    private data class MedicationRow(val view: View, val name: EditText, val dose: EditText)
+
+    private val notificationPermissionLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            Toast.makeText(this, "Camera permission granted for face distance.", Toast.LENGTH_SHORT).show()
-            if (findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode).checkedRadioButtonId == -1) {
-                findViewById<android.widget.RadioButton>(R.id.rbFaceDistanceAppForeground).isChecked = true
-            }
-            findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode).visibility = View.VISIBLE
-        } else {
-            Toast.makeText(this, "Camera permission is required for face distance.", Toast.LENGTH_LONG).show()
-            switchFaceDistance.isChecked = false
-            findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode).visibility = View.GONE
-        }
+    ) { granted ->
+        profile.notificationsOptIn = granted
+        goTo(STEP_READY)
+    }
+
+    private val healthConnectPermissionLauncher = registerForActivityResult(
+        androidx.health.connect.client.PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        profile.healthConnectStatus =
+            if (granted.containsAll(HealthConnectManager.PERMISSIONS)) STATUS_CONNECTED else STATUS_DENIED
+        renderHealthStep()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,449 +96,56 @@ class ProfileSetupActivity : AppCompatActivity() {
         setContentView(R.layout.activity_profile_setup)
 
         profile = UserProfile(this)
-
-        val userIdEdit = findViewById<EditText>(R.id.editUserId)
-        val ageEdit = findViewById<EditText>(R.id.editAge)
-        val genderSpinner = findViewById<AutoCompleteTextView>(R.id.spinnerGender)
+        flipper = findViewById(R.id.stepFlipper)
+        progressRow = findViewById(R.id.onboardingProgress)
         medicationContainer = findViewById(R.id.medicationContainer)
-        val addMedButton = findViewById<Button>(R.id.btnAddMedication)
-        val pairShellyButton = findViewById<Button>(R.id.btnPairShelly)
-        val saveButton = findViewById<Button>(R.id.btnSave)
-        
-        switchKeylogging = findViewById(R.id.switchKeylogging)
-        switchFaceDistance = findViewById(R.id.switchFaceDistance)
-        switchAutoUpload = findViewById(R.id.switchAutoUpload)
 
-        updatePermissionStatus()
+        bindAboutStep()
+        bindMedicationsStep()
+        bindTimesStep()
+        bindHealthStep()
+        bindKeyboardStep()
+        bindRemindersStep()
+        bindReadyStep()
 
-        val genderAdapter = ArrayAdapter.createFromResource(
-            this, R.array.gender_options, android.R.layout.simple_spinner_item
-        )
-        genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        genderSpinner.setAdapter(genderAdapter)
-        userIdEdit.setText(profile.userId)
+        // Legacy participants already answered the demographics; drop them at
+        // the session windows, which is the one thing v1 never asked for.
+        val initialStep = savedInstanceState?.getInt(STATE_STEP)
+            ?: if (profile.profileComplete && profile.needsOnboardingV2) STEP_TIMES else STEP_ABOUT
+        goTo(initialStep)
 
-        // Removed old manage buttons as they are now part of the status center
-
-        // Pre-fill only when there is real saved profile data.
-        if (hasExistingProfileData()) {
-            ageEdit.setText(if (profile.age > 0) profile.age.toString() else "")
-            
-            val adapter = genderSpinner.adapter
-            val genderIndex = if (adapter is ArrayAdapter<*>) {
-                (adapter as? ArrayAdapter<String>)?.getPosition(profile.gender) ?: -1
-            } else -1
-            if (genderIndex >= 0) genderSpinner.setText(profile.gender, false)
-            
-            switchKeylogging.isChecked = profile.keyloggingEnabled
-            switchFaceDistance.isChecked = profile.faceDistanceEnabled
-            switchAutoUpload.isChecked = profile.autoUploadEnabled
-            applyFaceDistanceModeToUi(profile.faceDistanceMode)
-            
-            loadMedications()
-        } else {
-            // Fresh setup defaults: passive collection starts after setup is saved,
-            // while optional sub-features stay opt-in.
-            switchKeylogging.isChecked = false
-            switchFaceDistance.isChecked = false
-            switchAutoUpload.isChecked = true
-            applyFaceDistanceModeToUi(com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_OFF)
-            addMedicationRow()
-        }
-
-        setupPermissionAutomation()
-
-        // Setup the TimePickers
-        val editMorning = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.editTimeMorning)
-        val editNoon = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.editTimeNoon)
-
-        editMorning.setText(profile.testTimeMorning)
-        editNoon.setText(profile.testTimeNoon)
-
-        editMorning.setOnClickListener {
-            val parts = editMorning.text.toString().split(":")
-            val h = parts.getOrNull(0)?.toIntOrNull() ?: 8
-            val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
-            android.app.TimePickerDialog(this, { _, hour, minute ->
-                editMorning.setText(String.format(java.util.Locale.US, "%02d:%02d", hour, minute))
-            }, h, m, true).show()
-        }
-
-        editNoon.setOnClickListener {
-            val parts = editNoon.text.toString().split(":")
-            val h = parts.getOrNull(0)?.toIntOrNull() ?: 12
-            val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
-            android.app.TimePickerDialog(this, { _, hour, minute ->
-                editNoon.setText(String.format(java.util.Locale.US, "%02d:%02d", hour, minute))
-            }, h, m, true).show()
-        }
-
-        addMedButton.setOnClickListener { addMedicationRow() }
-        // Shelly BLE is temporarily disabled (Constants.SHELLY_BLE_ENABLED) —
-        // hide the pairing entry point entirely rather than leaving a button
-        // that would tap through to a scanner that silently ignores the request.
-        if (com.pdcollect.app.util.Constants.SHELLY_BLE_ENABLED) {
-            pairShellyButton.visibility = View.VISIBLE
-            pairShellyButton.setOnClickListener { startShellyPairing() }
-        } else {
-            pairShellyButton.visibility = View.GONE
-        }
-
-        // Pre-select the body-side radios from any saved value (so editing
-        // an existing profile shows the previous answer). The save block
-        // below reads them back into UserProfile.
-        prefillBodySideRadios()
-
-        saveButton.setOnClickListener {
-            val previousUserId = profile.userId
-            val userId = userIdEdit.text.toString().trim()
-            val ageStr = ageEdit.text.toString().trim()
-            val gender = genderSpinner.text.toString()
-
-            if (userId.isEmpty()) {
-                Toast.makeText(this, "Please enter a User ID", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (step > STEP_ABOUT) {
+                    goTo(step - 1)
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
             }
-            if (ageStr.isEmpty()) {
-                Toast.makeText(this, "Please enter age", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            com.pdcollect.app.data.StorageDirectoryResolver.migrateUserDirectory(this, previousUserId, userId)
-            profile.userId = userId
-            profile.age = ageStr.toIntOrNull() ?: 0
-            profile.gender = gender
-            profile.medications = buildMedicationsJson()
-            
-            profile.keyloggingEnabled = switchKeylogging.isChecked
-            profile.faceDistanceMode = selectedFaceDistanceMode()
-            profile.autoUploadEnabled = switchAutoUpload.isChecked
-            profile.passiveCollectionActive = true
-            
-            profile.testTimeMorning = editMorning.text.toString()
-            profile.testTimeNoon = editNoon.text.toString()
-            // Custom "your window" — use noon as the editable third window when
-            // the dedicated Figma field is not yet on this layout.
-            if (profile.testTimeCustom.isBlank()) {
-                profile.testTimeCustom = profile.testTimeNoon.ifBlank { "14:00" }
-            }
-
-            // Persist body-side answers from radios. Defaults to "Unknown"
-            // if the participant didn't pick — never fabricate handedness.
-            profile.dominantHand = readDominantHandFromRadios()
-            profile.affectedSide = readAffectedSideFromRadios()
-
-            profile.profileComplete = true
-            profile.onboardingVersion = 2
-
-            // Write to CSV. Use writeProfileSnapshot() instead of formatting
-            // the row inline so any future column added to PROFILE_HEADER
-            // (e.g. the recent dominant_hand / affected_side fields) is wired
-            // up in exactly one place.
-            val dataManager = com.pdcollect.app.data.DataManager(this@ProfileSetupActivity, profile)
-            dataManager.writeProfileSnapshot()
-
-            lifecycleScope.launch {
-                com.pdcollect.app.data.FirebaseSyncManager.saveProfileToCloud(profile, dataManager)
-                // Additive Postgres dual-write — must not block legacy path.
-                com.pdcollect.app.data.BackendSyncManager.syncProfile(this@ProfileSetupActivity)
-                dataManager.closeAll()
-            }
-
-            try {
-                com.pdcollect.app.receiver.BatteryReminderReceiver.scheduleBatteryAlarms(this@ProfileSetupActivity)
-            } catch (e: Exception) {
-               Log.e("ProfileSetup", "Failed to setup battery reminders", e)
-            }
-
-            startActivity(Intent(this@ProfileSetupActivity, MainActivity::class.java))
-            finish()
-        }
-
-        displayAppVersion()
-    }
-
-    private fun hasExistingProfileData(): Boolean {
-        val hasMedications = runCatching {
-            JSONArray(profile.medications).length() > 0
-        }.getOrDefault(false)
-
-        return profile.profileComplete ||
-            profile.age > 0 ||
-            profile.gender.isNotBlank() ||
-            hasMedications ||
-            profile.keyloggingEnabled ||
-            profile.faceDistanceEnabled ||
-            !profile.autoUploadEnabled ||
-            profile.dominantHand != com.pdcollect.app.util.Constants.PARTICIPANT_HAND_UNKNOWN ||
-            profile.affectedSide != com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_UNKNOWN
-    }
-
-    /**
-     * Pre-select the dominant-hand and affected-side radio groups from the
-     * UserProfile. Called after the layout is inflated. If the profile has
-     * never had these set (fresh install), both default to "Unknown".
-     */
-    private fun prefillBodySideRadios() {
-        val rgDom = findViewById<android.widget.RadioGroup>(R.id.rgDominantHand)
-        rgDom.check(when (profile.dominantHand) {
-            com.pdcollect.app.util.Constants.PARTICIPANT_HAND_RIGHT -> R.id.rbDominantRight
-            com.pdcollect.app.util.Constants.PARTICIPANT_HAND_LEFT -> R.id.rbDominantLeft
-            else -> R.id.rbDominantUnknown
-        })
-
-        val rgAff = findViewById<android.widget.RadioGroup>(R.id.rgAffectedSide)
-        rgAff.check(when (profile.affectedSide) {
-            com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_RIGHT -> R.id.rbAffectedRight
-            com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_LEFT -> R.id.rbAffectedLeft
-            com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_BOTH -> R.id.rbAffectedBoth
-            com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_NONE -> R.id.rbAffectedNone
-            else -> R.id.rbAffectedUnknown
         })
     }
 
-    private fun readDominantHandFromRadios(): String =
-        when (findViewById<android.widget.RadioGroup>(R.id.rgDominantHand).checkedRadioButtonId) {
-            R.id.rbDominantRight -> com.pdcollect.app.util.Constants.PARTICIPANT_HAND_RIGHT
-            R.id.rbDominantLeft -> com.pdcollect.app.util.Constants.PARTICIPANT_HAND_LEFT
-            else -> com.pdcollect.app.util.Constants.PARTICIPANT_HAND_UNKNOWN
-        }
-
-    private fun readAffectedSideFromRadios(): String =
-        when (findViewById<android.widget.RadioGroup>(R.id.rgAffectedSide).checkedRadioButtonId) {
-            R.id.rbAffectedRight -> com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_RIGHT
-            R.id.rbAffectedLeft -> com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_LEFT
-            R.id.rbAffectedBoth -> com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_BOTH
-            R.id.rbAffectedNone -> com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_NONE
-            else -> com.pdcollect.app.util.Constants.PARTICIPANT_SIDE_UNKNOWN
-        }
-
-    private fun selectedFaceDistanceMode(): String {
-        if (!switchFaceDistance.isChecked) {
-            return com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_OFF
-        }
-
-        return when (findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode).checkedRadioButtonId) {
-            R.id.rbFaceDistanceTmtOnly -> com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_TMT_ONLY
-            R.id.rbFaceDistanceAlways -> com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_ALWAYS
-            else -> com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_APP_FOREGROUND
-        }
-    }
-
-    private fun applyFaceDistanceModeToUi(mode: String) {
-        val group = findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode)
-        val enabled = mode != com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_OFF
-        switchFaceDistance.isChecked = enabled
-        group.visibility = if (enabled) View.VISIBLE else View.GONE
-        group.check(
-            when (mode) {
-                com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_APP_FOREGROUND -> R.id.rbFaceDistanceAppForeground
-                com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_OFF -> R.id.rbFaceDistanceAppForeground
-                com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_TMT_ONLY -> R.id.rbFaceDistanceTmtOnly
-                else -> R.id.rbFaceDistanceAlways
-            }
-        )
-    }
-
-    private fun displayAppVersion() {
-        try {
-            val pInfo = packageManager.getPackageInfo(packageName, 0)
-            val version = pInfo.versionName
-            val build = pInfo.longVersionCode
-            findViewById<TextView>(R.id.tvAppVersion)?.text = "dopa-X Version: $version ($build)"
-        } catch (e: Exception) {
-            Log.e("ProfileSetup", "Error getting version info", e)
-        }
-    }
-
-    private fun loadMedications() {
-        if (profile.medications.isEmpty()) {
-            addMedicationRow()
-            return
-        }
-        try {
-            val array = JSONArray(profile.medications)
-            for (i in 0 until array.length()) {
-                val obj = array.getJSONObject(i)
-                addMedicationRow(obj.getString("name"), obj.getString("dose"))
-            }
-            if (array.length() == 0) addMedicationRow()
-        } catch (e: Exception) {
-            addMedicationRow()
-        }
-    }
-
-    // Navigation now handled via PermissionUtils in updatePermissionStatus
-
-    private fun addMedicationRow(name: String = "", dose: String = "") {
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = 8 }
-        }
-
-        val nameEdit = EditText(this).apply {
-            hint = "Medication name"
-            setText(name)
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-        }
-        val doseEdit = EditText(this).apply {
-            hint = "Dose"
-            setText(dose)
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 0.7f)
-        }
-        val removeBtn = Button(this).apply {
-            text = "X"
-            setPadding(0, 0, 0, 0)
-            // DESIGN.md requires a 48dp-minimum tap target for tremor
-            // accommodation. Raw `100` here is pixels, not dp, when
-            // LayoutParams are built in code — ~33dp on a ~3x-density phone
-            // like the Galaxy S25. Convert 48dp to px explicitly.
-            val minTapTargetPx = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, 48f, resources.displayMetrics
-            ).toInt()
-            layoutParams = LinearLayout.LayoutParams(minTapTargetPx, minTapTargetPx, 0.3f)
-            setOnClickListener {
-                medicationContainer.removeView(row)
-                medicationViews.removeAll { it.first == row }
-            }
-        }
-
-        row.addView(nameEdit)
-        row.addView(doseEdit)
-        row.addView(removeBtn)
-        medicationContainer.addView(row)
-        medicationViews.add(Triple(row, nameEdit, doseEdit))
-    }
-
-    private fun buildMedicationsJson(): String {
-        val array = JSONArray()
-        for ((_, nameEdit, doseEdit) in medicationViews) {
-            val name = nameEdit.text.toString().trim()
-            val dose = doseEdit.text.toString().trim()
-            if (name.isNotEmpty()) {
-                array.put(JSONObject().apply {
-                    put("name", name)
-                    put("dose", dose)
-                })
-            }
-        }
-        return array.toString()
-    }
-
-    private fun setupPermissionAutomation() {
-        val faceModeGroup = findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode)
-
-        // Camera — used by the on-device face-distance estimator. We always
-        // show a rationale before launching the system permission sheet so
-        // the user understands what the camera is for *before* the modal
-        // appears. ML Kit runs entirely on-device; no frames leave the phone.
-        switchFaceDistance.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                faceModeGroup.visibility = View.VISIBLE
-                if (faceModeGroup.checkedRadioButtonId == -1) {
-                    findViewById<android.widget.RadioButton>(R.id.rbFaceDistanceAppForeground).isChecked = true
-                }
-                if (!PermissionUtils.hasCameraPermission(this)) {
-                    AlertDialog.Builder(this)
-                        .setTitle("Allow camera for face distance?")
-                        .setMessage(
-                            "This estimates how far your face is from the screen without storing photos or video.\n\n" +
-                                "You can keep it conservative so it runs only while dopa-X is open, " +
-                                "or use it during passive collection and tests. Faces are processed " +
-                                "on your device by ML Kit; only the distance number is saved."
-                        )
-                        .setPositiveButton("Continue") { _, _ ->
-                            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-                        }
-                        .setNegativeButton("Not now") { _, _ ->
-                            switchFaceDistance.isChecked = false
-                            findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode).visibility = View.GONE
-                        }
-                        .show()
-                }
-            } else if (PermissionUtils.hasCameraPermission(this)) {
-                findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode).visibility = View.GONE
-                showRevokeDialog("Camera", "Face Distance") { PermissionUtils.openAppSettings(this) }
-            } else {
-                findViewById<android.widget.RadioGroup>(R.id.rgFaceDistanceMode).visibility = View.GONE
-            }
-        }
-
-        faceModeGroup.setOnCheckedChangeListener { _, checkedId ->
-            if (!switchFaceDistance.isChecked) return@setOnCheckedChangeListener
-            if (checkedId == R.id.rbFaceDistanceAlways &&
-                !PermissionUtils.isAccessibilityServiceEnabled(this)
-            ) {
-                showAccessibilityGuide(
-                    title = "Allow interaction access for background face distance?",
-                    featureSummary =
-                        "To measure face distance while other apps are open, dopa-X needs to know which app is currently on screen."
-                ) {
-                    findViewById<android.widget.RadioButton>(R.id.rbFaceDistanceAppForeground).isChecked = true
-                }
-            }
-        }
-
-        // Accessibility Service — used to capture which app you're typing in
-        // and a *redacted* category for each key (digit / letter / space /
-        // punct / backspace). The literal characters typed are never recorded
-        // and password fields are skipped entirely.
-        switchKeylogging.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked && !PermissionUtils.isAccessibilityServiceEnabled(this)) {
-                showAccessibilityGuide(
-                    title = "Allow interaction logging?",
-                    featureSummary =
-                        "This records typing rhythm — the rate, rhythm, and corrections of your keystrokes — without storing the actual letters you type."
-                ) {
-                    switchKeylogging.isChecked = false
-                }
-            } else if (!isChecked &&
-                PermissionUtils.isAccessibilityServiceEnabled(this) &&
-                selectedFaceDistanceMode() != com.pdcollect.app.util.Constants.FACE_DISTANCE_MODE_ALWAYS
-            ) {
-                showRevokeDialog("Interaction access (Accessibility)", "Interaction Logging") {
-                    PermissionUtils.openAccessibilitySettings(this)
-                }
-            }
-        }
-
-    }
-
-    private fun showRevokeDialog(permName: String, featureName: String, action: () -> Unit) {
-        AlertDialog.Builder(this)
-            .setTitle("Permission still granted")
-            .setMessage(
-                "You turned off \"$featureName\", so dopa-X has stopped using it — but Android still " +
-                    "lists the \"$permName\" permission as allowed in your phone settings.\n\n" +
-                    "If you'd like to remove it for full peace of mind, open Settings now."
-            )
-            .setPositiveButton("Open Settings") { _, _ -> action() }
-            .setNegativeButton("Leave it", null)
-            .show()
-    }
-
-    private fun showAccessibilityGuide(
-        title: String,
-        featureSummary: String,
-        onCancel: () -> Unit
-    ) {
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(PermissionUtils.accessibilitySettingsHelp(featureSummary))
-            .setPositiveButton("Open Accessibility Settings") { _, _ ->
-                PermissionUtils.openAccessibilitySettings(this)
-            }
-            .setNegativeButton("Cancel") { _, _ -> onCancel() }
-            .setCancelable(false)
-            .show()
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(STATE_STEP, step)
     }
 
     override fun onResume() {
         super.onResume()
-        updatePermissionStatus()
+        // The health, interaction and reminder steps all send the participant
+        // into a system settings screen, so re-read the real state on return
+        // instead of trusting what we showed before leaving.
+        renderHealthStep()
+        renderKeyboardStep()
+        renderRemindersStep()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Medication rows only live in the view hierarchy until they are
+        // committed, so flush them before the process can be killed.
+        commitMedications()
     }
 
     override fun onDestroy() {
@@ -509,16 +156,551 @@ class ProfileSetupActivity : AppCompatActivity() {
         pairingDialog = null
     }
 
+    // MARK: - Navigation
+
+    private fun goTo(target: Int) {
+        // Leaving the medications step in any direction — Continue, Back, or
+        // the system back gesture — has to persist what was typed, or an
+        // answer given is an answer lost.
+        if (step == STEP_MEDICATIONS && target != STEP_MEDICATIONS) commitMedications()
+
+        step = target.coerceIn(STEP_ABOUT, STEP_COUNT - 1)
+        flipper.displayedChild = step
+        renderProgress()
+        when (step) {
+            STEP_ABOUT -> renderAboutStep()
+            STEP_TIMES -> renderTimesStep()
+            STEP_HEALTH -> renderHealthStep()
+            STEP_KEYBOARD -> renderKeyboardStep()
+            STEP_REMINDERS -> renderRemindersStep()
+            STEP_READY -> renderReadyStep()
+        }
+        hideKeyboard()
+    }
+
+    private fun renderProgress() {
+        progressRow.removeAllViews()
+        val current = minOf(step + 1, PROGRESS_DOTS - 1)
+        for (index in 0 until PROGRESS_DOTS) {
+            val dot = View(this).apply {
+                setBackgroundResource(
+                    when {
+                        index == current -> R.drawable.onboarding_progress_active
+                        index < current -> R.drawable.onboarding_progress_past
+                        else -> R.drawable.onboarding_progress_idle
+                    }
+                )
+                layoutParams = LinearLayout.LayoutParams(
+                    dp(if (index == current) 22 else 7),
+                    LinearLayout.LayoutParams.MATCH_PARENT
+                ).apply { if (index > 0) marginStart = dp(6) }
+            }
+            progressRow.addView(dot)
+        }
+    }
+
+    private fun hideKeyboard() {
+        val focused = currentFocus ?: return
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.hideSoftInputFromWindow(focused.windowToken, 0)
+    }
+
+    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+
+    // MARK: - Step 1: about you
+
+    private fun bindAboutStep() {
+        val nameEdit = findViewById<EditText>(R.id.editDisplayName)
+        val yearEdit = findViewById<EditText>(R.id.editYearOfBirth)
+
+        nameEdit.setText(profile.displayName)
+        nameEdit.doAfterTextChanged { profile.displayName = it?.toString()?.trim().orEmpty() }
+
+        yearEdit.setText(profile.yearOfBirth)
+        yearEdit.doAfterTextChanged { text ->
+            val value = text?.toString()?.trim().orEmpty()
+            profile.yearOfBirth = value
+            // Only derive an age from a plausible complete year — otherwise a
+            // half-typed "19" would write an age of 2007.
+            val year = value.toIntOrNull()
+            if (value.length == 4 && year != null && year in 1900..currentYear()) {
+                profile.age = currentYear() - year
+            }
+            renderAboutStep()
+        }
+
+        findViewById<TextView>(R.id.fieldGender).setOnClickListener { showGenderPicker() }
+
+        findViewById<TextView>(R.id.segDominantLeft).setOnClickListener {
+            profile.dominantHand = Constants.PARTICIPANT_HAND_LEFT
+            renderAboutStep()
+        }
+        findViewById<TextView>(R.id.segDominantRight).setOnClickListener {
+            profile.dominantHand = Constants.PARTICIPANT_HAND_RIGHT
+            renderAboutStep()
+        }
+        findViewById<TextView>(R.id.linkDominantUnknown).setOnClickListener {
+            profile.dominantHand = Constants.PARTICIPANT_HAND_UNKNOWN
+            renderAboutStep()
+        }
+
+        findViewById<TextView>(R.id.segAffectedLeft).setOnClickListener {
+            profile.affectedSide = Constants.PARTICIPANT_SIDE_LEFT
+            renderAboutStep()
+        }
+        findViewById<TextView>(R.id.segAffectedRight).setOnClickListener {
+            profile.affectedSide = Constants.PARTICIPANT_SIDE_RIGHT
+            renderAboutStep()
+        }
+        findViewById<TextView>(R.id.segAffectedBoth).setOnClickListener {
+            profile.affectedSide = Constants.PARTICIPANT_SIDE_BOTH
+            renderAboutStep()
+        }
+        findViewById<TextView>(R.id.linkAffectedOther).setOnClickListener { showAffectedSideOptions() }
+
+        findViewById<MaterialButton>(R.id.btnAboutContinue).setOnClickListener { goTo(STEP_MEDICATIONS) }
+    }
+
+    private fun renderAboutStep() {
+        val genderField = findViewById<TextView>(R.id.fieldGender)
+        val chosenGender = profile.gender
+        genderField.text = chosenGender.ifBlank { "Select" }
+        genderField.setTextColor(
+            androidx.core.content.ContextCompat.getColor(
+                this,
+                if (chosenGender.isBlank()) R.color.gray_50 else R.color.black_90
+            )
+        )
+
+        findViewById<TextView>(R.id.segDominantLeft).isSelected =
+            profile.dominantHand == Constants.PARTICIPANT_HAND_LEFT
+        findViewById<TextView>(R.id.segDominantRight).isSelected =
+            profile.dominantHand == Constants.PARTICIPANT_HAND_RIGHT
+        renderChoiceLink(
+            findViewById(R.id.linkDominantUnknown),
+            label = "Prefer not to say",
+            active = profile.dominantHand == Constants.PARTICIPANT_HAND_UNKNOWN
+        )
+
+        findViewById<TextView>(R.id.segAffectedLeft).isSelected =
+            profile.affectedSide == Constants.PARTICIPANT_SIDE_LEFT
+        findViewById<TextView>(R.id.segAffectedRight).isSelected =
+            profile.affectedSide == Constants.PARTICIPANT_SIDE_RIGHT
+        findViewById<TextView>(R.id.segAffectedBoth).isSelected =
+            profile.affectedSide == Constants.PARTICIPANT_SIDE_BOTH
+        renderChoiceLink(
+            findViewById(R.id.linkAffectedOther),
+            label = when (profile.affectedSide) {
+                Constants.PARTICIPANT_SIDE_NONE -> "Neither — no PD symptoms"
+                Constants.PARTICIPANT_SIDE_UNKNOWN -> "Prefer not to say"
+                else -> "Neither / prefer not to say"
+            },
+            active = profile.affectedSide == Constants.PARTICIPANT_SIDE_NONE ||
+                profile.affectedSide == Constants.PARTICIPANT_SIDE_UNKNOWN
+        )
+
+        findViewById<TextView>(R.id.tvParticipantCode).text =
+            "Participant ID: ${profile.userId} — assigned by the study, so it never changes."
+
+        findViewById<MaterialButton>(R.id.btnAboutContinue).isEnabled = isAboutComplete()
+    }
+
     /**
-     * One row in the permission status list. We split *what the feature is*
-     * from *why it needs the permission* so the user can decide informedly.
+     * The "prefer not to say" style answers sit outside the segmented row, so
+     * they need their own selected state — otherwise declining looks identical
+     * to not having answered at all.
      */
-    private data class PermissionEntry(
-        val name: String,            // Plain-English feature name
-        val purpose: String,         // What it does + why this permission is needed
-        val isGranted: Boolean,
-        val openSettings: () -> Unit
-    )
+    private fun renderChoiceLink(link: TextView, label: String, active: Boolean) {
+        link.text = if (active) "✓ $label" else label
+        link.setTextColor(
+            androidx.core.content.ContextCompat.getColor(
+                this,
+                if (active) R.color.onboarding_accent else R.color.onboarding_text_tertiary
+            )
+        )
+    }
+
+    private fun showGenderPicker() {
+        val options = resources.getStringArray(R.array.gender_options)
+        val checked = options.indexOf(profile.gender)
+        AlertDialog.Builder(this)
+            .setTitle("Gender")
+            .setSingleChoiceItems(options, checked) { dialog, which ->
+                profile.gender = options[which]
+                renderAboutStep()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showAffectedSideOptions() {
+        val labels = arrayOf("Neither — no PD symptoms", "Prefer not to say")
+        val values = arrayOf(Constants.PARTICIPANT_SIDE_NONE, Constants.PARTICIPANT_SIDE_UNKNOWN)
+        AlertDialog.Builder(this)
+            .setTitle("Which hand is affected?")
+            .setSingleChoiceItems(labels, values.indexOf(profile.affectedSide)) { dialog, which ->
+                profile.affectedSide = values[which]
+                renderAboutStep()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun isAboutComplete(): Boolean {
+        val year = profile.yearOfBirth.toIntOrNull()
+        val hasBirthInfo = profile.age > 0 || (year != null && year in 1900..currentYear())
+        return hasBirthInfo && profile.gender.isNotBlank()
+    }
+
+    private fun currentYear() = Calendar.getInstance().get(Calendar.YEAR)
+
+    // MARK: - Step 2: medications
+
+    private fun bindMedicationsStep() {
+        loadMedications()
+
+        findViewById<TextView>(R.id.btnAddMedication).setOnClickListener { addMedicationRow() }
+
+        // Shelly BLE is temporarily disabled (Constants.SHELLY_BLE_ENABLED) —
+        // hide the pairing entry point entirely rather than leaving a button
+        // that taps through to a scanner that silently ignores the request.
+        findViewById<MaterialButton>(R.id.btnPairShelly).apply {
+            if (Constants.SHELLY_BLE_ENABLED) {
+                visibility = View.VISIBLE
+                setOnClickListener { startShellyPairing() }
+            } else {
+                visibility = View.GONE
+            }
+        }
+
+        findViewById<MaterialButton>(R.id.btnMedicationsContinue).setOnClickListener { goTo(STEP_TIMES) }
+        findViewById<TextView>(R.id.btnMedicationsBack).setOnClickListener { goTo(STEP_ABOUT) }
+    }
+
+    private fun loadMedications() {
+        val stored = runCatching { JSONArray(profile.medications) }.getOrNull()
+        if (stored == null || stored.length() == 0) {
+            addMedicationRow()
+            return
+        }
+        for (i in 0 until stored.length()) {
+            val entry = stored.optJSONObject(i) ?: continue
+            addMedicationRow(entry.optString("name"), entry.optString("dose"))
+        }
+        if (medicationRows.isEmpty()) addMedicationRow()
+    }
+
+    private fun addMedicationRow(name: String = "", dose: String = "") {
+        val row = LayoutInflater.from(this)
+            .inflate(R.layout.onboarding_medication_row, medicationContainer, false)
+        (row.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = dp(12)
+
+        val nameEdit = row.findViewById<EditText>(R.id.editMedicationName).apply { setText(name) }
+        val doseEdit = row.findViewById<EditText>(R.id.editMedicationDose).apply { setText(dose) }
+
+        row.findViewById<ImageView>(R.id.btnRemoveMedication).setOnClickListener {
+            medicationContainer.removeView(row)
+            medicationRows.removeAll { it.view === row }
+            if (medicationRows.isEmpty()) addMedicationRow()
+            commitMedications()
+        }
+
+        medicationContainer.addView(row)
+        medicationRows.add(MedicationRow(row, nameEdit, doseEdit))
+    }
+
+    private fun commitMedications() {
+        val array = JSONArray()
+        for (row in medicationRows) {
+            val name = row.name.text.toString().trim()
+            if (name.isEmpty()) continue
+            array.put(
+                JSONObject()
+                    .put("name", name)
+                    .put("dose", row.dose.text.toString().trim())
+            )
+        }
+        profile.medications = array.toString()
+    }
+
+    // MARK: - Step 3: session windows
+
+    private fun bindTimesStep() {
+        findViewById<View>(R.id.rowMorningWindow).setOnClickListener {
+            pickTime(profile.testTimeMorning, fallbackHour = 8) { picked ->
+                profile.testTimeMorning = picked
+                renderTimesStep()
+            }
+        }
+        findViewById<View>(R.id.rowNoonWindow).setOnClickListener {
+            pickTime(profile.testTimeNoon, fallbackHour = 12) { picked ->
+                profile.testTimeNoon = picked
+                renderTimesStep()
+            }
+        }
+
+        val customEdit = findViewById<EditText>(R.id.editTimeCustom)
+        customEdit.setText(profile.testTimeCustom)
+        customEdit.doAfterTextChanged {
+            profile.testTimeCustom = it?.toString()?.trim().orEmpty()
+            findViewById<MaterialButton>(R.id.btnTimesContinue).isEnabled = isTimesComplete()
+        }
+
+        findViewById<MaterialButton>(R.id.btnTimesContinue).setOnClickListener { goTo(STEP_HEALTH) }
+        findViewById<TextView>(R.id.btnTimesBack).setOnClickListener { goTo(STEP_MEDICATIONS) }
+    }
+
+    private fun renderTimesStep() {
+        findViewById<TextView>(R.id.tvMorningWindow).text = profile.testTimeMorning
+        findViewById<TextView>(R.id.tvNoonWindow).text = profile.testTimeNoon
+        findViewById<MaterialButton>(R.id.btnTimesContinue).isEnabled = isTimesComplete()
+    }
+
+    private fun isTimesComplete() = profile.testTimeCustom.isNotBlank()
+
+    private fun pickTime(current: String, fallbackHour: Int, onPicked: (String) -> Unit) {
+        val parts = current.split(":")
+        val hour = parts.getOrNull(0)?.toIntOrNull() ?: fallbackHour
+        val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        TimePickerDialog(this, { _, pickedHour, pickedMinute ->
+            onPicked(String.format(java.util.Locale.US, "%02d:%02d", pickedHour, pickedMinute))
+        }, hour, minute, true).show()
+    }
+
+    // MARK: - Step 4: health apps
+
+    private fun bindHealthStep() {
+        findViewById<TextView>(R.id.btnConnectHealthConnect).setOnClickListener { connectHealthConnect() }
+
+        findViewById<TextView>(R.id.btnConnectStrava).setOnClickListener {
+            if (StravaManager.isConnected(this)) {
+                profile.healthStravaStatus = STATUS_CONNECTED
+                renderHealthStep()
+            } else {
+                // Toasts and returns on its own if this build has no Strava
+                // credentials, so the row stays honest about not being linked.
+                StravaManager.startAuth(this)
+            }
+        }
+
+        findViewById<MaterialButton>(R.id.btnHealthContinue).setOnClickListener { goTo(STEP_KEYBOARD) }
+        findViewById<TextView>(R.id.btnHealthSkip).setOnClickListener {
+            if (profile.healthConnectStatus != STATUS_CONNECTED) profile.healthConnectStatus = STATUS_SKIPPED
+            if (profile.healthStravaStatus != STATUS_CONNECTED) profile.healthStravaStatus = STATUS_SKIPPED
+            goTo(STEP_KEYBOARD)
+        }
+    }
+
+    private fun connectHealthConnect() {
+        if (!HealthConnectManager.isAvailable(this)) {
+            profile.healthConnectStatus = STATUS_UNAVAILABLE
+            Toast.makeText(this, "Health Connect isn't installed on this device.", Toast.LENGTH_LONG).show()
+            renderHealthStep()
+            return
+        }
+        lifecycleScope.launch {
+            if (HealthConnectManager.hasAllPermissions(this@ProfileSetupActivity)) {
+                profile.healthConnectStatus = STATUS_CONNECTED
+                renderHealthStep()
+            } else {
+                healthConnectPermissionLauncher.launch(HealthConnectManager.PERMISSIONS)
+            }
+        }
+    }
+
+    private fun renderHealthStep() {
+        if (StravaManager.isConnected(this)) profile.healthStravaStatus = STATUS_CONNECTED
+        renderConnectButton(findViewById(R.id.btnConnectStrava), profile.healthStravaStatus)
+
+        val healthConnectButton = findViewById<TextView>(R.id.btnConnectHealthConnect)
+        if (!HealthConnectManager.isAvailable(this)) {
+            renderConnectButton(healthConnectButton, STATUS_UNAVAILABLE)
+            return
+        }
+        lifecycleScope.launch {
+            if (HealthConnectManager.hasAllPermissions(this@ProfileSetupActivity)) {
+                profile.healthConnectStatus = STATUS_CONNECTED
+            }
+            renderConnectButton(healthConnectButton, profile.healthConnectStatus)
+        }
+    }
+
+    private fun renderConnectButton(button: TextView, status: String) {
+        when (status) {
+            STATUS_CONNECTED -> {
+                button.text = "Connected"
+                button.isEnabled = false
+            }
+            STATUS_UNAVAILABLE -> {
+                button.text = "Unavailable"
+                button.isEnabled = false
+            }
+            else -> {
+                button.text = "Connect"
+                button.isEnabled = true
+            }
+        }
+        button.alpha = if (button.isEnabled) 1f else 0.6f
+    }
+
+    // MARK: - Step 5: interaction primer
+
+    private fun bindKeyboardStep() {
+        findViewById<MaterialButton>(R.id.btnKeyboardOpenSettings).setOnClickListener {
+            if (PermissionUtils.isAccessibilityServiceEnabled(this)) {
+                profile.keyloggingEnabled = true
+                goTo(STEP_REMINDERS)
+            } else {
+                // Recorded as intent before leaving: Android will not let the
+                // app flip this switch, so the participant's answer is all we
+                // have until they come back.
+                profile.keyloggingEnabled = true
+                PermissionUtils.openAccessibilitySettings(this)
+            }
+        }
+        findViewById<TextView>(R.id.btnKeyboardSkip).setOnClickListener {
+            profile.keyloggingEnabled = false
+            goTo(STEP_REMINDERS)
+        }
+    }
+
+    private fun renderKeyboardStep() {
+        val enabled = PermissionUtils.isAccessibilityServiceEnabled(this)
+        findViewById<MaterialButton>(R.id.btnKeyboardOpenSettings).text =
+            if (enabled) "Continue" else "Open Settings"
+        findViewById<TextView>(R.id.tvKeyboardStatus).apply {
+            visibility = if (enabled) View.VISIBLE else View.GONE
+            text = "Interaction access is on."
+        }
+    }
+
+    // MARK: - Step 6: reminders primer
+
+    private fun bindRemindersStep() {
+        findViewById<MaterialButton>(R.id.btnRemindersContinue).setOnClickListener {
+            requestNotifications()
+        }
+        findViewById<TextView>(R.id.btnRemindersSkip).setOnClickListener {
+            profile.notificationsOptIn = false
+            goTo(STEP_READY)
+        }
+        findViewById<TextView>(R.id.btnExactAlarm).setOnClickListener {
+            PermissionUtils.openExactAlarmSettings(this)
+        }
+    }
+
+    private fun requestNotifications() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !PermissionUtils.hasNotificationPermission(this)
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            return
+        }
+        profile.notificationsOptIn = PermissionUtils.hasNotificationPermission(this)
+        goTo(STEP_READY)
+    }
+
+    private fun renderRemindersStep() {
+        val exactAlarmGranted = PermissionUtils.hasExactAlarmPermission(this)
+        profile.exactAlarmOptIn = exactAlarmGranted
+        findViewById<TextView>(R.id.btnExactAlarm).visibility =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !exactAlarmGranted) View.VISIBLE else View.GONE
+    }
+
+    // MARK: - Step 7: ready
+
+    private fun bindReadyStep() {
+        findViewById<MaterialButton>(R.id.btnStartFirstSession).setOnClickListener { finishProfile() }
+        findViewById<TextView>(R.id.btnFinishLater).setOnClickListener { finishProfile() }
+        buildHelixStrand()
+        displayAppVersion()
+    }
+
+    private fun renderReadyStep() {
+        findViewById<MaterialButton>(R.id.btnStartFirstSession).isEnabled =
+            isAboutComplete() && isTimesComplete()
+    }
+
+    private fun buildHelixStrand() {
+        val row = findViewById<LinearLayout>(R.id.helixStrandRow)
+        row.removeAllViews()
+        // One bar per study day: the first is already earned by enrolling.
+        for (index in 0 until 14) {
+            val bar = View(this).apply {
+                setBackgroundResource(
+                    if (index == 0) R.drawable.bg_onboarding_helix_active
+                    else R.drawable.bg_onboarding_helix_idle
+                )
+                layoutParams = LinearLayout.LayoutParams(dp(13), LinearLayout.LayoutParams.MATCH_PARENT)
+                    .apply { if (index > 0) marginStart = dp(5) }
+            }
+            row.addView(bar)
+        }
+    }
+
+    private fun displayAppVersion() {
+        try {
+            val info = packageManager.getPackageInfo(packageName, 0)
+            findViewById<TextView>(R.id.tvAppVersion)?.text =
+                "dopa-X Version: ${info.versionName} (${info.longVersionCode})"
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting version info", e)
+        }
+    }
+
+    private fun finishProfile() {
+        commitMedications()
+
+        if (profile.gender.isBlank()) profile.gender = "Prefer not to say"
+        if (profile.age <= 0) {
+            profile.yearOfBirth.toIntOrNull()
+                ?.takeIf { it in 1900..currentYear() }
+                ?.let { profile.age = currentYear() - it }
+        }
+        if (profile.testTimeCustom.isBlank()) {
+            profile.testTimeCustom = profile.testTimeNoon.ifBlank { "14:00" }
+        }
+        // faceDistanceMode reads back as ALWAYS when it has never been set, and
+        // this screen no longer asks about the camera (Settings does). Write the
+        // off state explicitly so an unanswered question can't enable it.
+        if (!profile.faceDistanceConfigured) {
+            profile.faceDistanceMode = Constants.FACE_DISTANCE_MODE_OFF
+        }
+        // Never report an opt-in the system hasn't actually granted.
+        if (!PermissionUtils.hasNotificationPermission(this)) profile.notificationsOptIn = false
+        profile.usageAccessOptIn = PermissionUtils.hasUsageStatsPermission(this)
+        profile.exactAlarmOptIn = PermissionUtils.hasExactAlarmPermission(this)
+
+        profile.passiveCollectionActive = true
+        profile.profileComplete = true
+        profile.onboardingVersion = 2
+
+        // Write to CSV. Use writeProfileSnapshot() instead of formatting the row
+        // inline so any future column added to PROFILE_HEADER is wired up in
+        // exactly one place.
+        val dataManager = com.pdcollect.app.data.DataManager(this, profile)
+        dataManager.writeProfileSnapshot()
+
+        lifecycleScope.launch {
+            com.pdcollect.app.data.FirebaseSyncManager.saveProfileToCloud(profile, dataManager)
+            // Additive Postgres dual-write — must not block the legacy path.
+            com.pdcollect.app.data.BackendSyncManager.syncProfile(this@ProfileSetupActivity)
+            dataManager.closeAll()
+        }
+
+        try {
+            com.pdcollect.app.receiver.BatteryReminderReceiver.scheduleBatteryAlarms(this)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to setup battery reminders", e)
+        }
+
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
+    }
+
+    // MARK: - Shelly pillbox pairing
 
     private var pairingScanner: com.pdcollect.app.service.ShellyBleScanner? = null
     private var pairingDialog: androidx.appcompat.app.AlertDialog? = null
@@ -534,10 +716,11 @@ class ProfileSetupActivity : AppCompatActivity() {
     }
 
     private fun startShellyPairing() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            val required = arrayOf(android.Manifest.permission.BLUETOOTH_SCAN, android.Manifest.permission.BLUETOOTH_CONNECT)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val required = arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
             val missing = required.filter {
-                androidx.core.content.ContextCompat.checkSelfPermission(this, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                androidx.core.content.ContextCompat.checkSelfPermission(this, it) !=
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
             }
             if (missing.isNotEmpty()) {
                 btPermissionLauncher.launch(missing.toTypedArray())
@@ -548,7 +731,7 @@ class ProfileSetupActivity : AppCompatActivity() {
     }
 
     private fun executeShellyPairing() {
-        val btManager = getSystemService(android.content.Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
+        val btManager = getSystemService(Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager
         val btAdapter = btManager?.adapter
         if (btAdapter == null || !btAdapter.isEnabled) {
             Toast.makeText(this, "Please enable Bluetooth first", Toast.LENGTH_LONG).show()
@@ -556,17 +739,17 @@ class ProfileSetupActivity : AppCompatActivity() {
         }
 
         pairingScanner = com.pdcollect.app.service.ShellyBleScanner(this, profile, null)
-        
-        pairingDialog = androidx.appcompat.app.AlertDialog.Builder(this)
+
+        pairingDialog = AlertDialog.Builder(this)
             .setTitle("Pair Pillbox Sensor")
             .setMessage("Please open your Shelly Pillbox sensor now...")
-            .setNegativeButton("Cancel") { _, _ -> 
+            .setNegativeButton("Cancel") { _, _ ->
                 pairingScanner?.stopScanning()
                 pairingScanner = null
             }
             .setCancelable(false)
             .show()
-            
+
         pairingScanner?.startPairing { macAddress ->
             runOnUiThread {
                 pairingDialog?.dismiss()
@@ -576,153 +759,4 @@ class ProfileSetupActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun updatePermissionStatus() {
-        val container = findViewById<LinearLayout>(R.id.permissionStatusContainer) ?: return
-        container.removeAllViews()
-
-        val density = resources.displayMetrics.density
-        fun dp(v: Int) = (v * density).toInt()
-
-        val entries = mutableListOf(
-            PermissionEntry(
-                name = "Interaction Logging",
-                purpose = "Records typing rhythm. Also used by face distance if you choose background tracking across other apps.",
-                isGranted = PermissionUtils.isAccessibilityServiceEnabled(this),
-                openSettings = { PermissionUtils.openAccessibilitySettings(this) }
-            ),
-
-            PermissionEntry(
-                name = "App Usage Detection",
-                purpose = "Tags data with which app you're in (e.g. WhatsApp). Reads app names only — not their contents.",
-                isGranted = PermissionUtils.hasUsageStatsPermission(this),
-                openSettings = { PermissionUtils.openUsageAccessSettings(this) }
-            ),
-            PermissionEntry(
-                name = "Recording Indicator",
-                purpose = "A small floating dot shows whenever dopa-X is recording. Needs \"Display over other apps\".",
-                isGranted = PermissionUtils.canDrawOverlays(this),
-                openSettings = { PermissionUtils.openOverlaySettings(this) }
-            ),
-            PermissionEntry(
-                name = "Face Distance",
-                purpose = "Uses the camera to estimate face-to-screen distance in the mode you choose below.",
-                isGranted = PermissionUtils.hasCameraPermission(this),
-                openSettings = { PermissionUtils.openAppSettings(this) }
-            )
-        )
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            entries.add(
-                PermissionEntry(
-                    name = "Test Reminders",
-                    purpose = "Lets dopa-X post the daily prompt notifications at your scheduled times.",
-                    isGranted = PermissionUtils.hasNotificationPermission(this),
-                    openSettings = { PermissionUtils.openAppSettings(this) }
-                )
-            )
-        }
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            entries.add(
-                PermissionEntry(
-                    name = "On-Time Reminders",
-                    purpose = "Allows the daily prompt to fire exactly at your chosen time, not delayed by battery saver.",
-                    isGranted = PermissionUtils.hasExactAlarmPermission(this),
-                    openSettings = { PermissionUtils.openExactAlarmSettings(this) }
-                )
-            )
-        }
-
-        // Theme-aware status colors. We avoid encoding state in color *alone*
-        // (the leading icon + status text both signal it) so this works for
-        // color-blind users too.
-        val grantedColor = androidx.core.content.ContextCompat.getColor(this, R.color.primary)
-        val ungrantedColor = androidx.core.content.ContextCompat.getColor(this, R.color.tertiary)
-        val onSurface = androidx.core.content.ContextCompat.getColor(this, R.color.on_surface)
-        val secondary = androidx.core.content.ContextCompat.getColor(this, R.color.secondary)
-
-        for (entry in entries) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(dp(4), dp(12), dp(4), dp(12))
-                isClickable = true
-                isFocusable = true
-                val typedValue = android.util.TypedValue()
-                theme.resolveAttribute(android.R.attr.selectableItemBackground, typedValue, true)
-                setBackgroundResource(typedValue.resourceId)
-                setOnClickListener { entry.openSettings() }
-                contentDescription = "${entry.name}. " +
-                    (if (entry.isGranted) "Allowed. " else "Not allowed. ") +
-                    entry.purpose + " Tap to open settings."
-            }
-
-            val icon = TextView(this).apply {
-                text = if (entry.isGranted) "✓" else "!"
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18f)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(if (entry.isGranted) grantedColor else ungrantedColor)
-                gravity = android.view.Gravity.CENTER
-                layoutParams = LinearLayout.LayoutParams(dp(28), LinearLayout.LayoutParams.WRAP_CONTENT)
-                    .apply { marginEnd = dp(12); topMargin = dp(2) }
-            }
-
-            // Two-line text block: bold feature name + secondary explanation.
-            val textCol = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            val nameTv = TextView(this).apply {
-                text = entry.name
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 15f)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(onSurface)
-            }
-            val purposeTv = TextView(this).apply {
-                text = entry.purpose
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 12f)
-                setTextColor(secondary)
-                setLineSpacing(0f, 1.15f)
-            }
-            val statusTv = TextView(this).apply {
-                text = if (entry.isGranted) "Allowed — tap to manage" else "Not allowed — tap to grant"
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(if (entry.isGranted) grantedColor else ungrantedColor)
-                (layoutParams as? LinearLayout.LayoutParams)?.topMargin = dp(2)
-            }
-            textCol.addView(nameTv)
-            textCol.addView(purposeTv)
-            textCol.addView(statusTv)
-
-            val arrow = TextView(this).apply {
-                text = "›"
-                setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 22f)
-                setTextColor(secondary)
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT
-                ).apply { marginStart = dp(8) }
-            }
-
-            row.addView(icon)
-            row.addView(textCol)
-            row.addView(arrow)
-
-            // Light divider between rows (skip after the last).
-            container.addView(row)
-            if (entry !== entries.last()) {
-                val divider = android.view.View(this).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, dp(1)
-                    )
-                    setBackgroundColor(androidx.core.content.ContextCompat
-                        .getColor(this@ProfileSetupActivity, R.color.surface_container_high))
-                }
-                container.addView(divider)
-            }
-        }
-    }
 }
-

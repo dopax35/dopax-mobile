@@ -43,6 +43,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var viewBeanieStatusDot: android.view.View
     private lateinit var switchKeyLogging: androidx.appcompat.widget.SwitchCompat
     private lateinit var switchFaceDistance: androidx.appcompat.widget.SwitchCompat
+    private lateinit var switchAutoUpload: androidx.appcompat.widget.SwitchCompat
     private lateinit var faceDistanceModeGroup: RadioGroup
     private lateinit var medicationContainer: LinearLayout
     private val medicationViews = mutableListOf<Triple<LinearLayout, EditText, EditText>>()
@@ -113,6 +114,7 @@ class SettingsActivity : AppCompatActivity() {
         viewBeanieStatusDot = findViewById(R.id.viewBeanieStatusDot)
         switchKeyLogging = findViewById(R.id.switchKeyLogging)
         switchFaceDistance = findViewById(R.id.switchFaceDistance)
+        switchAutoUpload = findViewById(R.id.switchAutoUpload)
         faceDistanceModeGroup = findViewById(R.id.rgFaceDistanceMode)
         medicationContainer = findViewById(R.id.medicationContainer)
 
@@ -126,6 +128,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         switchKeyLogging.isChecked = profile.keyloggingEnabled
+        switchAutoUpload.isChecked = profile.autoUploadEnabled
         applyFaceDistanceModeToUi(profile.faceDistanceMode)
         bindFeatureToggles()
         bindMedicationEditor()
@@ -246,6 +249,13 @@ class SettingsActivity : AppCompatActivity() {
             }
             syncFaceDistanceService()
             updatePermissionStatus()
+        }
+
+        // Lives here rather than in enrolment: it is an ongoing preference, and
+        // scheduleDaily() both schedules and cancels off the same flag.
+        switchAutoUpload.setOnCheckedChangeListener { _, isChecked ->
+            profile.autoUploadEnabled = isChecked
+            com.pdcollect.app.worker.DataUploadWorker.scheduleDaily(this)
         }
 
         switchFaceDistance.setOnCheckedChangeListener { _, isChecked ->

@@ -126,8 +126,18 @@ object BackendSyncManager {
                         JSONObject()
                             .put("notifications", profile.notificationsOptIn)
                             .put("usageAccess", profile.usageAccessOptIn)
-                            .put("exactAlarm", profile.exactAlarmOptIn),
+                            .put("exactAlarm", profile.exactAlarmOptIn)
+                            .put("interactionLogging", profile.keyloggingEnabled),
                     )
+
+                // signatureName above stays the consent signature; the onboarding
+                // display name is a separate, optional field.
+                if (profile.displayName.isNotBlank()) {
+                    body.put("displayName", profile.displayName)
+                }
+                profile.yearOfBirth.toIntOrNull()?.takeIf { it in 1900..2100 }?.let {
+                    body.put("yearOfBirth", it)
+                }
 
                 val (code, json) = request(
                     context,

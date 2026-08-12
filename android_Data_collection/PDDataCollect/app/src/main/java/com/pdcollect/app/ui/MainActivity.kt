@@ -290,6 +290,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // onCreate() hands off to Consent / ProfileSetup and finishes before
+        // setContentView() when enrolment isn't done, so none of the view
+        // fields below exist yet on that path.
+        if (isFinishing) return
+
         profile = UserProfile(this)
         recreateDataManager()
         dataManager.initializePassiveLogs()

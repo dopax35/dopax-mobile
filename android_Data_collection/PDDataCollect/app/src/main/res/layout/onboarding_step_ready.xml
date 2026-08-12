@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingBottom="28dp">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="40dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="104dp"
+                android:layout_height="104dp"
+                android:contentDescription="@null"
+                android:src="@drawable/onboarding_dopa" />
+
+            <ImageView
+                android:layout_width="170dp"
+                android:layout_height="62dp"
+                android:layout_marginTop="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/onboarding_helix" />
+
+            <LinearLayout
+                android:id="@+id/helixStrandRow"
+                android:layout_width="wrap_content"
+                android:layout_height="8dp"
+                android:layout_marginTop="22dp"
+                android:orientation="horizontal" />
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.Title"
+                android:layout_marginTop="28dp"
+                android:gravity="center"
+                android:text="Your helix starts today"
+                android:textSize="27sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/lexend"
+                android:gravity="center"
+                android:text="For the next 14 days, every session teaches dopa-X how you move. Your first strand is waiting."
+                android:textColor="@color/black_70"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvAppVersion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/lexend"
+                android:gravity="center"
+                android:text="@string/label_version_placeholder"
+                android:textColor="@color/onboarding_text_tertiary"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartFirstSession"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:text="Start my first session" />
+
+    <TextView
+        android:id="@+id/btnFinishLater"
+        style="@style/Widget.DopaX.Onboarding.SecondaryLink"
+        android:layout_marginTop="12dp"
+        android:text="Later today" />
+</LinearLayout>

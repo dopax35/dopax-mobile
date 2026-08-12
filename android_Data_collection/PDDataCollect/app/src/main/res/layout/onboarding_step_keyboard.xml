@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingBottom="28dp">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="40dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:background="@drawable/bg_onboarding_circle"
+                android:contentDescription="@null"
+                android:padding="27dp"
+                android:src="@drawable/ic_onboarding_touch" />
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.Title"
+                android:layout_marginTop="28dp"
+                android:gravity="center"
+                android:text="How you use your phone" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/lexend"
+                android:gravity="center"
+                android:text="dopa-X reads simple interaction signals, like typing rhythm, to notice changes over time."
+                android:textColor="@color/black_70"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/bg_onboarding_surface"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend_medium"
+                    android:text="What we never do"
+                    android:textColor="@color/black_90"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="@font/lexend"
+                    android:text="Never reads what you type. Never sees messages or passwords. Only rhythm and movement patterns."
+                    android:textColor="@color/black_70"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvKeyboardStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/lexend_medium"
+                android:gravity="center"
+                android:textColor="@color/onboarding_accent"
+                android:textSize="13sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnKeyboardOpenSettings"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:text="Open Settings" />
+
+    <TextView
+        android:id="@+id/btnKeyboardSkip"
+        style="@style/Widget.DopaX.Onboarding.SecondaryLink"
+        android:layout_marginTop="12dp"
+        android:text="Not now" />
+</LinearLayout>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_onboarding_surface"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/editMedicationName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:fontFamily="@font/lexend_medium"
+            android:hint="Medication name"
+            android:importantForAutofill="no"
+            android:inputType="textCapWords"
+            android:minHeight="44dp"
+            android:textColor="@color/black_90"
+            android:textColorHint="@color/gray_50"
+            android:textSize="15.5sp" />
+
+        <EditText
+            android:id="@+id/editMedicationDose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:fontFamily="@font/lexend"
+            android:hint="Dose (e.g. 100mg)"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:minHeight="44dp"
+            android:textColor="@color/black_70"
+            android:textColorHint="@color/gray_50"
+            android:textSize="13.5sp" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/btnRemoveMedication"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:contentDescription="Remove this medication"
+        android:padding="12dp"
+        android:src="@drawable/ic_onboarding_close" />
+</LinearLayout>

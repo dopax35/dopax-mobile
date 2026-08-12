@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingBottom="28dp">
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Title"
+        android:text="About you" />
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Subtitle"
+        android:text="This helps us read your tests correctly." />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="28dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.FieldLabel"
+                android:text="Your name" />
+
+            <EditText
+                android:id="@+id/editDisplayName"
+                style="@style/Widget.DopaX.Onboarding.Field"
+                android:autofillHints="name"
+                android:hint="Optional"
+                android:importantForAutofill="no"
+                android:inputType="textPersonName" />
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.FieldLabel"
+                android:layout_marginTop="18dp"
+                android:text="Year of birth" />
+
+            <EditText
+                android:id="@+id/editYearOfBirth"
+                style="@style/Widget.DopaX.Onboarding.Field"
+                android:hint="e.g. 1957"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:maxLength="4" />
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.FieldLabel"
+                android:layout_marginTop="18dp"
+                android:text="Gender" />
+
+            <TextView
+                android:id="@+id/fieldGender"
+                style="@style/Widget.DopaX.Onboarding.Field"
+                android:drawableEnd="@drawable/ic_onboarding_chevron_down"
+                android:text="Select"
+                android:textColor="@color/gray_50" />
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.FieldLabel"
+                android:layout_marginTop="18dp"
+                android:text="Your dominant hand" />
+
+            <LinearLayout
+                android:id="@+id/segmentDominantHand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/segDominantLeft"
+                    style="@style/Widget.DopaX.Onboarding.Segment"
+                    android:layout_marginEnd="8dp"
+                    android:text="Left" />
+
+                <TextView
+                    android:id="@+id/segDominantRight"
+                    style="@style/Widget.DopaX.Onboarding.Segment"
+                    android:text="Right" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/linkDominantUnknown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="@font/lexend_medium"
+                android:minHeight="48dp"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="4dp"
+                android:text="Prefer not to say"
+                android:textColor="@color/onboarding_text_tertiary"
+                android:textSize="13.5sp" />
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.FieldLabel"
+                android:layout_marginTop="10dp"
+                android:text="Which hand is affected by Parkinson’s?" />
+
+            <LinearLayout
+                android:id="@+id/segmentAffectedSide"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/segAffectedLeft"
+                    style="@style/Widget.DopaX.Onboarding.Segment"
+                    android:layout_marginEnd="8dp"
+                    android:text="Left" />
+
+                <TextView
+                    android:id="@+id/segAffectedRight"
+                    style="@style/Widget.DopaX.Onboarding.Segment"
+                    android:layout_marginEnd="8dp"
+                    android:text="Right" />
+
+                <TextView
+                    android:id="@+id/segAffectedBoth"
+                    style="@style/Widget.DopaX.Onboarding.Segment"
+                    android:text="Both" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/linkAffectedOther"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="@font/lexend_medium"
+                android:gravity="center_vertical"
+                android:minHeight="48dp"
+                android:paddingHorizontal="4dp"
+                android:text="Neither / prefer not to say"
+                android:textColor="@color/onboarding_text_tertiary"
+                android:textSize="13.5sp" />
+
+            <TextView
+                android:id="@+id/tvParticipantCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/lexend"
+                android:textColor="@color/onboarding_text_tertiary"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAboutContinue"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:text="Continue" />
+</LinearLayout>

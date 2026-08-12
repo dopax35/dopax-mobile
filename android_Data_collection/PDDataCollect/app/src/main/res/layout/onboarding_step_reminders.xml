@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingBottom="28dp">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="40dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:background="@drawable/bg_onboarding_circle"
+                android:contentDescription="@null"
+                android:padding="27dp"
+                android:src="@drawable/ic_onboarding_clock" />
+
+            <TextView
+                style="@style/Widget.DopaX.Onboarding.Title"
+                android:layout_marginTop="28dp"
+                android:gravity="center"
+                android:text="Gentle reminders" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/lexend"
+                android:gravity="center"
+                android:text="dopa-X will remind you when a session window opens. Nothing else."
+                android:textColor="@color/black_70"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/bg_onboarding_surface"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/lexend_medium"
+                    android:text="What we never do"
+                    android:textColor="@color/black_90"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="@font/lexend"
+                    android:text="No marketing messages. No guilt reminders. Quiet hours are respected."
+                    android:textColor="@color/black_70"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Android-only: without exact alarms the reminder can be held back
+                 by battery saver until well after the window opened. -->
+            <TextView
+                android:id="@+id/btnExactAlarm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="@font/lexend_medium"
+                android:gravity="center"
+                android:minHeight="48dp"
+                android:paddingHorizontal="8dp"
+                android:text="Let reminders arrive on time"
+                android:textColor="@color/onboarding_accent"
+                android:textSize="13.5sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRemindersContinue"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:text="Continue" />
+
+    <TextView
+        android:id="@+id/btnRemindersSkip"
+        style="@style/Widget.DopaX.Onboarding.SecondaryLink"
+        android:layout_marginTop="12dp"
+        android:text="Not now" />
+</LinearLayout>

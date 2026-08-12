@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingBottom="28dp">
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Title"
+        android:text="Your medications" />
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Subtitle"
+        android:text="So one tap can log a dose later." />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="28dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/medicationContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/btnAddMedication"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="?attr/selectableItemBackground"
+                android:fontFamily="@font/lexend_medium"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="4dp"
+                android:text="+ Add another medication"
+                android:textColor="@color/onboarding_accent"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/lexend"
+                android:text="You can always change these in your Profile."
+                android:textColor="@color/onboarding_text_tertiary"
+                android:textSize="13sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPairShelly"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Pair Pillbox Sensor (Shelly)"
+                android:textAllCaps="false" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMedicationsContinue"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:text="Continue" />
+
+    <TextView
+        android:id="@+id/btnMedicationsBack"
+        style="@style/Widget.DopaX.Onboarding.SecondaryLink"
+        android:layout_marginTop="12dp"
+        android:text="Back" />
+</LinearLayout>
