@@ -275,6 +275,19 @@ struct SettingsView: View {
                 }
                 
                 // MARK: - Danger Zone (matches Android's SettingsActivity reset / stop)
+                // MARK: - Data
+                // Moved here from its own tab when Today was added, to keep the
+                // tab bar at five items. Every destination is still reachable.
+                Section {
+                    NavigationLink {
+                        DataExportView()
+                    } label: {
+                        Label("Export & Upload Data", systemImage: "square.and.arrow.up")
+                    }
+                } header: {
+                    Label("Data", systemImage: "externaldrive")
+                }
+
                 Section {
                     Button(role: .destructive) {
                         // Sign out of Firebase only — local profile data is preserved.

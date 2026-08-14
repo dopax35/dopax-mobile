@@ -107,6 +107,7 @@ final class BackendSyncManager {
                 "onboardingVersion": 2,
                 "sessionWindows": [
                     "morning": profile.testTimeMorning,
+                    "noon": profile.testTimeNoon,
                     "evening": profile.testTimeEvening,
                     "custom": profile.testTimeCustom,
                 ],

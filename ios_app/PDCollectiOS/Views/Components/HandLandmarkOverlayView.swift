@@ -61,7 +61,7 @@ struct HandLandmarkOverlayView: View {
 
                         // Index Tip (Magenta circle)
                         let iRect = CGRect(x: iPt.x - 9, y: iPt.y - 9, width: 18, height: 18)
-                        context.fill(Path(ellipseIn: iRect), with: .color(.magenta))
+                        context.fill(Path(ellipseIn: iRect), with: .color(Color(uiColor: .magenta)))
                         context.stroke(Path(ellipseIn: iRect), with: .color(.white), lineWidth: 2)
                     }
                 }

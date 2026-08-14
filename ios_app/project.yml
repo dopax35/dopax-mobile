@@ -66,6 +66,9 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+    scheme:
+      testTargets:
+        - PDCollectiOSTests
     dependencies:
       - package: ZIPFoundation
       - package: Firebase
@@ -105,6 +108,25 @@ targets:
           DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
           DEVELOPMENT_TEAM: YD2UPLT5JG
           SWIFT_OPTIMIZATION_LEVEL: "-O"
+
+  # Unit tests — session/baseline domain logic (no UI, no device required)
+  PDCollectiOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: PDCollectiOSTests
+        type: group
+    dependencies:
+      - target: PDCollectiOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oriw.pdcollect.ios1.tests
+        SWIFT_VERSION: 5.9
+        IPHONEOS_DEPLOYMENT_TARGET: 16.0
+        DEVELOPMENT_TEAM: YD2UPLT5JG
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
 
   # Keyboard Extension — logs keystroke types (never actual characters)
   PDCollectKeyboard:

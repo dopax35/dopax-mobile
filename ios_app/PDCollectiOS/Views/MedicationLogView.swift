@@ -195,6 +195,7 @@ struct MedicationLogView: View {
         )
 
         appState.dataManager.writeMedicationEvent(event)
+        appState.sessionManager.markTask(.medication)
         recentLogs.append(event)
 
         // Haptic feedback

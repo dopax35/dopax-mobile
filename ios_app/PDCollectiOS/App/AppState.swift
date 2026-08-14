@@ -13,6 +13,9 @@ class AppState: ObservableObject {
     // MARK: - Gamification
     let gamification = GamificationManager()
 
+    // MARK: - Daily sessions (Today screen)
+    let sessionManager: SessionManager
+
     // MARK: - New passive-collection managers (iPhone branch)
 
     let passiveSensor  = PassiveSensorService()
@@ -55,6 +58,7 @@ class AppState: ObservableObject {
         let profile = UserProfile()
         self.userProfile = profile
         self.dataManager = DataManager(userId: profile.userId)
+        self.sessionManager = SessionManager(schedule: profile.sessionSchedule)
         if let val = UserDefaults.standard.object(forKey: "isCollecting") as? Bool {
             self.isCollecting = val
         } else {
@@ -78,6 +82,26 @@ class AppState: ObservableObject {
         profile.$userId
             .dropFirst()
             .sink { [weak self] newId in self?.dataManager.userId = newId }
+            .store(in: &cancellables)
+
+        // Session windows are user-editable, so keep the schedule current.
+        // CombineLatest3 replays the current values immediately; dropFirst
+        // skips that so we don't rebuild the schedule we just constructed.
+        Publishers.CombineLatest3(profile.$testTimeMorning,
+                                  profile.$testTimeNoon,
+                                  profile.$testTimeEvening)
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] morning, noon, night in
+                self?.sessionManager.updateSchedule(
+                    SessionSchedule(morningText: morning, noonText: noon, nightText: night))
+            }
+            .store(in: &cancellables)
+
+        // A window may have opened or the day rolled over while backgrounded.
+        NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.sessionManager.refresh() }
             .store(in: &cancellables)
 
         sensorKitManager.configure(dataManager: dataManager)

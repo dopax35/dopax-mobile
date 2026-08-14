@@ -17,6 +17,18 @@ extension Color {
     static let onboardingDotPast = Color(hex: 0xB9AFE8)
     static let onboardingTextTertiary = Color(hex: 0xA3A3A3)
 
+    // Today / session flow (Figma "Current Design")
+    static let todaySurfaceBrand = Color(hex: 0xF4F1F8)        // task + hub icon wells
+    static let todaySurfaceBrandStrong = Color(hex: 0xE9E5F8)  // article thumbnails, window chip
+    static let todayTextDisabled = Color(hex: 0xC4BBC8)        // locked session card text
+    static let todayAccentWarm = Color(hex: 0xFF8953)          // morning/noon session button
+    static let todayMorningTop = Color(hex: 0xFFD9AE)
+    static let todayMorningBottom = Color(hex: 0xFFC08A)
+    static let todayNoonTop = Color(hex: 0xFFD079)
+    static let todayNoonBottom = Color(hex: 0xE7D0C6)
+    static let todayNightTop = Color(hex: 0x2E2A4A)
+    static let todayNightBottom = Color(hex: 0x4A4468)
+
     // Neutrals — mirror Android's colors.xml Dopa-X Brand Palette grays
     // (black_90/black_80/black_70/gray_50/gray_30), so both platforms draw
     // from the same named neutral scale instead of each picking its own
@@ -54,6 +66,11 @@ extension ShapeStyle where Self == Color {
     static var onboardingDotIdle: Color { .onboardingDotIdle }
     static var onboardingDotPast: Color { .onboardingDotPast }
     static var onboardingTextTertiary: Color { .onboardingTextTertiary }
+
+    static var todaySurfaceBrand: Color { .todaySurfaceBrand }
+    static var todaySurfaceBrandStrong: Color { .todaySurfaceBrandStrong }
+    static var todayTextDisabled: Color { .todayTextDisabled }
+    static var todayAccentWarm: Color { .todayAccentWarm }
 
     static var dopaxBlack90: Color { .dopaxBlack90 }
     static var dopaxBlack80: Color { .dopaxBlack80 }

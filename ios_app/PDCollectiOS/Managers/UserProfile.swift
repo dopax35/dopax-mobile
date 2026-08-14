@@ -28,6 +28,10 @@ class UserProfile: ObservableObject {
     @Published var displayName: String         { didSet { save("displayName", displayName) } }
     @Published var yearOfBirth: String         { didSet { save("yearOfBirth", yearOfBirth) } }
     @Published var testTimeMorning: String     { didSet { save("testTimeMorning", testTimeMorning) } }
+    /// Third daily window. Added for the Today redesign, which schedules
+    /// morning/noon/night. Defaulted rather than migrated so existing
+    /// participants keep the two windows they already chose.
+    @Published var testTimeNoon: String        { didSet { save("testTimeNoon", testTimeNoon) } }
     @Published var testTimeEvening: String     { didSet { save("testTimeEvening", testTimeEvening) } }
     @Published var testTimeCustom: String      { didSet { save("testTimeCustom", testTimeCustom) } }
     @Published var healthAppleStatus: String   { didSet { save("healthAppleStatus", healthAppleStatus) } }
@@ -40,6 +44,14 @@ class UserProfile: ObservableObject {
     /// Legacy users who completed v1 still need v2 fields (session windows).
     var needsOnboardingV2: Bool {
         onboardingVersion < 2 || testTimeCustom.isEmpty
+    }
+
+    /// The three daily windows the Today screen schedules against. The design's
+    /// "Night Session" is this profile's evening window.
+    var sessionSchedule: SessionSchedule {
+        SessionSchedule(morningText: testTimeMorning,
+                        noonText: testTimeNoon,
+                        nightText: testTimeEvening)
     }
 
     init() {
@@ -57,6 +69,7 @@ class UserProfile: ObservableObject {
         self.displayName = d.string(forKey: "displayName") ?? ""
         self.yearOfBirth = d.string(forKey: "yearOfBirth") ?? ""
         self.testTimeMorning = d.string(forKey: "testTimeMorning") ?? "08:00-10:00"
+        self.testTimeNoon = d.string(forKey: "testTimeNoon") ?? "12:00-14:00"
         self.testTimeEvening = d.string(forKey: "testTimeEvening") ?? "18:00-20:00"
         self.testTimeCustom = d.string(forKey: "testTimeCustom") ?? ""
         self.healthAppleStatus = d.string(forKey: "healthAppleStatus") ?? "skipped"
@@ -101,7 +114,7 @@ class UserProfile: ObservableObject {
     func clearAll() {
         ["consentGiven","profileComplete","userId","age","gender","dominantHand","affectedSide","medications",
          "hrDeviceIdentifier","hrDeviceName","beanieDeviceIdentifier","beanieDeviceName",
-         "displayName","yearOfBirth","testTimeMorning","testTimeEvening","testTimeCustom",
+         "displayName","yearOfBirth","testTimeMorning","testTimeNoon","testTimeEvening","testTimeCustom",
          "healthAppleStatus","healthStravaStatus","notificationsOptIn","keyboardOptIn","onboardingVersion"]
             .forEach { UserDefaults.standard.removeObject(forKey: $0) }
         UserProfile.deleteFromKeychain()
@@ -114,7 +127,8 @@ class UserProfile: ObservableObject {
         hrDeviceIdentifier = ""; hrDeviceName = ""
         beanieDeviceIdentifier = ""; beanieDeviceName = ""
         displayName = ""; yearOfBirth = ""
-        testTimeMorning = "08:00-10:00"; testTimeEvening = "18:00-20:00"; testTimeCustom = ""
+        testTimeMorning = "08:00-10:00"; testTimeNoon = "12:00-14:00"
+        testTimeEvening = "18:00-20:00"; testTimeCustom = ""
         healthAppleStatus = "skipped"; healthStravaStatus = "skipped"
         notificationsOptIn = false; keyboardOptIn = false
     }
@@ -184,6 +198,7 @@ class UserProfile: ObservableObject {
             "displayName": displayName,
             "yearOfBirth": yearOfBirth,
             "testTimeMorning": testTimeMorning,
+            "testTimeNoon": testTimeNoon,
             "testTimeEvening": testTimeEvening,
             "testTimeCustom": testTimeCustom,
             "healthAppleStatus": healthAppleStatus,

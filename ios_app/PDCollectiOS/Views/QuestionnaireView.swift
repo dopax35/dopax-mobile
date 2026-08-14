@@ -167,6 +167,7 @@ struct QuestionnaireView: View {
             q6DeprYesNo: deprProb,     q6DeprScore: deprScore
         )
         appState.dataManager.writeQuestionnaire(response)
+        appState.sessionManager.markTask(.questionnaire)
         submitted = true
     }
 

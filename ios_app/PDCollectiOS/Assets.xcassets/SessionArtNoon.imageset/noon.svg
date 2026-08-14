@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 7">
+<line id="ray-v" opacity="0.4" x1="41" y1="1" x2="41" y2="79" stroke="#FDEDE8" stroke-width="2" stroke-linecap="round"/>
+<line id="ray-h" opacity="0.4" x1="1" y1="39" x2="79" y2="39" stroke="#FDEDE8" stroke-width="2" stroke-linecap="round"/>
+<line id="ray-d1" opacity="0.3" x1="11.4142" y1="10" x2="66.5685" y2="65.1543" stroke="#FDEDE8" stroke-width="2" stroke-linecap="round"/>
+<line id="ray-d2" opacity="0.3" x1="10" y1="68.5858" x2="65.1543" y2="13.4315" stroke="#FDEDE8" stroke-width="2" stroke-linecap="round"/>
+<circle id="sun-outer" opacity="0.5" cx="40" cy="40" r="24" fill="#FDEDE8"/>
+<circle id="sun-inner" cx="40" cy="40" r="16" fill="#FDEDE8"/>
+</g>
+</svg>
