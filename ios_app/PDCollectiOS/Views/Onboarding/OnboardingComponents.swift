@@ -83,6 +83,7 @@ struct OnboardingTextField: View {
     let placeholder: String
     @Binding var text: String
     var keyboard: UIKeyboardType = .default
+    var isFocused: Bool = false
 
     var body: some View {
         TextField(placeholder, text: $text)
@@ -91,12 +92,17 @@ struct OnboardingTextField: View {
             .frame(height: 56)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(isFocused ? Color.onboardingAccent : Color.clear, lineWidth: 1.5)
+            )
     }
 }
 
 struct OnboardingSegmentRow: View {
     let options: [String]
     @Binding var selection: String
+    var fontSize: CGFloat = 15
 
     var body: some View {
         HStack(spacing: 8) {
@@ -106,7 +112,7 @@ struct OnboardingSegmentRow: View {
                     selection = option
                 } label: {
                     Text(option)
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: fontSize, weight: .bold))
                         .foregroundColor(selected ? .white : .dopaxBlack70)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)

@@ -36,6 +36,13 @@
       "when": 1786518000000,
       "tag": "0004_drive_manifest_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786604400000,
+      "tag": "0005_email_otp_and_consent_signature",
+      "breakpoints": true
     }
   ]
 }

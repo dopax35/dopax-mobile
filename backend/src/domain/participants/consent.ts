@@ -4,8 +4,16 @@ import { z } from 'zod';
 import type { Database } from '../../db/client.js';
 import { consents } from '../../db/schema/identity.js';
 
+/** Roughly 1.5 MB of base64, comfortably above any hand-drawn signature PNG. */
+const SIGNATURE_IMAGE_MAX_CHARS = 2_000_000;
+
 export const consentWriteSchema = z.object({
   signatureName: z.string().min(1),
+  // Base64 PNG of the drawn signature. Optional: clients older than the
+  // drawn-signature screen still submit a typed name only, and rejecting them
+  // would break consent for participants mid-upgrade.
+  signatureImage: z.string().max(SIGNATURE_IMAGE_MAX_CHARS).optional(),
+  documentLocale: z.string().min(2).max(16).optional(),
   documentVersion: z.string().min(1).optional().default('onboarding-v2'),
   documentHash: z.string().optional(),
   grantedAt: z.string().datetime().optional(),
@@ -20,6 +28,9 @@ export interface ConsentView {
   documentVersion: string;
   documentHash: string;
   signatureName: string;
+  /** Whether a drawn signature was captured, not the image itself. */
+  hasSignatureImage: boolean;
+  documentLocale: string | null;
   grantedAt: string;
   platform: string | null;
   appVersion: string | null;
@@ -32,9 +43,26 @@ function defaultHash(input: ConsentWriteInput): string {
         version: input.documentVersion,
         signature: input.signatureName,
         platform: input.platform ?? null,
+        // Two participants who signed the same version in different languages
+        // did not sign the same document, so the hash has to separate them.
+        locale: input.documentLocale ?? null,
       }),
     )
     .digest('hex');
+}
+
+function toView(row: typeof consents.$inferSelect): ConsentView {
+  return {
+    id: row.id,
+    documentVersion: row.documentVersion,
+    documentHash: row.documentHash,
+    signatureName: row.signatureName,
+    hasSignatureImage: row.signatureImage !== null,
+    documentLocale: row.documentLocale,
+    grantedAt: row.grantedAt.toISOString(),
+    platform: row.platform,
+    appVersion: row.appVersion,
+  };
 }
 
 export async function appendConsent(
@@ -55,6 +83,8 @@ export async function appendConsent(
       documentVersion,
       documentHash,
       signatureName: input.signatureName,
+      signatureImage: input.signatureImage,
+      documentLocale: input.documentLocale,
       grantedAt,
       platform: input.platform,
       appVersion: input.appVersion,
@@ -63,15 +93,7 @@ export async function appendConsent(
 
   if (!row) throw new Error('failed to append consent');
 
-  return {
-    id: row.id,
-    documentVersion: row.documentVersion,
-    documentHash: row.documentHash,
-    signatureName: row.signatureName,
-    grantedAt: row.grantedAt.toISOString(),
-    platform: row.platform,
-    appVersion: row.appVersion,
-  };
+  return toView(row);
 }
 
 export async function listConsents(
@@ -84,13 +106,5 @@ export async function listConsents(
     .where(eq(consents.participantId, participantId))
     .orderBy(desc(consents.grantedAt));
 
-  return rows.map((row) => ({
-    id: row.id,
-    documentVersion: row.documentVersion,
-    documentHash: row.documentHash,
-    signatureName: row.signatureName,
-    grantedAt: row.grantedAt.toISOString(),
-    platform: row.platform,
-    appVersion: row.appVersion,
-  }));
+  return rows.map(toView);
 }

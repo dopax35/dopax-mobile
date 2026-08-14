@@ -89,24 +89,18 @@
             app:iconSize="22dp"
             app:iconTint="@null" />
 
-        <com.google.android.material.button.MaterialButton
+        <TextView
             android:id="@+id/btnContinueEmail"
-            style="@style/Widget.Material3.Button.ElevatedButton"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="12dp"
-            android:fontFamily="@font/lexend_bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/lexend_medium"
+            android:padding="8dp"
             android:text="Use email instead"
-            android:textAllCaps="false"
-            android:textColor="@color/black_90"
-            android:textSize="15.5sp"
-            app:backgroundTint="@color/white"
-            app:cornerRadius="16dp"
-            app:elevation="2dp"
-            app:icon="@android:drawable/ic_dialog_email"
-            app:iconGravity="textStart"
-            app:iconPadding="14dp"
-            app:iconTint="@color/black_90" />
+            android:textColor="@color/onboarding_accent"
+            android:textSize="14sp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/btnPhoneSignIn"

@@ -46,7 +46,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/lexend_medium"
-                        android:text="Health Connect"
+                        android:text="Google Fit / Health Connect"
                         android:textColor="@color/black_90"
                         android:textSize="15sp" />
 
@@ -54,7 +54,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/lexend"
-                        android:text="Sleep &amp; activity"
+                        android:text="Steps &amp; activity"
                         android:textColor="@color/black_70"
                         android:textSize="13sp" />
                 </LinearLayout>
@@ -63,7 +63,7 @@
                     android:id="@+id/btnConnectHealthConnect"
                     android:layout_width="wrap_content"
                     android:layout_height="44dp"
-                    android:background="@drawable/bg_onboarding_pill"
+                    android:background="@drawable/bg_onboarding_connect_pill"
                     android:fontFamily="@font/lexend_bold"
                     android:gravity="center"
                     android:minWidth="104dp"
@@ -110,13 +110,61 @@
                     android:id="@+id/btnConnectStrava"
                     android:layout_width="wrap_content"
                     android:layout_height="44dp"
-                    android:background="@drawable/bg_onboarding_pill"
+                    android:background="@drawable/bg_onboarding_connect_pill"
                     android:fontFamily="@font/lexend_bold"
                     android:gravity="center"
                     android:minWidth="104dp"
                     android:paddingHorizontal="16dp"
                     android:text="Connect"
                     android:textColor="@color/onboarding_accent"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:alpha="0.65"
+                android:background="@drawable/bg_onboarding_surface"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend_medium"
+                        android:text="Apple Health"
+                        android:textColor="@color/black_90"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend"
+                        android:text="Sleep &amp; activity · iPhone only"
+                        android:textColor="@color/black_70"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btnConnectAppleHealth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:enabled="false"
+                    android:fontFamily="@font/lexend_bold"
+                    android:gravity="center"
+                    android:minWidth="104dp"
+                    android:paddingHorizontal="16dp"
+                    android:text="iPhone only"
+                    android:textColor="@color/gray_50"
                     android:textSize="14sp" />
             </LinearLayout>
 

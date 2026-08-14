@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
+  integer,
   jsonb,
   pgTable,
   smallint,
@@ -75,6 +76,35 @@ export const authIdentities = pgTable(
 );
 
 /**
+ * Short-lived email sign-in codes. R1 is preserved: a verified code mints a
+ * Firebase custom token and the client still signs in through Firebase, so this
+ * is an additional way to reach a Firebase session, never a second identity
+ * provider.
+ *
+ * Only the hash is stored. A dump of this table must not let anyone sign in as
+ * a participant, and the plaintext code exists solely in the email we sent.
+ */
+export const emailOtpCodes = pgTable(
+  'email_otp_codes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull(),
+    codeHash: text('code_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    // Counted server-side so a stolen code cannot be brute-forced within its
+    // validity window even if the caller rotates IPs past the rate limiter.
+    attempts: integer('attempts').notNull().default(0),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    requestIp: text('request_ip'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('email_otp_codes_email_idx').on(t.email, t.createdAt),
+    index('email_otp_codes_expires_idx').on(t.expiresAt),
+  ],
+);
+
+/**
  * `revision` powers the local-wins merge the iOS client already relies on after
  * the v3.7.29 regression that blanked profiles. A stale revision on write is a
  * 409, never a silent overwrite.
@@ -144,6 +174,14 @@ export const consents = pgTable(
     documentVersion: text('document_version').notNull(),
     documentHash: text('document_hash').notNull(),
     signatureName: text('signature_name').notNull(),
+    // Base64 PNG of the drawn signature. Nullable because every consent
+    // gathered before the drawn-signature screen shipped has a typed name only,
+    // and those consents stay valid exactly as they were given.
+    signatureImage: text('signature_image'),
+    // Which language the participant actually read the form in. A Hebrew
+    // signatory who was shown the English text has not consented to the same
+    // document, so this belongs in the audit trail.
+    documentLocale: text('document_locale'),
     grantedAt: timestamp('granted_at', { withTimezone: true }).notNull(),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     platform: text('platform'),

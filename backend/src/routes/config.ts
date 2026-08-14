@@ -10,12 +10,17 @@ import type { FastifyInstance } from 'fastify';
  */
 export async function configRoutes(app: FastifyInstance): Promise<void> {
   app.get('/config', async () => {
-    const { BOTH_ARCH } = app.config;
+    const { BOTH_ARCH, EMAIL_AUTH_ENABLED } = app.config;
 
     return {
       bothArch: BOTH_ARCH,
       dualWriteLegacy: BOTH_ARCH,
       sourceOfTruth: BOTH_ARCH ? 'legacy_drive' : 'backend',
+      auth: {
+        // Lets the welcome screen hide "Use email instead" rather than offering
+        // a route to a code that this environment cannot send.
+        emailCodeEnabled: EMAIL_AUTH_ENABLED,
+      },
       upload: {
         strategy: 'multipart_presigned',
         maxPartBytes: 16 * 1024 * 1024,

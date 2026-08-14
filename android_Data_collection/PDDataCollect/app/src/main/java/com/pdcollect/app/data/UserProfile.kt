@@ -110,6 +110,18 @@ class UserProfile(context: Context) {
         get() = prefs.getString(Constants.PREF_TEST_TIME_NOON, "12:00") ?: "12:00"
         set(value) = prefs.edit().putString(Constants.PREF_TEST_TIME_NOON, value).apply()
 
+    var testTimeEvening: String
+        get() = prefs.getString("test_time_evening", "18:00-20:00") ?: "18:00-20:00"
+        set(value) = prefs.edit().putString("test_time_evening", value).apply()
+
+    var consentSignatureImage: String
+        get() = prefs.getString("consent_signature_image", "") ?: ""
+        set(value) = prefs.edit().putString("consent_signature_image", value).apply()
+
+    var consentLocale: String
+        get() = prefs.getString("consent_locale", "en") ?: "en"
+        set(value) = prefs.edit().putString("consent_locale", value).apply()
+
     var testTimeRandom: String
         get() = prefs.getString(Constants.PREF_TEST_TIME_RANDOM, "") ?: ""
         set(value) = prefs.edit().putString(Constants.PREF_TEST_TIME_RANDOM, value).apply()
@@ -238,6 +250,7 @@ class UserProfile(context: Context) {
             "autoUploadEnabled" to autoUploadEnabled,
             "testTimeMorning" to testTimeMorning,
             "testTimeNoon" to testTimeNoon,
+            "testTimeEvening" to testTimeEvening,
             "testTimeRandom" to testTimeRandom,
             "hrDeviceAddress" to hrDeviceAddress,
             "hrDeviceName" to hrDeviceName,
@@ -256,12 +269,19 @@ class UserProfile(context: Context) {
             "usageAccessOptIn" to usageAccessOptIn,
             "exactAlarmOptIn" to exactAlarmOptIn,
             "onboardingVersion" to onboardingVersion,
+            "consentSignatureImage" to consentSignatureImage,
+            "consentLocale" to consentLocale,
         )
     }
 
     fun updateFromMap(map: Map<String, Any>) {
         val editor = prefs.edit()
-        (map["consentGiven"] as? Boolean)?.let { editor.putBoolean(Constants.PREF_CONSENT_GIVEN, it) }
+        // Consent is a one-way latch: a stale or partially-written cloud doc must
+        // never revoke it, because that would re-prompt a participant who has
+        // already consented. Matches mergeFromCloud on iOS.
+        if (!consentGiven) {
+            (map["consentGiven"] as? Boolean)?.let { editor.putBoolean(Constants.PREF_CONSENT_GIVEN, it) }
+        }
         (map["signatureName"] as? String)?.let { editor.putString("signature_name", it) }
         (map["consentTimestamp"] as? Long)?.let { editor.putLong("consent_timestamp", it) }
         (map["shellyMacAddress"] as? String)?.let { editor.putString("shelly_mac_address", it) }

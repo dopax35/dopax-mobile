@@ -1,23 +1,27 @@
 package com.pdcollect.app.ui
 
 import android.content.Intent
-import android.os.Bundle
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import com.pdcollect.app.R
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
+import android.os.Bundle
 import android.os.ParcelFileDescriptor
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.text.Editable
 import android.text.TextWatcher
-import com.google.android.material.textfield.TextInputEditText
+import android.view.View
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import com.google.android.material.button.MaterialButton
+import com.pdcollect.app.R
+import com.pdcollect.app.data.BackendSyncManager
+import com.pdcollect.app.data.UserProfile
+import com.pdcollect.app.ui.view.SignaturePadView
+import android.widget.ImageView
 import java.io.File
 import java.io.FileOutputStream
-import com.pdcollect.app.data.UserProfile
 
 class ConsentActivity : AppCompatActivity() {
 
@@ -25,6 +29,15 @@ class ConsentActivity : AppCompatActivity() {
     private var pdfRenderer: PdfRenderer? = null
     private var parcelFileDescriptor: ParcelFileDescriptor? = null
     private var consentDocumentLoaded = false
+    private var consentLocale = "en"
+
+    private lateinit var pdfContainer: LinearLayout
+    private lateinit var consentContentContainer: LinearLayout
+    private lateinit var subtitleView: TextView
+    private lateinit var checkbox: CheckBox
+    private lateinit var agreeButton: MaterialButton
+    private lateinit var signatureInput: EditText
+    private lateinit var signaturePad: SignaturePadView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,34 +50,99 @@ class ConsentActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_consent)
 
-        val pdfContainer = findViewById<LinearLayout>(R.id.pdfContainer)
-        val checkbox = findViewById<CheckBox>(R.id.consentCheckbox)
-        val agreeButton = findViewById<Button>(R.id.agreeButton)
-        val signatureInput = findViewById<TextInputEditText>(R.id.signatureInput)
+        pdfContainer = findViewById(R.id.pdfContainer)
+        consentContentContainer = findViewById(R.id.consentContentContainer)
+        subtitleView = findViewById(R.id.tvConsentSubtitle)
+        checkbox = findViewById(R.id.consentCheckbox)
+        agreeButton = findViewById(R.id.agreeButton)
+        signatureInput = findViewById(R.id.signatureInput)
+        signaturePad = findViewById(R.id.signaturePad)
 
-        // Render PDF. Pages are scaled to the device's actual screen width in
-        // pixels (NOT densityDpi * points/72, which double-applies density and
-        // produces multi-hundred-MB bitmaps per page on high-density phones —
-        // e.g. ~150MB/page at xxxhdpi for an A4 page, easily OOM-crashing this
-        // screen for every new participant on a 3-page consent form).
+        consentLocale = profile.consentLocale.ifBlank { "en" }
+        if (!signatureInput.text.isNullOrBlank()) {
+            signatureInput.setText(profile.signatureName)
+        }
+
+        findViewById<TextView>(R.id.chipLanguage).setOnClickListener { toggleLocale() }
+        findViewById<TextView>(R.id.btnClearSignature).setOnClickListener {
+            signaturePad.clear()
+            validate()
+        }
+        signaturePad.onSignatureChanged = { validate() }
+
+        loadConsentPdf()
+        applyLocaleChrome()
+
+        agreeButton.isEnabled = false
+
+        checkbox.setOnCheckedChangeListener { _, _ -> validate() }
+        signatureInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { validate() }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+
+        agreeButton.setOnClickListener {
+            val name = signatureInput.text?.toString()?.trim().orEmpty()
+            val signatureImage = signaturePad.exportPngBase64().orEmpty()
+            profile.signatureName = name
+            profile.consentSignatureImage = signatureImage
+            profile.consentLocale = consentLocale
+            profile.consentTimestamp = System.currentTimeMillis()
+            profile.consentGiven = true
+            BackendSyncManager.syncConsent(
+                context = this,
+                signatureName = name,
+                signatureImage = signatureImage.ifBlank { null },
+                documentLocale = consentLocale,
+            )
+            navigateNext()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        closePdfRenderer()
+    }
+
+    private fun toggleLocale() {
+        consentLocale = if (consentLocale == "en") "he" else "en"
+        applyLocaleChrome()
+        loadConsentPdf()
+        validate()
+    }
+
+    private fun applyLocaleChrome() {
+        val languageLabel = if (consentLocale == "he") "Hebrew" else "English"
+        subtitleView.text = "Please read and sign. Presented in $languageLabel."
+
+        val direction = if (consentLocale == "he") View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR
+        ViewCompat.setLayoutDirection(consentContentContainer, direction)
+        consentContentContainer.textDirection =
+            if (consentLocale == "he") View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
+    }
+
+    private fun loadConsentPdf() {
+        closePdfRenderer()
+        pdfContainer.removeAllViews()
+        consentDocumentLoaded = false
+
         var pagesRendered = 0
         try {
-            val file = File(cacheDir, "consent_form.pdf")
+            val assetName = consentPdfAssetName()
+            val file = File(cacheDir, "consent_${consentLocale}.pdf")
             if (!file.exists()) {
-                val assetStream = assets.open("consent_form.pdf")
-                val outputStream = FileOutputStream(file)
-                assetStream.copyTo(outputStream)
-                assetStream.close()
-                outputStream.close()
+                assets.open(assetName).use { assetStream ->
+                    FileOutputStream(file).use { outputStream ->
+                        assetStream.copyTo(outputStream)
+                    }
+                }
             }
 
             parcelFileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
             val renderer = PdfRenderer(parcelFileDescriptor!!)
             pdfRenderer = renderer
 
-            // Cap render width at the screen width (already in real device
-            // pixels) so we never render at a higher resolution than the
-            // screen can even display.
             val targetWidthPx = resources.displayMetrics.widthPixels
 
             for (i in 0 until renderer.pageCount) {
@@ -79,7 +157,7 @@ class ConsentActivity : AppCompatActivity() {
                         val imageView = ImageView(this).apply {
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
                             ).apply {
                                 setMargins(0, 0, 0, 16)
                             }
@@ -90,8 +168,6 @@ class ConsentActivity : AppCompatActivity() {
                         pagesRendered++
                     }
                 } catch (pageError: Exception) {
-                    // Skip this page but keep trying the rest — one corrupt
-                    // page shouldn't hide the entire consent document.
                     android.util.Log.e("ConsentActivity", "Failed to render consent page $i", pageError)
                 }
             }
@@ -101,9 +177,6 @@ class ConsentActivity : AppCompatActivity() {
 
         consentDocumentLoaded = pagesRendered > 0
         if (!consentDocumentLoaded) {
-            // Never allow silent sign-off on a document the participant could
-            // not actually see. Show a clear error and offer a retry instead
-            // of leaving a blank box next to an enabled checkbox.
             val errorView = TextView(this).apply {
                 text = "We couldn't load the consent document. Please check your storage space " +
                     "and try again, or contact the study team before continuing."
@@ -112,37 +185,40 @@ class ConsentActivity : AppCompatActivity() {
             }
             pdfContainer.addView(errorView)
             checkbox.isEnabled = false
-        }
-
-        agreeButton.isEnabled = false
-
-        fun validate() {
-            val name = signatureInput.text?.toString()?.trim() ?: ""
-            agreeButton.isEnabled = consentDocumentLoaded && checkbox.isChecked && name.isNotEmpty()
-        }
-
-        checkbox.setOnCheckedChangeListener { _, _ -> validate() }
-        
-        signatureInput.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { validate() }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        agreeButton.setOnClickListener {
-            val name = signatureInput.text?.toString()?.trim() ?: ""
-            profile.signatureName = name
-            profile.consentTimestamp = System.currentTimeMillis()
-            profile.consentGiven = true
-            com.pdcollect.app.data.BackendSyncManager.syncConsent(this, name)
-            navigateNext()
+        } else {
+            checkbox.isEnabled = true
         }
     }
-    
-    override fun onDestroy() {
-        super.onDestroy()
+
+    private fun consentPdfAssetName(): String {
+        val hebrewAsset = "consent_form_he.pdf"
+        return if (consentLocale == "he" && assetExists(hebrewAsset)) {
+            hebrewAsset
+        } else {
+            "consent_form.pdf"
+        }
+    }
+
+    private fun assetExists(name: String): Boolean = try {
+        assets.open(name).close()
+        true
+    } catch (_: Exception) {
+        false
+    }
+
+    private fun closePdfRenderer() {
         pdfRenderer?.close()
+        pdfRenderer = null
         parcelFileDescriptor?.close()
+        parcelFileDescriptor = null
+    }
+
+    private fun validate() {
+        val name = signatureInput.text?.toString()?.trim().orEmpty()
+        agreeButton.isEnabled = consentDocumentLoaded &&
+            checkbox.isChecked &&
+            name.isNotEmpty() &&
+            !signaturePad.isEmpty()
     }
 
     private fun navigateNext() {

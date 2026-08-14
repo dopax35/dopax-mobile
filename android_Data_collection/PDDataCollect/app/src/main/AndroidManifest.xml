@@ -92,6 +92,17 @@
         </activity>
 
         <activity
+            android:name=".ui.EmailSignInActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.LoginActivity" />
+
+        <activity
+            android:name=".ui.EmailCodeActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.EmailSignInActivity"
+            android:windowSoftInputMode="stateVisible" />
+
+        <activity
             android:name=".ui.ConsentActivity"
             android:exported="false"
             android:resizeableActivity="true">

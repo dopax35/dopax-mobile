@@ -42,4 +42,33 @@ describe('environment configuration', () => {
       loadEnv({ ...withoutFolder, STORAGE_BACKEND: 'gdrive' }),
     ).toThrow(/LEGACY_DRIVE_FOLDER_ID/);
   });
+
+  it('leaves email sign-in codes off by default', () => {
+    expect(loadEnv({ ...base }).EMAIL_AUTH_ENABLED).toBe(false);
+  });
+
+  it('requires SMTP settings when email sign-in is enabled', () => {
+    expect(() => loadEnv({ ...base, EMAIL_AUTH_ENABLED: 'true' })).toThrow(/SMTP_HOST/);
+  });
+
+  it('requires a service account key when email sign-in is enabled', () => {
+    expect(() =>
+      loadEnv({
+        ...base,
+        EMAIL_AUTH_ENABLED: 'true',
+        SMTP_HOST: 'smtp.example.com',
+        SMTP_FROM: 'dopa-X <no-reply@example.com>',
+      }),
+    ).toThrow(/GOOGLE_APPLICATION_CREDENTIALS/);
+  });
+
+  it('accepts email sign-in with no SMTP credential when the dev bypass is on', () => {
+    const env = loadEnv({
+      ...base,
+      NODE_ENV: 'development',
+      AUTH_DEV_BYPASS: 'true',
+      EMAIL_AUTH_ENABLED: 'true',
+    });
+    expect(env.EMAIL_AUTH_ENABLED).toBe(true);
+  });
 });

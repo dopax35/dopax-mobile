@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_onboarding"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="28dp">
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        android:src="@drawable/ic_arrow_back_24"
+        app:tint="@color/black_90" />
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Title"
+        android:layout_marginTop="8dp"
+        android:text="Sign in with email" />
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Subtitle"
+        android:text="We'll send a 6-digit code to confirm it's you." />
+
+    <EditText
+        android:id="@+id/editEmail"
+        style="@style/Widget.DopaX.Onboarding.Field"
+        android:layout_marginTop="28dp"
+        android:autofillHints="emailAddress"
+        android:background="@drawable/bg_onboarding_field"
+        android:hint="alex@email.com"
+        android:importantForAutofill="yes"
+        android:inputType="textEmailAddress" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSendCode"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:layout_marginTop="24dp"
+        android:enabled="false"
+        android:text="Send code" />
+
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/lexend"
+        android:textColor="@color/error"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/lexend"
+        android:text="We only use your email to sign you in."
+        android:textColor="@color/onboarding_text_tertiary"
+        android:textSize="13sp" />
+</LinearLayout>

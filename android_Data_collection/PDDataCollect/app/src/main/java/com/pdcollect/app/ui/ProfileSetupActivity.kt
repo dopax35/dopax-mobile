@@ -64,6 +64,8 @@ class ProfileSetupActivity : AppCompatActivity() {
         const val STATUS_UNAVAILABLE = "unavailable"
 
         const val TAG = "ProfileSetup"
+
+        val MEDICATION_UNITS = arrayOf("pill(s)", "mg", "ml", "patch", "drop(s)")
     }
 
     private lateinit var profile: UserProfile
@@ -74,7 +76,18 @@ class ProfileSetupActivity : AppCompatActivity() {
     private val medicationRows = mutableListOf<MedicationRow>()
     private var step = STEP_ABOUT
 
-    private data class MedicationRow(val view: View, val name: EditText, val dose: EditText)
+    private data class MedicationRow(
+        val view: View,
+        val name: EditText,
+        val unit: TextView,
+        val count: EditText,
+        /**
+         * A pre-split free-text dose ("100mg twice daily") that could not be
+         * parsed into count + unit. Held so it can be written back verbatim,
+         * and cleared the moment the participant edits either field.
+         */
+        var legacyDose: String? = null,
+    )
 
     private val notificationPermissionLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -256,6 +269,10 @@ class ProfileSetupActivity : AppCompatActivity() {
             profile.affectedSide = Constants.PARTICIPANT_SIDE_BOTH
             renderAboutStep()
         }
+        findViewById<TextView>(R.id.segAffectedNeither).setOnClickListener {
+            profile.affectedSide = Constants.PARTICIPANT_SIDE_NONE
+            renderAboutStep()
+        }
         findViewById<TextView>(R.id.linkAffectedOther).setOnClickListener { showAffectedSideOptions() }
 
         findViewById<MaterialButton>(R.id.btnAboutContinue).setOnClickListener { goTo(STEP_MEDICATIONS) }
@@ -288,15 +305,12 @@ class ProfileSetupActivity : AppCompatActivity() {
             profile.affectedSide == Constants.PARTICIPANT_SIDE_RIGHT
         findViewById<TextView>(R.id.segAffectedBoth).isSelected =
             profile.affectedSide == Constants.PARTICIPANT_SIDE_BOTH
+        findViewById<TextView>(R.id.segAffectedNeither).isSelected =
+            profile.affectedSide == Constants.PARTICIPANT_SIDE_NONE
         renderChoiceLink(
             findViewById(R.id.linkAffectedOther),
-            label = when (profile.affectedSide) {
-                Constants.PARTICIPANT_SIDE_NONE -> "Neither — no PD symptoms"
-                Constants.PARTICIPANT_SIDE_UNKNOWN -> "Prefer not to say"
-                else -> "Neither / prefer not to say"
-            },
-            active = profile.affectedSide == Constants.PARTICIPANT_SIDE_NONE ||
-                profile.affectedSide == Constants.PARTICIPANT_SIDE_UNKNOWN
+            label = "Prefer not to say",
+            active = profile.affectedSide == Constants.PARTICIPANT_SIDE_UNKNOWN
         )
 
         findViewById<TextView>(R.id.tvParticipantCode).text =
@@ -335,12 +349,10 @@ class ProfileSetupActivity : AppCompatActivity() {
     }
 
     private fun showAffectedSideOptions() {
-        val labels = arrayOf("Neither — no PD symptoms", "Prefer not to say")
-        val values = arrayOf(Constants.PARTICIPANT_SIDE_NONE, Constants.PARTICIPANT_SIDE_UNKNOWN)
         AlertDialog.Builder(this)
             .setTitle("Which hand is affected?")
-            .setSingleChoiceItems(labels, values.indexOf(profile.affectedSide)) { dialog, which ->
-                profile.affectedSide = values[which]
+            .setSingleChoiceItems(arrayOf("Prefer not to say"), 0) { dialog, _ ->
+                profile.affectedSide = Constants.PARTICIPANT_SIDE_UNKNOWN
                 renderAboutStep()
                 dialog.dismiss()
             }
@@ -387,28 +399,86 @@ class ProfileSetupActivity : AppCompatActivity() {
         }
         for (i in 0 until stored.length()) {
             val entry = stored.optJSONObject(i) ?: continue
-            addMedicationRow(entry.optString("name"), entry.optString("dose"))
+            val name = entry.optString("name")
+            val storedUnit = entry.optString("unit")
+            val storedCount = entry.optString("count")
+
+            if (storedUnit.isNotBlank() || storedCount.isNotBlank()) {
+                addMedicationRow(
+                    name = name,
+                    unit = storedUnit.ifBlank { "pill(s)" },
+                    count = storedCount.ifBlank { "1" },
+                )
+                continue
+            }
+
+            // Written before this screen split dose into count + unit.
+            val legacy = entry.optString("dose").trim()
+            val parsed = parseLegacyDose(legacy)
+            if (parsed != null) {
+                addMedicationRow(name = name, unit = parsed.second, count = parsed.first)
+            } else {
+                addMedicationRow(name = name, legacyDose = legacy.ifBlank { null })
+            }
         }
         if (medicationRows.isEmpty()) addMedicationRow()
     }
 
-    private fun addMedicationRow(name: String = "", dose: String = "") {
-        val row = LayoutInflater.from(this)
+    /**
+     * Splits a free-text dose such as "100mg" or "2 pill(s)" into count + unit.
+     * Returns null for anything that does not start with a number ("one tablet
+     * after food"), which the caller then preserves verbatim rather than
+     * overwriting with a guess.
+     */
+    private fun parseLegacyDose(dose: String): Pair<String, String>? {
+        val match = Regex("""^(\d+(?:[.,]\d+)?)\s*(.*)$""").matchEntire(dose.trim()) ?: return null
+        return match.groupValues[1] to match.groupValues[2].trim().ifBlank { "pill(s)" }
+    }
+
+    private fun addMedicationRow(
+        name: String = "",
+        unit: String = "pill(s)",
+        count: String = "1",
+        legacyDose: String? = null,
+    ) {
+        val view = LayoutInflater.from(this)
             .inflate(R.layout.onboarding_medication_row, medicationContainer, false)
-        (row.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = dp(12)
+        (view.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin = dp(12)
 
-        val nameEdit = row.findViewById<EditText>(R.id.editMedicationName).apply { setText(name) }
-        val doseEdit = row.findViewById<EditText>(R.id.editMedicationDose).apply { setText(dose) }
+        val nameEdit = view.findViewById<EditText>(R.id.editMedicationName).apply { setText(name) }
+        val unitField = view.findViewById<TextView>(R.id.fieldMedicationUnit).apply { text = unit }
+        val countEdit = view.findViewById<EditText>(R.id.editMedicationCount).apply { setText(count) }
+        val row = MedicationRow(view, nameEdit, unitField, countEdit, legacyDose)
 
-        row.findViewById<ImageView>(R.id.btnRemoveMedication).setOnClickListener {
-            medicationContainer.removeView(row)
-            medicationRows.removeAll { it.view === row }
+        unitField.setOnClickListener {
+            val checked = MEDICATION_UNITS.indexOf(unitField.text.toString()).coerceAtLeast(0)
+            AlertDialog.Builder(this)
+                .setTitle("Unit")
+                .setSingleChoiceItems(MEDICATION_UNITS, checked) { dialog, which ->
+                    unitField.text = MEDICATION_UNITS[which]
+                    row.legacyDose = null
+                    dialog.dismiss()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+        countEdit.doAfterTextChanged { row.legacyDose = null }
+
+        view.findViewById<ImageView>(R.id.btnRemoveMedication).setOnClickListener {
+            medicationContainer.removeView(view)
+            medicationRows.removeAll { it.view === view }
             if (medicationRows.isEmpty()) addMedicationRow()
             commitMedications()
         }
 
-        medicationContainer.addView(row)
-        medicationRows.add(MedicationRow(row, nameEdit, doseEdit))
+        medicationContainer.addView(view)
+        medicationRows.add(row)
+    }
+
+    private fun composeMedicationDose(count: String, unit: String): String {
+        val trimmedCount = count.trim().ifBlank { "1" }
+        val trimmedUnit = unit.trim().ifBlank { "pill(s)" }
+        return "$trimmedCount $trimmedUnit"
     }
 
     private fun commitMedications() {
@@ -416,10 +486,17 @@ class ProfileSetupActivity : AppCompatActivity() {
         for (row in medicationRows) {
             val name = row.name.text.toString().trim()
             if (name.isEmpty()) continue
+            val unit = row.unit.text.toString().trim().ifBlank { "pill(s)" }
+            val count = row.count.text.toString().trim().ifBlank { "1" }
             array.put(
                 JSONObject()
                     .put("name", name)
-                    .put("dose", row.dose.text.toString().trim())
+                    .put("unit", unit)
+                    .put("count", count)
+                    // An unparsed legacy dose survives untouched until the
+                    // participant edits the fields themselves. Recomposing it
+                    // would turn "100mg twice daily" into "1 pill(s)".
+                    .put("dose", row.legacyDose ?: composeMedicationDose(count, unit))
             )
         }
         profile.medications = array.toString()
@@ -428,24 +505,8 @@ class ProfileSetupActivity : AppCompatActivity() {
     // MARK: - Step 3: session windows
 
     private fun bindTimesStep() {
-        findViewById<View>(R.id.rowMorningWindow).setOnClickListener {
-            pickTime(profile.testTimeMorning, fallbackHour = 8) { picked ->
-                profile.testTimeMorning = picked
-                renderTimesStep()
-            }
-        }
-        findViewById<View>(R.id.rowNoonWindow).setOnClickListener {
-            pickTime(profile.testTimeNoon, fallbackHour = 12) { picked ->
-                profile.testTimeNoon = picked
-                renderTimesStep()
-            }
-        }
-
-        val customEdit = findViewById<EditText>(R.id.editTimeCustom)
-        customEdit.setText(profile.testTimeCustom)
-        customEdit.doAfterTextChanged {
-            profile.testTimeCustom = it?.toString()?.trim().orEmpty()
-            findViewById<MaterialButton>(R.id.btnTimesContinue).isEnabled = isTimesComplete()
+        findViewById<View>(R.id.rowCustomWindow).setOnClickListener {
+            pickCustomWindowTime()
         }
 
         findViewById<MaterialButton>(R.id.btnTimesContinue).setOnClickListener { goTo(STEP_HEALTH) }
@@ -454,19 +515,33 @@ class ProfileSetupActivity : AppCompatActivity() {
 
     private fun renderTimesStep() {
         findViewById<TextView>(R.id.tvMorningWindow).text = profile.testTimeMorning
-        findViewById<TextView>(R.id.tvNoonWindow).text = profile.testTimeNoon
+        findViewById<TextView>(R.id.tvEveningWindow).text = profile.testTimeEvening
+        findViewById<TextView>(R.id.tvCustomWindow).text = customWindowLabel()
         findViewById<MaterialButton>(R.id.btnTimesContinue).isEnabled = isTimesComplete()
+    }
+
+    private fun customWindowLabel(): String {
+        val custom = profile.testTimeCustom.trim()
+        return custom.ifBlank { "12:00-16:00" }
     }
 
     private fun isTimesComplete() = profile.testTimeCustom.isNotBlank()
 
-    private fun pickTime(current: String, fallbackHour: Int, onPicked: (String) -> Unit) {
-        val parts = current.split(":")
-        val hour = parts.getOrNull(0)?.toIntOrNull() ?: fallbackHour
+    private fun pickCustomWindowTime() {
+        val current = profile.testTimeCustom.ifBlank { "14:00" }
+        val parts = current.split(":", "-")
+        val hour = parts.getOrNull(0)?.toIntOrNull() ?: 14
         val minute = parts.getOrNull(1)?.toIntOrNull() ?: 0
         TimePickerDialog(this, { _, pickedHour, pickedMinute ->
-            onPicked(String.format(java.util.Locale.US, "%02d:%02d", pickedHour, pickedMinute))
-        }, hour, minute, true).show()
+            val clampedHour = when {
+                pickedHour < 12 -> 12
+                pickedHour > 16 || (pickedHour == 16 && pickedMinute > 0) -> 16
+                else -> pickedHour
+            }
+            val clampedMinute = if (clampedHour == 16) 0 else pickedMinute
+            profile.testTimeCustom = String.format(java.util.Locale.US, "%02d:%02d", clampedHour, clampedMinute)
+            renderTimesStep()
+        }, hour.coerceIn(12, 16), minute, true).show()
     }
 
     // MARK: - Step 4: health apps
@@ -548,16 +623,23 @@ class ProfileSetupActivity : AppCompatActivity() {
     // MARK: - Step 5: interaction primer
 
     private fun bindKeyboardStep() {
+        findViewById<TextView>(R.id.btnOpenInteractionSettings).setOnClickListener {
+            profile.keyloggingEnabled = true
+            PermissionUtils.openAccessibilitySettings(this)
+        }
+        findViewById<TextView>(R.id.btnOpenUsageSettings).setOnClickListener {
+            PermissionUtils.openUsageAccessSettings(this)
+        }
         findViewById<MaterialButton>(R.id.btnKeyboardOpenSettings).setOnClickListener {
-            if (PermissionUtils.isAccessibilityServiceEnabled(this)) {
-                profile.keyloggingEnabled = true
-                goTo(STEP_REMINDERS)
-            } else {
-                // Recorded as intent before leaving: Android will not let the
-                // app flip this switch, so the participant's answer is all we
-                // have until they come back.
-                profile.keyloggingEnabled = true
-                PermissionUtils.openAccessibilitySettings(this)
+            val interactionGranted = PermissionUtils.isAccessibilityServiceEnabled(this)
+            val usageGranted = PermissionUtils.hasUsageStatsPermission(this)
+            when {
+                interactionGranted && usageGranted -> goTo(STEP_REMINDERS)
+                !interactionGranted -> {
+                    profile.keyloggingEnabled = true
+                    PermissionUtils.openAccessibilitySettings(this)
+                }
+                else -> PermissionUtils.openUsageAccessSettings(this)
             }
         }
         findViewById<TextView>(R.id.btnKeyboardSkip).setOnClickListener {
@@ -567,13 +649,21 @@ class ProfileSetupActivity : AppCompatActivity() {
     }
 
     private fun renderKeyboardStep() {
-        val enabled = PermissionUtils.isAccessibilityServiceEnabled(this)
+        val interactionGranted = PermissionUtils.isAccessibilityServiceEnabled(this)
+        val usageGranted = PermissionUtils.hasUsageStatsPermission(this)
+
+        findViewById<TextView>(R.id.btnOpenInteractionSettings).visibility =
+            if (interactionGranted) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.tvInteractionGranted).visibility =
+            if (interactionGranted) View.VISIBLE else View.GONE
+
+        findViewById<TextView>(R.id.btnOpenUsageSettings).visibility =
+            if (usageGranted) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.tvUsageGranted).visibility =
+            if (usageGranted) View.VISIBLE else View.GONE
+
         findViewById<MaterialButton>(R.id.btnKeyboardOpenSettings).text =
-            if (enabled) "Continue" else "Open Settings"
-        findViewById<TextView>(R.id.tvKeyboardStatus).apply {
-            visibility = if (enabled) View.VISIBLE else View.GONE
-            text = "Interaction access is on."
-        }
+            if (interactionGranted && usageGranted) "Continue" else "Open Settings"
     }
 
     // MARK: - Step 6: reminders primer
@@ -660,6 +750,8 @@ class ProfileSetupActivity : AppCompatActivity() {
                 ?.let { profile.age = currentYear() - it }
         }
         if (profile.testTimeCustom.isBlank()) {
+            // A legacy participant may already have chosen a noon window under
+            // onboarding v1; inherit it rather than overwriting their answer.
             profile.testTimeCustom = profile.testTimeNoon.ifBlank { "14:00" }
         }
         // faceDistanceMode reads back as ALWAYS when it has never been set, and

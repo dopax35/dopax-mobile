@@ -2,10 +2,13 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
+import { createDevMinter, createFirebaseMinter, type CustomTokenMinter } from './auth/custom-token.js';
 import { createDevVerifier, createFirebaseVerifier, type IdTokenVerifier } from './auth/id-token.js';
 import { env, type Env } from './config/env.js';
 import { db, type Database } from './db/client.js';
+import { createLogMailer, createSmtpMailer, type Mailer } from './infra/mail/index.js';
 import { adminRoutes } from './routes/admin/index.js';
+import { emailAuthRoutes } from './routes/auth/email.js';
 import { configRoutes } from './routes/config.js';
 import { healthRoutes } from './routes/health.js';
 import { participantRoutes } from './routes/participants/index.js';
@@ -15,6 +18,8 @@ export interface BuildAppOptions {
   /** Injected by tests; production resolves the shared pool. */
   database?: Database;
   idTokenVerifier?: IdTokenVerifier;
+  mailer?: Mailer;
+  customTokenMinter?: CustomTokenMinter;
 }
 
 function resolveVerifier(config: Env, override?: IdTokenVerifier): IdTokenVerifier {
@@ -29,6 +34,41 @@ function resolveVerifier(config: Env, override?: IdTokenVerifier): IdTokenVerifi
     ...(config.GOOGLE_APPLICATION_CREDENTIALS
       ? { credentialsPath: config.GOOGLE_APPLICATION_CREDENTIALS }
       : {}),
+  });
+}
+
+function resolveMinter(config: Env, override?: CustomTokenMinter): CustomTokenMinter {
+  if (override) return override;
+
+  // AUTH_DEV_BYPASS already cannot be true outside development, so the dev
+  // minter is unreachable in a deployed environment.
+  if (config.AUTH_DEV_BYPASS) return createDevMinter();
+
+  return createFirebaseMinter({
+    projectId: config.FIREBASE_PROJECT_ID,
+    ...(config.GOOGLE_APPLICATION_CREDENTIALS
+      ? { credentialsPath: config.GOOGLE_APPLICATION_CREDENTIALS }
+      : {}),
+  });
+}
+
+function resolveMailer(config: Env, app: FastifyInstance, override?: Mailer): Mailer {
+  if (override) return override;
+
+  if (config.AUTH_DEV_BYPASS) {
+    return createLogMailer((message) =>
+      app.log.info({ to: message.to, body: message.text }, 'dev mailer — email not sent'),
+    );
+  }
+
+  // env.ts refuses to boot with EMAIL_AUTH_ENABLED and no SMTP_HOST/SMTP_FROM.
+  return createSmtpMailer({
+    host: config.SMTP_HOST!,
+    port: config.SMTP_PORT,
+    secure: config.SMTP_SECURE,
+    user: config.SMTP_USER,
+    password: config.SMTP_PASSWORD,
+    from: config.SMTP_FROM!,
   });
 }
 
@@ -77,6 +117,18 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     jwtSecret: config.JWT_SECRET,
     accessTtlSeconds: config.JWT_ACCESS_TTL,
   });
+
+  // Figma 6377:2 / 6377:21 — email sign-in codes. Opt-in per environment: with
+  // no mail credential the code could never arrive, so the surface stays off
+  // rather than accepting requests it cannot fulfil.
+  if (config.EMAIL_AUTH_ENABLED) {
+    await app.register(emailAuthRoutes, {
+      prefix: '/v1',
+      database,
+      mailer: resolveMailer(config, app, options.mailer),
+      minter: resolveMinter(config, options.customTokenMinter),
+    });
+  }
 
   // §7.1 — the staff console. Opt-in per environment because it reads
   // participant data; an environment that has not been given a secret does not

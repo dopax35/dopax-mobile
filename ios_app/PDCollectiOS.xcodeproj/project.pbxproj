@@ -20,8 +20,12 @@
 		185DFB1BA33DD97247309E57 /* BackendSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC4E87021A4A25236684B2D0 /* BackendSyncManager.swift */; };
 		1BD788D23C0ACB1A45069953 /* FacialMovementTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76422D92E63C01A1AF19C0FB /* FacialMovementTestView.swift */; };
 		1FB04B145A88DE29F41CBECF /* SessionOutcomeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D242671450D6EFAA875FCF2C /* SessionOutcomeTests.swift */; };
+		1FB04B145A88DE29F41CBED0 /* MedicationMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D242671450D6EFAA875FCF2D /* MedicationMigrationTests.swift */; };
 		2044DB951C17585EA1835AE8 /* HandLandmarkOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2247889D4ED27D941C497E6 /* HandLandmarkOverlayView.swift */; };
 		241899FFAA8B3B54E008418B /* SessionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AC95978447C71A31AB28F5E /* SessionCard.swift */; };
+		A1C2D3E4F5A6B7C8D9E0F1A2 /* EmailSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* EmailSignInView.swift */; };
+		B2D3E4F5A6B7C8D9E0F1A2B3 /* EmailCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* EmailCodeView.swift */; };
+		F6A7B8C9D0E1F2A3B4C5D6E7 /* SignaturePadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E5F6A7B8C9D0E1F2A3B4C5 /* SignaturePadView.swift */; };
 		25A5AD944A30A6635EC2511F /* TodayPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9039A3EE2A08CB6FCDC22635 /* TodayPresentationTests.swift */; };
 		2815E25616445B309F01F747 /* HeartRateReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D8EC4F3EB247DB9CA8B7D33 /* HeartRateReading.swift */; };
 		284603C4206DED0C5848E12B /* HandTrackingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 031CDC09BFDA8EC1DC4D82A1 /* HandTrackingManager.swift */; };
@@ -238,6 +242,9 @@
 		AED736E4394B92F29688FF60 /* BluetoothDevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothDevicesView.swift; sourceTree = "<group>"; };
 		B17922E3B917766BD5115F69 /* BeanieActivityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeanieActivityEngine.swift; sourceTree = "<group>"; };
 		B2247889D4ED27D941C497E6 /* HandLandmarkOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandLandmarkOverlayView.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* EmailSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailSignInView.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* EmailCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailCodeView.swift; sourceTree = "<group>"; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* SignaturePadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignaturePadView.swift; sourceTree = "<group>"; };
 		B2B07748303CBDC194A3A8FB /* FirebaseSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseSyncManager.swift; sourceTree = "<group>"; };
 		B301564D0412C7F81F746377 /* MotionActivityHistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionActivityHistoryService.swift; sourceTree = "<group>"; };
 		B30B5870A112D2B6B4F37500 /* PhysicalActivityEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityEvent.swift; sourceTree = "<group>"; };
@@ -258,6 +265,7 @@
 		CC7FA69D5703FCF094F5E1A8 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		CE537F928BE88E3762FAB657 /* BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothManager.swift; sourceTree = "<group>"; };
 		D242671450D6EFAA875FCF2C /* SessionOutcomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionOutcomeTests.swift; sourceTree = "<group>"; };
+		D242671450D6EFAA875FCF2D /* MedicationMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationMigrationTests.swift; sourceTree = "<group>"; };
 		D29757E221F20ECE18EED954 /* GaitMetric.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GaitMetric.swift; sourceTree = "<group>"; };
 		D62D6D2C92545ABAC1964DFB /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		D7F066A9149E34A73FFB1790 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -384,6 +392,7 @@
 				E9BE774D124CE41A1560C5D6 /* CameraPreviewView.swift */,
 				508DE7F5D0037651371FBB22 /* FaceLandmarkOverlayView.swift */,
 				B2247889D4ED27D941C497E6 /* HandLandmarkOverlayView.swift */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* SignaturePadView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -452,6 +461,7 @@
 				10BC7FBF0C8336C70C31A657 /* BaselineTrackerTests.swift */,
 				969B65CBAAF99A3EC805A1B0 /* SessionManagerTests.swift */,
 				D242671450D6EFAA875FCF2C /* SessionOutcomeTests.swift */,
+				D242671450D6EFAA875FCF2D /* MedicationMigrationTests.swift */,
 				89688A7F9EBF7A67A097299A /* SessionProgressTests.swift */,
 				1B8BA201813FCA6F2495A5EC /* SessionWindowTests.swift */,
 				9039A3EE2A08CB6FCDC22635 /* TodayPresentationTests.swift */,
@@ -500,6 +510,8 @@
 			isa = PBXGroup;
 			children = (
 				9504B340466252035940ADA6 /* OnboardingComponents.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* EmailSignInView.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* EmailCodeView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -679,6 +691,7 @@
 				01E59FE6520E4B7D175CEE3D /* BaselineTrackerTests.swift in Sources */,
 				2EFE0FCEF018FFD1B3D685CE /* SessionManagerTests.swift in Sources */,
 				1FB04B145A88DE29F41CBECF /* SessionOutcomeTests.swift in Sources */,
+				1FB04B145A88DE29F41CBED0 /* MedicationMigrationTests.swift in Sources */,
 				E8F020CEFA34866748A7B7CE /* SessionProgressTests.swift in Sources */,
 				BFC3B97775EEF6F9834B3F99 /* SessionWindowTests.swift in Sources */,
 				25A5AD944A30A6635EC2511F /* TodayPresentationTests.swift in Sources */,
@@ -750,6 +763,9 @@
 				48F83DD41CECB2F141814488 /* MotionActivityHistoryService.swift in Sources */,
 				AC029017AC2686C1453E05EC /* MotionActivitySample.swift in Sources */,
 				360EE3B83F705E41A44B5C8E /* OnboardingComponents.swift in Sources */,
+				A1C2D3E4F5A6B7C8D9E0F1A2 /* EmailSignInView.swift in Sources */,
+				B2D3E4F5A6B7C8D9E0F1A2B3 /* EmailCodeView.swift in Sources */,
+				F6A7B8C9D0E1F2A3B4C5D6E7 /* SignaturePadView.swift in Sources */,
 				CAD961BFA4B7982590B10FF2 /* PDAlgorithms.swift in Sources */,
 				6CD47DFF56E46D29883DD19D /* PDCollectiOSApp.swift in Sources */,
 				E48F30702EE977047022B202 /* PassiveSensorService.swift in Sources */,

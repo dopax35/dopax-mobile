@@ -12,41 +12,76 @@
         android:paddingHorizontal="24dp"
         android:paddingTop="56dp">
 
-        <!-- Progress: step 1 of 7 (consent) -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="7dp"
             android:layout_marginBottom="20dp"
             android:orientation="horizontal">
+
             <View
                 android:layout_width="22dp"
                 android:layout_height="7dp"
                 android:background="@drawable/onboarding_progress_active" />
-            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
-            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
-            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
-            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
-            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
-            <View android:layout_width="7dp" android:layout_height="7dp" android:layout_marginStart="6dp" android:background="@drawable/onboarding_progress_idle" />
+
+            <View
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/onboarding_progress_idle" />
+
+            <View
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/onboarding_progress_idle" />
+
+            <View
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/onboarding_progress_idle" />
+
+            <View
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/onboarding_progress_idle" />
+
+            <View
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/onboarding_progress_idle" />
+
+            <View
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/onboarding_progress_idle" />
         </LinearLayout>
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/lexend_bold"
-            android:text="Research consent"
-            android:textColor="@color/black_90"
-            android:textSize="26sp" />
+            style="@style/Widget.DopaX.Onboarding.Title"
+            android:text="Research consent" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/tvConsentSubtitle"
+            style="@style/Widget.DopaX.Onboarding.Subtitle"
+            android:layout_marginBottom="12dp"
+            android:text="Please read and sign. Presented in English." />
+
+        <TextView
+            android:id="@+id/chipLanguage"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginBottom="16dp"
-            android:fontFamily="@font/lexend"
-            android:text="Please read and sign."
-            android:textColor="@color/black_70"
-            android:textSize="14.5sp" />
+            android:background="@drawable/bg_onboarding_pill"
+            android:fontFamily="@font/lexend_medium"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp"
+            android:text="RTL · עברית"
+            android:textColor="@color/onboarding_accent"
+            android:textSize="13sp" />
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
@@ -63,6 +98,7 @@
                 app:cardElevation="0dp">
 
                 <LinearLayout
+                    android:id="@+id/consentContentContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
@@ -72,33 +108,61 @@
                         android:id="@+id/pdfContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
                         android:minHeight="240dp"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="16dp" />
+                        android:orientation="vertical" />
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/signatureLayout"
+                    <TextView
+                        style="@style/Widget.DopaX.Onboarding.FieldLabel"
+                        android:text="Full name" />
+
+                    <EditText
+                        android:id="@+id/signatureInput"
+                        style="@style/Widget.DopaX.Onboarding.Field"
+                        android:background="@drawable/bg_onboarding_field"
+                        android:hint="Your legal name"
+                        android:importantForAutofill="no"
+                        android:inputType="textPersonName" />
+
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Sign with your name"
-                        android:layout_marginBottom="16dp"
-                        app:boxBackgroundColor="@color/onboarding_cream"
-                        app:boxCornerRadiusBottomEnd="16dp"
-                        app:boxCornerRadiusBottomStart="16dp"
-                        app:boxCornerRadiusTopEnd="16dp"
-                        app:boxCornerRadiusTopStart="16dp">
+                        android:layout_marginTop="18dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/signatureInput"
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="textPersonName" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                            android:layout_weight="1"
+                            android:fontFamily="@font/lexend"
+                            android:text="Sign with your finger"
+                            android:textColor="@color/onboarding_text_tertiary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/btnClearSignature"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="?attr/selectableItemBackground"
+                            android:fontFamily="@font/lexend_medium"
+                            android:padding="8dp"
+                            android:text="Clear"
+                            android:textColor="@color/onboarding_accent"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <com.pdcollect.app.ui.view.SignaturePadView
+                        android:id="@+id/signaturePad"
+                        android:layout_width="match_parent"
+                        android:layout_height="100dp"
+                        android:layout_marginTop="8dp" />
 
                     <com.google.android.material.checkbox.MaterialCheckBox
                         android:id="@+id/consentCheckbox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
                         android:text="I have read and understand the above. I voluntarily agree to participate."
                         android:textColor="@color/black_70"
                         android:textSize="14sp"
@@ -109,17 +173,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/agreeButton"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
+            style="@style/Widget.DopaX.Onboarding.PrimaryButton"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="28dp"
             android:enabled="false"
-            android:fontFamily="@font/lexend_bold"
-            android:text="Continue"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            app:backgroundTint="@color/onboarding_accent"
-            app:cornerRadius="16dp" />
+            android:text="I agree — continue" />
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

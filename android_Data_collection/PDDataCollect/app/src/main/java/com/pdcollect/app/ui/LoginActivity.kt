@@ -2,6 +2,7 @@ package com.pdcollect.app.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +25,33 @@ import kotlinx.coroutines.launch
  */
 class LoginActivity : AppCompatActivity() {
 
+    companion object {
+        fun checkCloudProfile(activity: AppCompatActivity) {
+            activity.lifecycleScope.launch {
+                val profile = UserProfile(activity)
+                val exists = FirebaseSyncManager.loadProfileFromCloud(profile)
+                BackendSyncManager.ensureSession(activity, profile.userId)
+                if (exists) {
+                    navigateNext(activity)
+                } else {
+                    activity.startActivity(Intent(activity, ConsentActivity::class.java))
+                    activity.finish()
+                }
+            }
+        }
+
+        fun navigateNext(activity: AppCompatActivity) {
+            val profile = UserProfile(activity)
+            val target = when {
+                !profile.consentGiven -> ConsentActivity::class.java
+                !profile.profileComplete || profile.needsOnboardingV2 -> ProfileSetupActivity::class.java
+                else -> MainActivity::class.java
+            }
+            activity.startActivity(Intent(activity, target))
+            activity.finish()
+        }
+    }
+
     private val signInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -32,7 +60,7 @@ class LoginActivity : AppCompatActivity() {
         if (result.resultCode == RESULT_OK) {
             val user = FirebaseAuth.getInstance().currentUser
             if (user != null) {
-                checkCloudProfile()
+                checkCloudProfile(this)
             }
         } else {
             if (response == null) {
@@ -54,17 +82,23 @@ class LoginActivity : AppCompatActivity() {
 
         val auth = FirebaseAuth.getInstance()
         if (auth.currentUser != null) {
-            navigateNext()
+            navigateNext(this)
             return
         }
 
         setContentView(R.layout.activity_welcome)
 
+        val emailLink = findViewById<TextView>(R.id.btnContinueEmail)
+        emailLink.visibility = View.GONE
+        BackendSyncManager.fetchEmailCodeConfig(this) { enabled ->
+            emailLink.visibility = if (enabled) View.VISIBLE else View.GONE
+        }
+
         findViewById<MaterialButton>(R.id.btnContinueGoogle).setOnClickListener {
             launchSignIn(listOf(AuthUI.IdpConfig.GoogleBuilder().build()))
         }
-        findViewById<MaterialButton>(R.id.btnContinueEmail).setOnClickListener {
-            launchSignIn(listOf(AuthUI.IdpConfig.EmailBuilder().build()))
+        emailLink.setOnClickListener {
+            startActivity(Intent(this, EmailSignInActivity::class.java))
         }
         findViewById<TextView>(R.id.btnPhoneSignIn).setOnClickListener {
             launchSignIn(listOf(AuthUI.IdpConfig.PhoneBuilder().build()))
@@ -79,32 +113,5 @@ class LoginActivity : AppCompatActivity() {
             .setTheme(R.style.Theme_PDDataCollect)
             .build()
         signInLauncher.launch(signInIntent)
-    }
-
-    private fun checkCloudProfile() {
-        lifecycleScope.launch {
-            val profile = UserProfile(this@LoginActivity)
-            val exists = FirebaseSyncManager.loadProfileFromCloud(profile)
-            // Open a Postgres session when possible (additive; ignore failures).
-            BackendSyncManager.ensureSession(this@LoginActivity, profile.userId)
-            if (exists) {
-                navigateNext()
-            } else {
-                startActivity(Intent(this@LoginActivity, ConsentActivity::class.java))
-                finish()
-            }
-        }
-    }
-
-    private fun navigateNext() {
-        val profile = UserProfile(this)
-        if (!profile.consentGiven) {
-            startActivity(Intent(this, ConsentActivity::class.java))
-        } else if (!profile.profileComplete || profile.needsOnboardingV2) {
-            startActivity(Intent(this, ProfileSetupActivity::class.java))
-        } else {
-            startActivity(Intent(this, MainActivity::class.java))
-        }
-        finish()
     }
 }

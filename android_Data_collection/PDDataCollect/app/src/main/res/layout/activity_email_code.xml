@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_onboarding"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="28dp">
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        android:src="@drawable/ic_arrow_back_24"
+        app:tint="@color/black_90" />
+
+    <TextView
+        style="@style/Widget.DopaX.Onboarding.Title"
+        android:layout_marginTop="8dp"
+        android:text="Enter the code" />
+
+    <TextView
+        android:id="@+id/tvEmailSubtitle"
+        style="@style/Widget.DopaX.Onboarding.Subtitle"
+        android:text="Sent to" />
+
+    <FrameLayout
+        android:id="@+id/codeEntryContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp">
+
+        <LinearLayout
+            android:id="@+id/codeBoxesRow"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/codeBox0"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_onboarding_code_box_focused"
+                android:fontFamily="@font/lexend_bold"
+                android:gravity="center"
+                android:textColor="@color/black_90"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/codeBox1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_onboarding_code_box"
+                android:fontFamily="@font/lexend_bold"
+                android:gravity="center"
+                android:textColor="@color/black_90"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/codeBox2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_onboarding_code_box"
+                android:fontFamily="@font/lexend_bold"
+                android:gravity="center"
+                android:textColor="@color/black_90"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/codeBox3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_onboarding_code_box"
+                android:fontFamily="@font/lexend_bold"
+                android:gravity="center"
+                android:textColor="@color/black_90"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/codeBox4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_onboarding_code_box"
+                android:fontFamily="@font/lexend_bold"
+                android:gravity="center"
+                android:textColor="@color/black_90"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/codeBox5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_onboarding_code_box"
+                android:fontFamily="@font/lexend_bold"
+                android:gravity="center"
+                android:textColor="@color/black_90"
+                android:textSize="22sp" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/editHiddenCode"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:alpha="0.01"
+            android:background="@android:color/transparent"
+            android:cursorVisible="false"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:maxLength="6"
+            android:textColor="@android:color/transparent" />
+    </FrameLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnVerify"
+        style="@style/Widget.DopaX.Onboarding.PrimaryButton"
+        android:layout_marginTop="24dp"
+        android:enabled="false"
+        android:text="Verify" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnResend"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:layout_marginTop="12dp"
+        android:enabled="false"
+        android:fontFamily="@font/lexend_bold"
+        android:text="Resend"
+        android:textAllCaps="false"
+        android:textColor="@color/gray_50"
+        android:textSize="16sp"
+        app:backgroundTint="@color/onboarding_dot_idle"
+        app:cornerRadius="16dp"
+        app:elevation="0dp" />
+
+    <TextView
+        android:id="@+id/tvResendCountdown"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/lexend"
+        android:gravity="center"
+        android:text="Resend code"
+        android:textColor="@color/onboarding_text_tertiary"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/lexend"
+        android:textColor="@color/error"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

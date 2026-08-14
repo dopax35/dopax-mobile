@@ -131,7 +131,13 @@
                 <TextView
                     android:id="@+id/segAffectedBoth"
                     style="@style/Widget.DopaX.Onboarding.Segment"
+                    android:layout_marginEnd="8dp"
                     android:text="Both" />
+
+                <TextView
+                    android:id="@+id/segAffectedNeither"
+                    style="@style/Widget.DopaX.Onboarding.Segment"
+                    android:text="Neither" />
             </LinearLayout>
 
             <TextView
@@ -144,7 +150,7 @@
                 android:gravity="center_vertical"
                 android:minHeight="48dp"
                 android:paddingHorizontal="4dp"
-                android:text="Neither / prefer not to say"
+                android:text="Prefer not to say"
                 android:textColor="@color/onboarding_text_tertiary"
                 android:textSize="13.5sp" />
 

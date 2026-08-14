@@ -1,6 +1,38 @@
 import Foundation
 import FirebaseAuth
 
+enum EmailCodeStartResult {
+    case sent(expiresAt: Date, resendAvailableAt: Date, resendCooldownSeconds: Int)
+    case invalidRequest
+    case tooManyRequests(retryAfterSeconds: Int)
+    case emailDeliveryFailed
+    case networkError
+}
+
+enum EmailCodeVerifyInvalidReason {
+    case noActiveCode
+    case expired
+    case tooManyAttempts
+    case mismatch
+
+    init?(apiReason: String) {
+        switch apiReason {
+        case "no_active_code": self = .noActiveCode
+        case "expired": self = .expired
+        case "too_many_attempts": self = .tooManyAttempts
+        case "mismatch": self = .mismatch
+        default: return nil
+        }
+    }
+}
+
+enum EmailCodeVerifyResult {
+    case success(customToken: String, firebaseUid: String)
+    case invalidCode(reason: EmailCodeVerifyInvalidReason, attemptsRemaining: Int?)
+    case signInUnavailable
+    case networkError
+}
+
 /**
  * Additive dual-write client for the Postgres backend (§7.1 / Phase 3).
  * Firestore remains the primary write path while BOTH_ARCH is true — failures
@@ -8,6 +40,8 @@ import FirebaseAuth
  */
 final class BackendSyncManager {
     static let shared = BackendSyncManager()
+
+    private static let emailCodeEnabledKey = "dopaxEmailCodeEnabled"
 
     /// Override in Info.plist (`DopaxBackendBaseURL`) or UserDefaults for device testing.
     var baseURL: URL {
@@ -26,6 +60,10 @@ final class BackendSyncManager {
     private let tokenKey = "dopaxBackendAccessToken"
     private let revisionKey = "dopaxBackendProfileRevision"
 
+    static var emailCodeEnabled: Bool {
+        UserDefaults.standard.object(forKey: emailCodeEnabledKey) as? Bool ?? false
+    }
+
     var accessToken: String? {
         get { defaults.string(forKey: tokenKey) }
         set { defaults.set(newValue, forKey: tokenKey) }
@@ -37,6 +75,80 @@ final class BackendSyncManager {
             return v > 0 ? v : 1
         }
         set { defaults.set(newValue, forKey: revisionKey) }
+    }
+
+    func fetchEmailCodeConfig(completion: ((Bool) -> Void)? = nil) {
+        request(method: "GET", path: "/v1/config", body: nil, authorized: false) { code, json in
+            guard (200..<300).contains(code),
+                  let auth = json["auth"] as? [String: Any],
+                  let enabled = auth["emailCodeEnabled"] as? Bool else {
+                completion?(false)
+                return
+            }
+            self.defaults.set(enabled, forKey: Self.emailCodeEnabledKey)
+            completion?(enabled)
+        }
+    }
+
+    func requestEmailCode(email: String, completion: @escaping (EmailCodeStartResult) -> Void) {
+        request(
+            method: "POST",
+            path: "/v1/auth/email/start",
+            body: ["email": email],
+            authorized: false
+        ) { code, json in
+            switch code {
+            case 202:
+                guard let expiresAt = Self.parseISO8601(json["expiresAt"]),
+                      let resendAt = Self.parseISO8601(json["resendAvailableAt"]),
+                      let cooldown = json["resendCooldownSeconds"] as? Int else {
+                    completion(.networkError)
+                    return
+                }
+                completion(.sent(
+                    expiresAt: expiresAt,
+                    resendAvailableAt: resendAt,
+                    resendCooldownSeconds: cooldown
+                ))
+            case 400:
+                completion(.invalidRequest)
+            case 429:
+                let retry = json["retryAfterSeconds"] as? Int ?? 60
+                completion(.tooManyRequests(retryAfterSeconds: retry))
+            case 502:
+                completion(.emailDeliveryFailed)
+            default:
+                completion(.networkError)
+            }
+        }
+    }
+
+    func verifyEmailCode(email: String, code: String, completion: @escaping (EmailCodeVerifyResult) -> Void) {
+        request(
+            method: "POST",
+            path: "/v1/auth/email/verify",
+            body: ["email": email, "code": code],
+            authorized: false
+        ) { status, json in
+            switch status {
+            case 200:
+                guard let token = json["customToken"] as? String,
+                      let uid = json["firebaseUid"] as? String else {
+                    completion(.networkError)
+                    return
+                }
+                completion(.success(customToken: token, firebaseUid: uid))
+            case 401:
+                let reasonRaw = json["reason"] as? String ?? "mismatch"
+                let reason = EmailCodeVerifyInvalidReason(apiReason: reasonRaw) ?? .mismatch
+                let remaining = json["attemptsRemaining"] as? Int
+                completion(.invalidCode(reason: reason, attemptsRemaining: remaining))
+            case 503:
+                completion(.signInUnavailable)
+            default:
+                completion(.networkError)
+            }
+        }
     }
 
     func ensureSession(preferredParticipantCode: String, completion: ((Bool) -> Void)? = nil) {
@@ -74,18 +186,31 @@ final class BackendSyncManager {
         }
     }
 
-    func syncConsent(signatureName: String, platform: String = "ios", completion: ((Bool) -> Void)? = nil) {
+    func syncConsent(
+        signatureName: String,
+        signatureImage: String? = nil,
+        documentLocale: String? = nil,
+        platform: String = "ios",
+        completion: ((Bool) -> Void)? = nil
+    ) {
         let code = UserProfile().userId
         ensureSession(preferredParticipantCode: code) { [weak self] ok in
             guard let self, ok else { completion?(false); return }
+            var body: [String: Any] = [
+                "signatureName": signatureName.isEmpty ? "participant" : signatureName,
+                "documentVersion": "onboarding-v2",
+                "platform": platform,
+            ]
+            if let signatureImage, !signatureImage.isEmpty {
+                body["signatureImage"] = signatureImage
+            }
+            if let documentLocale, !documentLocale.isEmpty {
+                body["documentLocale"] = documentLocale
+            }
             self.request(
                 method: "POST",
                 path: "/v1/participants/me/consent",
-                body: [
-                    "signatureName": signatureName.isEmpty ? "participant" : signatureName,
-                    "documentVersion": "onboarding-v2",
-                    "platform": platform,
-                ],
+                body: body,
                 authorized: true
             ) { status, _ in
                 completion?((200..<300).contains(status))
@@ -152,10 +277,19 @@ final class BackendSyncManager {
         }
     }
 
+    private static func parseISO8601(_ value: Any?) -> Date? {
+        guard let string = value as? String else { return nil }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: string) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: string)
+    }
+
     private func request(
         method: String,
         path: String,
-        body: [String: Any],
+        body: [String: Any]?,
         authorized: Bool,
         completion: @escaping (Int, [String: Any]) -> Void
     ) {
@@ -170,7 +304,9 @@ final class BackendSyncManager {
         if authorized, let token = accessToken {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        if let body {
+            req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        }
         req.timeoutInterval = 15
 
         URLSession.shared.dataTask(with: req) { data, response, _ in

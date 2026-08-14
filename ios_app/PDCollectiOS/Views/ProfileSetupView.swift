@@ -7,7 +7,8 @@ import HealthKit
 struct ProfileSetupView: View {
     @EnvironmentObject var appState: AppState
     @State private var step = 0
-    @State private var editingMedication: Medication?
+    @State private var showTimePicker = false
+    @State private var pickerDate = Date()
 
     private var profile: UserProfile { appState.userProfile }
 
@@ -18,6 +19,8 @@ struct ProfileSetupView: View {
     private var isTimesComplete: Bool {
         !profile.testTimeCustom.trimmingCharacters(in: .whitespaces).isEmpty
     }
+
+    private let medicationUnits = ["pill(s)", "mg", "ml", "patch", "drop(s)"]
 
     var body: some View {
         ZStack {
@@ -44,13 +47,41 @@ struct ProfileSetupView: View {
             }
         }
         .onAppear {
-            // Legacy users who already completed demographics jump to test times.
             if profile.profileComplete && profile.needsOnboardingV2 && step == 0 {
                 step = 2
             }
+            syncPickerFromProfile()
         }
-        .sheet(item: $editingMedication) { med in
-            MedicationEditSheet(medication: med, profile: profile)
+        .sheet(isPresented: $showTimePicker) {
+            NavigationStack {
+                VStack {
+                    DatePicker(
+                        "Your window",
+                        selection: $pickerDate,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .onChange(of: pickerDate) { newValue in
+                        pickerDate = clampWindowTime(newValue)
+                    }
+                }
+                .padding()
+                .navigationTitle("Your window")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { showTimePicker = false }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") {
+                            profile.testTimeCustom = formatWindowTime(pickerDate)
+                            showTimePicker = false
+                        }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
         }
     }
 
@@ -103,14 +134,15 @@ struct ProfileSetupView: View {
 
                     OnboardingFieldLabel(text: "Which hand is affected by Parkinson’s?")
                     OnboardingSegmentRow(
-                        options: ["Left", "Right", "Both"],
+                        options: ["Left", "Right", "Both", "Neither"],
                         selection: Binding(
                             get: {
-                                ["Left", "Right", "Both"].contains(profile.affectedSide)
+                                ["Left", "Right", "Both", "Neither"].contains(profile.affectedSide)
                                     ? profile.affectedSide : "Left"
                             },
                             set: { profile.affectedSide = $0 }
-                        )
+                        ),
+                        fontSize: 12
                     )
                 }
                 .padding(.top, 28)
@@ -155,35 +187,19 @@ struct ProfileSetupView: View {
                 .padding(.top, 8)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(profile.medications.enumerated()), id: \.element.id) { index, med in
-                        Button { editingMedication = med } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(med.name.isEmpty ? "Medication \(index + 1)" : med.name)
-                                        .foregroundColor(.dopaxBlack90)
-                                        .font(.system(size: 16, weight: .semibold))
-                                    if !med.dosage.isEmpty {
-                                        Text(med.dosage).font(.caption).foregroundColor(.dopaxBlack70)
-                                    }
-                                }
-                                Spacer()
-                                Image(systemName: "pencil").foregroundColor(.onboardingAccent)
-                            }
-                            .padding(16)
-                            .background(Color.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(Array(profile.medications.enumerated()), id: \.element.id) { index, _ in
+                        medicationRow(at: index)
                     }
 
                     Button {
-                        editingMedication = Medication(name: "", dosage: "")
+                        profile.medications.append(Medication(name: ""))
                     } label: {
                         Text("+ Add another medication")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundColor(.onboardingAccent)
                     }
-                    .padding(.top, 8)
+                    .padding(.top, 4)
 
                     Text("You can always change these in your Profile.")
                         .font(.system(size: 13))
@@ -200,6 +216,67 @@ struct ProfileSetupView: View {
                 .padding(.bottom, 28)
         }
         .padding(.horizontal, 24)
+        .onAppear {
+            if profile.medications.isEmpty {
+                profile.medications = [Medication(name: "")]
+            }
+        }
+    }
+
+    private func medicationRow(at index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            OnboardingTextField(
+                placeholder: "Levodopa",
+                text: Binding(
+                    get: { profile.medications[index].name },
+                    set: { newValue in
+                        profile.medications[index].name = newValue
+                    }
+                )
+            )
+
+            HStack(spacing: 10) {
+                medicationUnitPicker(at: index)
+                    .frame(maxWidth: .infinity)
+                    .layoutPriority(0.62)
+
+                OnboardingTextField(
+                    placeholder: "1",
+                    text: Binding(
+                        get: { profile.medications[index].count },
+                        set: { newValue in
+                            profile.medications[index].count = newValue
+                            profile.medications[index].syncDosageFromFields()
+                        }
+                    ),
+                    keyboard: .numberPad
+                )
+                .frame(maxWidth: .infinity)
+                .layoutPriority(0.38)
+            }
+        }
+    }
+
+    private func medicationUnitPicker(at index: Int) -> some View {
+        Menu {
+            ForEach(medicationUnits, id: \.self) { unit in
+                Button(unit) {
+                    profile.medications[index].unit = unit
+                    profile.medications[index].syncDosageFromFields()
+                }
+            }
+        } label: {
+            HStack {
+                Text(profile.medications[index].unit)
+                    .foregroundColor(.dopaxBlack90)
+                Spacer()
+                Image(systemName: "chevron.down").foregroundColor(.dopaxGray50)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 56)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
     }
 
     // MARK: - Test times
@@ -215,17 +292,9 @@ struct ProfileSetupView: View {
                 .padding(.top, 8)
 
             VStack(spacing: 12) {
-                sessionRow(title: "Morning window", subtitle: profile.testTimeMorning, locked: true)
-                sessionRow(title: "Evening window", subtitle: profile.testTimeEvening, locked: true)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    OnboardingFieldLabel(text: "Your window")
-                    OnboardingTextField(
-                        placeholder: "e.g. 14:00 or 14:00-15:00",
-                        text: Binding(get: { profile.testTimeCustom }, set: { profile.testTimeCustom = $0 })
-                    )
-                }
-                .padding(.top, 8)
+                lockedSessionRow(title: "Morning window", subtitle: profile.testTimeMorning)
+                editableWindowRow
+                lockedSessionRow(title: "Evening window", subtitle: profile.testTimeEvening)
 
                 Text("A reminder arrives when each window opens. Sessions take about 4 minutes.")
                     .font(.system(size: 13))
@@ -245,23 +314,68 @@ struct ProfileSetupView: View {
         .padding(.horizontal, 24)
     }
 
-    private func sessionRow(title: String, subtitle: String, locked: Bool) -> some View {
+    private func lockedSessionRow(title: String, subtitle: String) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "clock")
-                .foregroundColor(.onboardingAccent)
+                .foregroundColor(.dopaxGray50)
                 .frame(width: 22, height: 22)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 15, weight: .semibold)).foregroundColor(.dopaxBlack90)
-                Text(subtitle).font(.system(size: 13)).foregroundColor(.dopaxBlack70)
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.todayTextDisabled)
+                Text(subtitle)
+                    .font(.system(size: 13))
+                    .foregroundColor(.dopaxGray50)
             }
             Spacer()
-            if locked {
-                Image(systemName: "lock.fill").foregroundColor(.dopaxGray50).font(.system(size: 14))
-            }
+            Image(systemName: "lock.fill")
+                .foregroundColor(.dopaxGray50)
+                .font(.system(size: 14))
         }
         .padding(16)
-        .background(Color.white)
+        .background(Color.onboardingDotIdle.opacity(0.55))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var editableWindowRow: some View {
+        Button {
+            syncPickerFromProfile()
+            showTimePicker = true
+        } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Your window")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.dopaxBlack90)
+                    HStack(spacing: 0) {
+                        Text("Choose a time between ")
+                            .font(.system(size: 13))
+                            .foregroundColor(.onboardingAccent)
+                        Text(windowTimeLabel)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.dopaxBlack90)
+                    }
+                }
+                Spacer()
+                Circle()
+                    .fill(Color.onboardingAccent.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Image(systemName: "pencil")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.onboardingAccent)
+                    )
+            }
+            .padding(16)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var windowTimeLabel: String {
+        let custom = profile.testTimeCustom.trimmingCharacters(in: .whitespaces)
+        return custom.isEmpty ? "12:00-16:00" : custom
     }
 
     // MARK: - Health apps
@@ -277,11 +391,20 @@ struct ProfileSetupView: View {
                 .padding(.top, 8)
 
             VStack(spacing: 12) {
-                healthRow(title: "Apple Health", subtitle: "Sleep & activity", status: profile.healthAppleStatus) {
-                    requestHealthKit()
-                }
-                healthRow(title: "Strava", subtitle: "Workouts", status: profile.healthStravaStatus) {
+                googleFitRow
+                healthConnectRow(
+                    title: "Strava",
+                    subtitle: "Workouts",
+                    status: profile.healthStravaStatus
+                ) {
                     profile.healthStravaStatus = "skipped"
+                }
+                healthConnectRow(
+                    title: "Apple Health",
+                    subtitle: "Sleep & activity",
+                    status: profile.healthAppleStatus
+                ) {
+                    requestHealthKit()
                 }
             }
             .padding(.top, 28)
@@ -301,7 +424,31 @@ struct ProfileSetupView: View {
         .padding(.horizontal, 24)
     }
 
-    private func healthRow(title: String, subtitle: String, status: String, action: @escaping () -> Void) -> some View {
+    private var googleFitRow: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Google Fit")
+                    .font(.system(size: 15, weight: .semibold))
+                Text("Steps & activity")
+                    .font(.system(size: 13))
+                    .foregroundColor(.dopaxBlack70)
+            }
+            Spacer()
+            Text("iPhone only")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.dopaxGray50)
+        }
+        .padding(16)
+        .background(Color.white.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func healthConnectRow(
+        title: String,
+        subtitle: String,
+        status: String,
+        action: @escaping () -> Void
+    ) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.system(size: 15, weight: .semibold))
@@ -314,6 +461,10 @@ struct ProfileSetupView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Color.onboardingAccent, lineWidth: 1)
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .padding(16)
@@ -356,7 +507,7 @@ struct ProfileSetupView: View {
                 .multilineTextAlignment(.center)
                 .padding(.top, 28)
 
-            Text("dopa-X reads simple interaction signals, like typing rhythm, to notice changes over time.")
+            Text("dopa-X reads simple interaction signals, like typing rhythm and scrolling, to notice changes over time.")
                 .font(.system(size: 15))
                 .foregroundColor(.dopaxBlack70)
                 .multilineTextAlignment(.center)
@@ -457,7 +608,7 @@ struct ProfileSetupView: View {
                 .foregroundColor(.dopaxBlack90)
                 .padding(.top, 28)
 
-            Text("For the next 14 days, every session teaches dopa-X how you move. Your first strand is waiting.")
+            Text("For the next 14 days, every session teaches dopa-X how you move. Your 14 days begin with your first completed session, inside its time window.")
                 .font(.system(size: 15))
                 .foregroundColor(.dopaxBlack70)
                 .multilineTextAlignment(.center)
@@ -485,9 +636,62 @@ struct ProfileSetupView: View {
         profile.profileComplete = true
         profile.onboardingVersion = 2
 
-        // Firestore (primary while BOTH_ARCH=true) + Postgres (additive).
         FirebaseSyncManager.shared.saveProfileToCloud(profile: profile)
         BackendSyncManager.shared.syncProfile(profile)
+    }
+
+    private func syncPickerFromProfile() {
+        let trimmed = profile.testTimeCustom.trimmingCharacters(in: .whitespaces)
+        if let parsed = parseWindowTime(trimmed) {
+            pickerDate = parsed
+        } else {
+            pickerDate = defaultWindowTime()
+        }
+    }
+
+    private func parseWindowTime(_ value: String) -> Date? {
+        let token = value.split(separator: "-").first.map(String.init) ?? value
+        let parts = token.split(separator: ":")
+        guard parts.count >= 2,
+              let hour = Int(parts[0]),
+              let minute = Int(parts[1]) else { return nil }
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        components.hour = hour
+        components.minute = minute
+        return Calendar.current.date(from: components)
+    }
+
+    private func defaultWindowTime() -> Date {
+        var components = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        components.hour = 14
+        components.minute = 0
+        return Calendar.current.date(from: components) ?? Date()
+    }
+
+    private func clampWindowTime(_ date: Date) -> Date {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        var components = calendar.dateComponents([.year, .month, .day], from: date)
+
+        if hour < 12 {
+            components.hour = 12
+            components.minute = 0
+        } else if hour > 16 || (hour == 16 && minute > 0) {
+            components.hour = 16
+            components.minute = 0
+        } else {
+            components.hour = hour
+            components.minute = minute
+        }
+        return calendar.date(from: components) ?? date
+    }
+
+    private func formatWindowTime(_ date: Date) -> String {
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        let minute = calendar.component(.minute, from: date)
+        return String(format: "%02d:%02d", hour, minute)
     }
 }
 

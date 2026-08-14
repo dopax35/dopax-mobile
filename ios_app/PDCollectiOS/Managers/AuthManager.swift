@@ -135,6 +135,20 @@ class AuthManager: NSObject, ObservableObject {
         controller.performRequests()
     }
 
+    func signInWithCustomToken(_ token: String, completion: @escaping (Result<AuthDataResult, Error>) -> Void) {
+        Auth.auth().signIn(withCustomToken: token) { authResult, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    completion(.failure(error))
+                } else if let authResult = authResult {
+                    completion(.success(authResult))
+                } else {
+                    completion(.failure(AuthError.authenticationFailed))
+                }
+            }
+        }
+    }
+
     func signOut() {
         do { try Auth.auth().signOut() } catch {
             print("Error signing out: \(error)")

@@ -3,20 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_onboarding_surface"
-    android:baselineAligned="false"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:padding="12dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <EditText
             android:id="@+id/editMedicationName"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@null"
             android:fontFamily="@font/lexend_medium"
             android:hint="Medication name"
@@ -27,28 +27,45 @@
             android:textColorHint="@color/gray_50"
             android:textSize="15.5sp" />
 
-        <EditText
-            android:id="@+id/editMedicationDose"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@null"
-            android:fontFamily="@font/lexend"
-            android:hint="Dose (e.g. 100mg)"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            android:minHeight="44dp"
-            android:textColor="@color/black_70"
-            android:textColorHint="@color/gray_50"
-            android:textSize="13.5sp" />
+        <ImageView
+            android:id="@+id/btnRemoveMedication"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="Remove this medication"
+            android:padding="12dp"
+            android:src="@drawable/ic_onboarding_close" />
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/btnRemoveMedication"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_gravity="center_vertical"
-        android:background="?attr/selectableItemBackground"
-        android:contentDescription="Remove this medication"
-        android:padding="12dp"
-        android:src="@drawable/ic_onboarding_close" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/fieldMedicationUnit"
+            style="@style/Widget.DopaX.Onboarding.Field"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="0dp"
+            android:layout_weight="0.62"
+            android:drawableEnd="@drawable/ic_onboarding_chevron_down"
+            android:text="pill(s)"
+            android:textColor="@color/black_90" />
+
+        <EditText
+            android:id="@+id/editMedicationCount"
+            style="@style/Widget.DopaX.Onboarding.Field"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="0dp"
+            android:layout_weight="0.38"
+            android:hint="1"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:text="1" />
+    </LinearLayout>
 </LinearLayout>

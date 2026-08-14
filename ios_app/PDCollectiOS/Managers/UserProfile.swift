@@ -40,6 +40,9 @@ class UserProfile: ObservableObject {
     @Published var keyboardOptIn: Bool         { didSet { save("keyboardOptIn", keyboardOptIn) } }
     /// Set when the Figma onboarding flow (incl. session windows) finishes.
     @Published var onboardingVersion: Int      { didSet { save("onboardingVersion", onboardingVersion) } }
+    @Published var consentSignatureName: String { didSet { save("consentSignatureName", consentSignatureName) } }
+    @Published var consentSignatureImage: String { didSet { save("consentSignatureImage", consentSignatureImage) } }
+    @Published var consentLocale: String       { didSet { save("consentLocale", consentLocale) } }
 
     /// Legacy users who completed v1 still need v2 fields (session windows).
     var needsOnboardingV2: Bool {
@@ -77,6 +80,9 @@ class UserProfile: ObservableObject {
         self.notificationsOptIn = d.object(forKey: "notificationsOptIn") as? Bool ?? false
         self.keyboardOptIn = d.object(forKey: "keyboardOptIn") as? Bool ?? false
         self.onboardingVersion = d.integer(forKey: "onboardingVersion")
+        self.consentSignatureName = d.string(forKey: "consentSignatureName") ?? ""
+        self.consentSignatureImage = d.string(forKey: "consentSignatureImage") ?? ""
+        self.consentLocale = d.string(forKey: "consentLocale") ?? "en"
 
         if let data = d.data(forKey: "medications") {
             if let meds = try? JSONDecoder().decode([Medication].self, from: data) {
@@ -115,7 +121,8 @@ class UserProfile: ObservableObject {
         ["consentGiven","profileComplete","userId","age","gender","dominantHand","affectedSide","medications",
          "hrDeviceIdentifier","hrDeviceName","beanieDeviceIdentifier","beanieDeviceName",
          "displayName","yearOfBirth","testTimeMorning","testTimeNoon","testTimeEvening","testTimeCustom",
-         "healthAppleStatus","healthStravaStatus","notificationsOptIn","keyboardOptIn","onboardingVersion"]
+         "healthAppleStatus","healthStravaStatus","notificationsOptIn","keyboardOptIn","onboardingVersion",
+         "consentSignatureName","consentSignatureImage","consentLocale"]
             .forEach { UserDefaults.standard.removeObject(forKey: $0) }
         UserProfile.deleteFromKeychain()
         consentGiven = false
@@ -131,6 +138,7 @@ class UserProfile: ObservableObject {
         testTimeEvening = "18:00-20:00"; testTimeCustom = ""
         healthAppleStatus = "skipped"; healthStravaStatus = "skipped"
         notificationsOptIn = false; keyboardOptIn = false
+        consentSignatureName = ""; consentSignatureImage = ""; consentLocale = "en"
     }
 
     private func save(_ key: String, _ value: Any) {
@@ -206,6 +214,9 @@ class UserProfile: ObservableObject {
             "notificationsOptIn": notificationsOptIn,
             "keyboardOptIn": keyboardOptIn,
             "onboardingVersion": onboardingVersion,
+            "consentSignatureName": consentSignatureName,
+            "consentSignatureImage": consentSignatureImage,
+            "consentLocale": consentLocale,
         ]
         
         let medsList = medications.map { ["name": $0.name, "dosage": $0.dosage] }

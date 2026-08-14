@@ -1,6 +1,5 @@
-import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { readFileSync } from 'node:fs';
+import { firebaseApp } from './firebase-app.js';
 
 /**
  * R1 — Firebase stays the identity provider and this backend only *verifies*.
@@ -26,30 +25,6 @@ export class IdTokenInvalid extends Error {
     super(`id token rejected: ${reason}`);
     this.name = 'IdTokenInvalid';
   }
-}
-
-let app: App | undefined;
-
-function firebaseApp(projectId: string, credentialsPath?: string): App {
-  if (app) return app;
-
-  const [existing] = getApps();
-  if (existing) {
-    app = existing;
-    return app;
-  }
-
-  // Token verification needs only the project id plus Google's public signing
-  // certificates, so an app with no credential is enough and is the only thing
-  // available on this laptop. A supplied key is still honoured.
-  if (credentialsPath) {
-    const serviceAccount = JSON.parse(readFileSync(credentialsPath, 'utf8'));
-    app = initializeApp({ projectId, credential: cert(serviceAccount) });
-  } else {
-    app = initializeApp({ projectId });
-  }
-
-  return app;
 }
 
 export function createFirebaseVerifier(options: {

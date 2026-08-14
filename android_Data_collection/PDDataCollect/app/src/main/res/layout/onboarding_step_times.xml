@@ -31,7 +31,7 @@
                 android:id="@+id/rowMorningWindow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_onboarding_surface"
+                android:background="@drawable/bg_onboarding_surface_locked"
                 android:baselineAligned="false"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
@@ -41,7 +41,8 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_onboarding_clock" />
+                    android:src="@drawable/ic_onboarding_clock"
+                    android:tint="@color/gray_50" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -55,7 +56,7 @@
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/lexend_medium"
                         android:text="Morning window"
-                        android:textColor="@color/black_90"
+                        android:textColor="@color/gray_50"
                         android:textSize="15sp" />
 
                     <TextView
@@ -63,7 +64,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/lexend"
-                        android:textColor="@color/black_70"
+                        android:textColor="@color/gray_50"
                         android:textSize="13sp" />
                 </LinearLayout>
 
@@ -71,11 +72,11 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_onboarding_edit" />
+                    android:src="@drawable/ic_onboarding_lock" />
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/rowNoonWindow"
+                android:id="@+id/rowCustomWindow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -85,11 +86,76 @@
                 android:orientation="horizontal"
                 android:padding="16dp">
 
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/lexend_medium"
+                        android:text="Your window"
+                        android:textColor="@color/black_90"
+                        android:textSize="15sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/lexend"
+                            android:text="Choose a time between "
+                            android:textColor="@color/onboarding_accent"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvCustomWindow"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/lexend_bold"
+                            android:text="12:00-16:00"
+                            android:textColor="@color/black_90"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_onboarding_edit_circle">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_onboarding_edit"
+                        android:tint="@color/onboarding_accent" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowEveningWindow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_onboarding_surface_locked"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
                 <ImageView
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_onboarding_clock" />
+                    android:src="@drawable/ic_onboarding_clock"
+                    android:tint="@color/gray_50" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -102,16 +168,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/lexend_medium"
-                        android:text="Midday window"
-                        android:textColor="@color/black_90"
+                        android:text="Evening window"
+                        android:textColor="@color/gray_50"
                         android:textSize="15sp" />
 
                     <TextView
-                        android:id="@+id/tvNoonWindow"
+                        android:id="@+id/tvEveningWindow"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/lexend"
-                        android:textColor="@color/black_70"
+                        android:textColor="@color/gray_50"
                         android:textSize="13sp" />
                 </LinearLayout>
 
@@ -119,20 +185,8 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_onboarding_edit" />
+                    android:src="@drawable/ic_onboarding_lock" />
             </LinearLayout>
-
-            <TextView
-                style="@style/Widget.DopaX.Onboarding.FieldLabel"
-                android:layout_marginTop="20dp"
-                android:text="Your window" />
-
-            <EditText
-                android:id="@+id/editTimeCustom"
-                style="@style/Widget.DopaX.Onboarding.Field"
-                android:hint="e.g. 14:00 or 14:00-15:00"
-                android:importantForAutofill="no"
-                android:inputType="text" />
 
             <TextView
                 android:layout_width="match_parent"

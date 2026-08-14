@@ -44,6 +44,17 @@ const schema = z
     GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
     AUTH_DEV_BYPASS: booleanish.default(false),
 
+    // Email sign-in codes (Figma 6377:2 / 6377:21). Off by default: an
+    // environment with no mail credential must not advertise a sign-in method
+    // whose code can never arrive.
+    EMAIL_AUTH_ENABLED: booleanish.default(false),
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.coerce.number().int().positive().default(587),
+    SMTP_SECURE: booleanish.default(false),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASSWORD: z.string().optional(),
+    SMTP_FROM: z.string().optional(),
+
     LEGACY_DRIVE_FOLDER_ID: z.string().optional(),
     LEGACY_APPS_SCRIPT_URL: z.string().url().optional().or(z.literal('')),
 
@@ -90,6 +101,31 @@ const schema = z
           code: z.ZodIssueCode.custom,
           path: ['ADMIN_JWT_SECRET'],
           message: 'ADMIN_JWT_SECRET must differ from JWT_SECRET',
+        });
+      }
+    }
+
+    // AUTH_DEV_BYPASS swaps in the log mailer and the dev token minter, so a
+    // deployed environment enabling email auth must supply real SMTP settings.
+    if (env.EMAIL_AUTH_ENABLED && !env.AUTH_DEV_BYPASS) {
+      for (const key of ['SMTP_HOST', 'SMTP_FROM'] as const) {
+        if (!env[key]) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} is required when EMAIL_AUTH_ENABLED=true`,
+          });
+        }
+      }
+
+      // Minting a Firebase custom token needs a real service account key;
+      // verification alone does not. Without it every verified code would 503.
+      if (!env.GOOGLE_APPLICATION_CREDENTIALS) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['GOOGLE_APPLICATION_CREDENTIALS'],
+          message:
+            'GOOGLE_APPLICATION_CREDENTIALS is required when EMAIL_AUTH_ENABLED=true — minting Firebase custom tokens needs a service account key',
         });
       }
     }
