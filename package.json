@@ -1,0 +1,12 @@
+{
+  "name": "dopax-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd admin && npm run dev",
+    "build": "cd admin && npm run build",
+    "start": "cd admin && npm run start",
+    "lint": "cd admin && npm run lint",
+    "typecheck": "cd admin && npm run typecheck"
+  }
+}
