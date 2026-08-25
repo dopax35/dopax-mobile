@@ -221,3 +221,40 @@ export interface AuditEntry {
   occurredAt: string;
   metadata: Record<string, unknown> | null;
 }
+
+export interface ParticipantProgressItem {
+  participantId: string;
+  participantCode: string;
+  legacyFileUserIds: string[];
+  status: string;
+  isTestAccount: boolean;
+  email?: string | null;
+  displayName?: string | null;
+  firebaseUid?: string | null;
+  platform: string;
+  uploadCount: number;
+  totalBytes: number;
+  latestUploadDate: string | null;
+  complianceStatus: 'proper_usage' | 'improper_usage';
+  complianceReason: string;
+  hasSensorData: boolean;
+  hasActivityData: boolean;
+  integrityStatus: 'healthy' | 'missing_sensor_data' | 'missing_activity_data' | 'no_uploads';
+  integrityAlerts: string[];
+  medicationStatus: 'logged' | 'none_reported';
+  activeTestDates: { date: string; testTypes: string[]; totalCompleted: number }[];
+  dailyLoads: { collectionDate: string; bytes: number; filename: string; passed: boolean }[];
+  medicationReports: { date: string; medicationName: string | null; dosage: string | null }[];
+}
+
+export interface ProgressSummary {
+  totalRegistered: number;
+  compliantCount: number;
+  nonCompliantCount: number;
+  activeTestUserCount: number;
+  integrityAlertCount: number;
+  medicationReportCount: number;
+  identityVisible: boolean;
+  participants: ParticipantProgressItem[];
+}
+

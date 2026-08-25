@@ -8,6 +8,7 @@ import { adminAuthRoutes } from './auth.js';
 import { adminOperationsRoutes } from './operations.js';
 import { adminOverviewRoutes } from './overview.js';
 import { adminParticipantRoutes } from './participants.js';
+import { adminProgressRoutes } from './progress.js';
 
 /**
  * The staff console surface, MIGRATION_PLAN.md §7.1 (`GET /v1/admin/*`).
@@ -134,6 +135,7 @@ export async function adminRoutes(
     await guarded.register(adminOverviewRoutes, dependencies);
     await guarded.register(adminParticipantRoutes, dependencies);
     await guarded.register(adminOperationsRoutes, dependencies);
+    await guarded.register(adminProgressRoutes, dependencies);
   });
 }
 
