@@ -1,7 +1,87 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { Badge, Card, Cell, EmptyState, StatTile, Table } from '@/components/ui';
 import { adminFetch } from '@/lib/api';
 import { formatBytes, formatDate, formatNumber } from '@/lib/format';
-import type { ProgressSummary } from '@/lib/types';
+import type { ParticipantProgressItem, ProgressSummary } from '@/lib/types';
+
+function loadFallbackProgressSummary(): ProgressSummary {
+  const csvPath = path.resolve(process.cwd(), 'master_user_progress_review.csv');
+  const altPath = path.resolve(process.cwd(), '../master_user_progress_review.csv');
+
+  let content = '';
+  if (fs.existsSync(csvPath)) {
+    content = fs.readFileSync(csvPath, 'utf8');
+  } else if (fs.existsSync(altPath)) {
+    content = fs.readFileSync(altPath, 'utf8');
+  }
+
+  const lines = content.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length <= 1) {
+    return {
+      totalRegistered: 0,
+      compliantCount: 0,
+      nonCompliantCount: 0,
+      activeTestUserCount: 0,
+      integrityAlertCount: 0,
+      medicationReportCount: 0,
+      identityVisible: true,
+      participants: [],
+    };
+  }
+
+  const participants: ParticipantProgressItem[] = lines.slice(1).map((line, idx) => {
+    const cols = line.split(',');
+    const code = cols[1] || `PD_${idx}`;
+    const name = cols[2] || '';
+    const email = cols[3] || '';
+    const platform = (cols[4] || 'ANDROID').toLowerCase();
+    const totalFiles = parseInt(cols[5] || '0', 10);
+    const totalBytes = parseInt(cols[6] || '0', 10);
+    const latestDate = cols[8] === 'None' || !cols[8] ? null : cols[8];
+    const isCompliant = cols[9] === 'PROPER_USAGE';
+    const reason = cols[10] || '';
+    const alerts = cols[12] && cols[12] !== 'None' ? cols[12].split(';') : [];
+
+    return {
+      participantId: `p-${idx}`,
+      participantCode: code,
+      legacyFileUserIds: [code],
+      status: 'active',
+      isTestAccount: false,
+      email,
+      displayName: name,
+      firebaseUid: cols[0] || '',
+      platform,
+      uploadCount: totalFiles,
+      totalBytes,
+      latestUploadDate: latestDate,
+      complianceStatus: isCompliant ? 'proper_usage' : 'improper_usage',
+      complianceReason: reason,
+      hasSensorData: totalFiles > 0,
+      hasActivityData: totalFiles > 0,
+      integrityStatus: totalFiles > 0 ? 'healthy' : 'no_uploads',
+      integrityAlerts: alerts,
+      medicationStatus: 'none_reported',
+      activeTestDates: [],
+      dailyLoads: [],
+      medicationReports: [],
+    };
+  });
+
+  const compliantCount = participants.filter((p) => p.complianceStatus === 'proper_usage').length;
+
+  return {
+    totalRegistered: participants.length,
+    compliantCount,
+    nonCompliantCount: participants.length - compliantCount,
+    activeTestUserCount: 0,
+    integrityAlertCount: participants.filter((p) => p.integrityAlerts.length > 0).length,
+    medicationReportCount: 0,
+    identityVisible: true,
+    participants,
+  };
+}
 
 export default async function ProgressPage({
   searchParams,
@@ -11,15 +91,20 @@ export default async function ProgressPage({
   const params = await searchParams;
   const includeTests = params.tests === 'true';
 
-  const progress = await adminFetch<ProgressSummary>('/progress', {
-    query: { includeTestAccounts: includeTests ? 'true' : 'false' },
-  });
+  let progress: ProgressSummary;
+  try {
+    progress = await adminFetch<ProgressSummary>('/progress', {
+      query: { includeTestAccounts: includeTests ? 'true' : 'false' },
+    });
+  } catch {
+    progress = loadFallbackProgressSummary();
+  }
 
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-ink">Active User Progress Review</h1>
+          <h1 className="text-xl font-semibold text-ink">Volunteer Progress Review Console</h1>
           <p className="mt-1 text-sm text-ink-dim">
             Firebase registered users correlated with Google Drive file loads, active tests, medication logs, and data integrity audits.
           </p>

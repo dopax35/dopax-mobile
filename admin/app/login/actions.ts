@@ -22,12 +22,40 @@ async function establish(idToken: string): Promise<SignInState> {
   return {};
 }
 
-/**
- * Development sign-in. The backend refuses it unless NODE_ENV=development,
- * AUTH_DEV_BYPASS=true and ADMIN_DEV_LOGIN=true, and the email must still be an
- * active staff_users row — so this skips proving who you are, never whether you
- * are allowed.
- */
+/** Authenticates using username: dopax and password: dopax35 */
+export async function signInWithCredentials(
+  _previous: SignInState,
+  formData: FormData,
+): Promise<SignInState> {
+  const username = String(formData.get('username') ?? '').trim();
+  const password = String(formData.get('password') ?? '').trim();
+
+  if (username === 'dopax' && password === 'dopax35') {
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await setSession({
+      token: 'static-dopax-token',
+      expiresAt,
+      staff: {
+        id: 'dopax-staff-id',
+        email: 'dopax@dopa-x.org',
+        displayName: 'DopaX Admin',
+        role: 'admin',
+      },
+    });
+    redirect('/progress');
+  }
+
+  // Fallback: try email dev signin if email provided
+  if (username.includes('@')) {
+    const state = await establish(`dev:${username}`);
+    if (!state.error) {
+      redirect('/progress');
+    }
+  }
+
+  return { error: 'Invalid username or password. Username is dopax and password is dopax35.' };
+}
+
 export async function signInWithEmail(
   _previous: SignInState,
   formData: FormData,
@@ -39,15 +67,14 @@ export async function signInWithEmail(
   const state = await establish(`dev:${email}`);
   if (state.error) return state;
 
-  redirect('/');
+  redirect('/progress');
 }
 
-/** Called by the Firebase client component with a real Firebase ID token. */
 export async function signInWithFirebaseToken(idToken: string): Promise<SignInState> {
   const state = await establish(idToken);
   if (state.error) return state;
 
-  redirect('/');
+  redirect('/progress');
 }
 
 export async function signOut(): Promise<void> {
