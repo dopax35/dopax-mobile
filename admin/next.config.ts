@@ -2,8 +2,9 @@ import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
   agentRules: false,
+
+  ...(process.env.NEXT_OUTPUT_STANDALONE ? { output: 'standalone' } : {}),
 
   async redirects() {
     return [
