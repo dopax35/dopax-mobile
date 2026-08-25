@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { getActiveUserProgressSummary } from '../../domain/admin/progress.js';
-import { canSeeIdentity, redactParticipant } from '../../domain/admin/view.js';
+import { canSeeIdentity } from '../../domain/admin/view.js';
 import type { AdminRouteDependencies } from './index.js';
 
 const progressQuery = z.object({
@@ -32,7 +32,7 @@ export async function adminProgressRoutes(
         identityVisible: canSeeIdentity(role),
         participants: summary.participants.map((p) => {
           if (canSeeIdentity(role)) return p;
-          const { email, displayName, firebaseUid, ...rest } = p;
+          const { email: _email, displayName: _displayName, firebaseUid: _firebaseUid, ...rest } = p;
           return rest;
         }),
       };

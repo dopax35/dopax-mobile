@@ -1,8 +1,8 @@
-import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import type { Database } from '../../db/client.js';
-import { authIdentities, participantProfiles, participants } from '../../db/schema/identity.js';
-import { dailySummaries, medicationLogs, testSessions } from '../../db/schema/results.js';
-import { uploadFiles, uploads } from '../../db/schema/uploads.js';
+import { authIdentities, participants } from '../../db/schema/identity.js';
+import { medicationLogs, testSessions } from '../../db/schema/results.js';
+import { uploads } from '../../db/schema/uploads.js';
 
 export interface ParticipantProgressItem {
   participantId: string;
