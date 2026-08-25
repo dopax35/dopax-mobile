@@ -7,11 +7,22 @@
 import { parse } from 'csv-parse/sync';
 import { classifyZipEntry, type ZipEntryKind } from './zip-kinds.js';
 
+/**
+ * `unknown` is not a synonym for `ok`. It means this asset has no shape we know how
+ * to judge — a voice recording, an opaque JSON blob — so the catalogue says so
+ * rather than implying it was checked.
+ */
+export type AssetQualityStatus = 'ok' | 'suspect' | 'unusable' | 'unknown';
+
 export interface PlannedUploadFile {
   pathInZip: string;
   kind: ZipEntryKind;
   rowCount: number;
   bytes: number;
+  /** Earliest row timestamp in the file. Null when the source carries none. */
+  capturedAt: Date | null;
+  qualityStatus: AssetQualityStatus;
+  qualityFlags: string[];
 }
 
 export interface PlannedTestSession {
@@ -102,6 +113,102 @@ function num(value: string | undefined): number | null {
   if (value === undefined || value === '') return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Epoch-millisecond columns used across the collectors. Ordered by how specific
+ * they are to the event the row describes, so a medication row is dated by when the
+ * dose was taken rather than by when the app wrote the line.
+ */
+const TIMESTAMP_COLUMNS = [
+  'taken_ms',
+  'start_time_ms',
+  'sleep_start_ms',
+  'time_of_day_ms',
+  'timestamp_ms',
+  'time_ms',
+  'ts_ms',
+  'epoch_ms',
+] as const;
+
+/** Exposed so the streaming scanner can date a file it never fully parses. */
+export function parseEpochMs(value: string | undefined): Date | null {
+  return msToDate(value);
+}
+
+function earliestTimestamp(rows: Record<string, string>[]): Date | null {
+  let earliest: Date | null = null;
+
+  for (const row of rows) {
+    for (const column of TIMESTAMP_COLUMNS) {
+      const at = msToDate(row[column]);
+      if (!at) continue;
+      if (!earliest || at.getTime() < earliest.getTime()) earliest = at;
+      break;
+    }
+  }
+
+  return earliest;
+}
+
+/**
+ * Dates a high-rate stream from its header plus first data row, so a multi-hundred-
+ * megabyte sensor CSV never has to be held in memory to be catalogued.
+ *
+ * Naive comma splitting is safe here: stream CSVs are numeric columns written by our
+ * own collectors, with no quoted fields.
+ */
+export function timestampFromStreamHead(header: string, firstRow: string): Date | null {
+  const columns = header
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .split(',')
+    .map((name) => name.trim());
+  const values = firstRow.trim().split(',');
+
+  for (const column of TIMESTAMP_COLUMNS) {
+    const index = columns.indexOf(column);
+    if (index === -1) continue;
+    const at = msToDate(values[index]?.trim());
+    if (at) return at;
+  }
+
+  return null;
+}
+
+/** A file whose rows are tabular, and which therefore ought to have rows and a time. */
+function isTabular(kind: ZipEntryKind, pathInZip: string): boolean {
+  if (kind === 'stream') return true;
+  if (kind === 'voice_audio' || kind === 'json' || kind === 'marker') return false;
+  return pathInZip.toLowerCase().endsWith('.csv');
+}
+
+/**
+ * Whether a researcher can use this asset, as distinct from whether we managed to
+ * parse it. `uploads.status` and `uploads.error` already answer the second question.
+ *
+ * Deliberately conservative: an empty or untimed file is reported, never repaired.
+ */
+export function assessAssetQuality(input: {
+  kind: ZipEntryKind;
+  pathInZip: string;
+  bytes: number;
+  rowCount: number;
+  capturedAt: Date | null;
+}): { status: AssetQualityStatus; flags: string[] } {
+  const flags: string[] = [];
+  const tabular = isTabular(input.kind, input.pathInZip);
+
+  if (input.bytes === 0) flags.push('zero_bytes');
+  if (tabular && input.rowCount === 0) flags.push('no_rows');
+  if (tabular && input.capturedAt === null) flags.push('no_timestamp');
+
+  if (flags.includes('zero_bytes') || flags.includes('no_rows')) {
+    return { status: 'unusable', flags };
+  }
+  if (flags.length > 0) return { status: 'suspect', flags };
+
+  return { status: tabular ? 'ok' : 'unknown', flags };
 }
 
 const MOTOR_TYPES: Record<string, string> = {
@@ -326,6 +433,24 @@ function parseHeartRate(csv: string, collectionDate: string): PlannedHeartRateSu
   ];
 }
 
+/**
+ * The ZIP paths that exactly one session claims, and which can therefore be linked
+ * to it without guessing.
+ *
+ * A motor CSV holds several START/END cycles and so produces several sessions from
+ * one path. Attributing that file to whichever cycle parsed first would silently
+ * mis-file research data, so those paths are excluded and the row keeps a null
+ * `session_id`; `test_sessions.raw_object_key` still records the provenance.
+ */
+export function unambiguousSessionPaths(sessions: PlannedTestSession[]): Set<string> {
+  const counts = new Map<string, number>();
+  for (const session of sessions) {
+    counts.set(session.rawObjectKey, (counts.get(session.rawObjectKey) ?? 0) + 1);
+  }
+
+  return new Set([...counts].filter(([, count]) => count === 1).map(([path]) => path));
+}
+
 export function emptyZipParsePlan(): ZipParsePlan {
   return {
     files: [],
@@ -355,17 +480,24 @@ export function ingestStructuredCsv(
   // rejects those quotes and would abort the whole ZIP; we only need it
   // catalogued here (Firestore is the profile source of truth later).
   if (kind === 'profile') {
-    plan.files.push({
+    pushFile(plan, {
       pathInZip,
       kind,
       rowCount: Math.max(0, csv.trim().split('\n').length - 1),
       bytes,
+      capturedAt: null,
     });
     return;
   }
 
   const rows = rowsOf(csv);
-  plan.files.push({ pathInZip, kind, rowCount: rows.length, bytes });
+  pushFile(plan, {
+    pathInZip,
+    kind,
+    rowCount: rows.length,
+    bytes,
+    capturedAt: earliestTimestamp(rows),
+  });
 
   if (kind in MOTOR_TYPES) {
     plan.sessions.push(...parseMotorSessions(kind, pathInZip, csv));
@@ -386,18 +518,38 @@ export function ingestStructuredCsv(
   }
 }
 
+function pushFile(
+  plan: ZipParsePlan,
+  file: {
+    pathInZip: string;
+    kind: ZipEntryKind;
+    rowCount: number;
+    bytes: number;
+    capturedAt: Date | null;
+  },
+): void {
+  const quality = assessAssetQuality(file);
+  plan.files.push({
+    ...file,
+    qualityStatus: quality.status,
+    qualityFlags: quality.flags,
+  });
+}
+
 export function catalogueEntry(
   plan: ZipParsePlan,
   pathInZip: string,
   bytes: number,
   rowCount: number | null = null,
+  capturedAt: Date | null = null,
 ): void {
   const kind = classifyZipEntry(pathInZip);
   if (kind === 'marker') return;
-  plan.files.push({
+  pushFile(plan, {
     pathInZip,
     kind,
     rowCount: rowCount ?? 0,
     bytes,
+    capturedAt,
   });
 }

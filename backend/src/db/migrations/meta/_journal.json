@@ -43,6 +43,20 @@
       "when": 1786604400000,
       "tag": "0005_email_otp_and_consent_signature",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786690800000,
+      "tag": "0006_identity_schema_and_asset_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786777200000,
+      "tag": "0007_withhold_id_conflicts_from_research",
+      "breakpoints": true
     }
   ]
 }

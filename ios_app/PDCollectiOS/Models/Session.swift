@@ -12,10 +12,12 @@ import Foundation
 // MARK: - Period
 
 /// One of the three daily session windows.
-enum SessionPeriod: String, CaseIterable, Codable {
+enum SessionPeriod: String, CaseIterable, Codable, Identifiable {
     case morning
     case noon
     case night
+
+    var id: String { rawValue }
 
     /// Title shown on the session hub, e.g. "Evening session".
     var title: String {
@@ -190,39 +192,104 @@ struct SessionSchedule: Equatable {
 
 // MARK: - Tests
 
+/// Hardware a test needs before it can run, so the primer can be shown before
+/// the OS prompt rather than after it.
+enum TestCapability {
+    case camera
+    case microphone
+}
+
 /// One row of the session hub. `id` deliberately reuses the identifiers the
 /// app already writes to CSV and stores in GamificationManager, so the session
 /// layer does not introduce a second vocabulary for the same tests.
 struct SessionTest: Identifiable, Equatable {
     let id: String
     let title: String
+    /// The full hint the hub and Tests tab show, e.g. "~20 sec · each hand".
     let durationHint: String
     let iconName: String
+    /// What the OS must grant first. Nil for the tests that only need touch
+    /// or the motion sensors, which is most of them.
+    let capability: TestCapability?
+
+    init(id: String, title: String, durationHint: String,
+         iconName: String, capability: TestCapability? = nil) {
+        self.id = id
+        self.title = title
+        self.durationHint = durationHint
+        self.iconName = iconName
+        self.capability = capability
+    }
+
+    /// Just the duration, for the hub's "Up next · ~20 sec" line. The design
+    /// drops the qualifier there because the row is already the focus.
+    var shortDurationHint: String {
+        durationHint.components(separatedBy: " · ").first ?? durationHint
+    }
+
+    /// What a finished row reads, e.g. "9.4 seconds" or "Both hands done".
+    ///
+    /// Only Trail Making reports a number, because it is the one test whose
+    /// score is a plain duration the participant can interpret. The others
+    /// score in RMSE, tap counts, and rotation rates — figures that mean
+    /// something to a researcher and nothing to the person who just did the
+    /// test — so they confirm completion instead.
+    func completedSummary(score: Double) -> String {
+        switch id {
+        case "trail_making_A", "trail_making_B":
+            return String(format: "%.1f seconds", score)
+        case "spiral_tracing", "finger_tapping", "hand_turning":
+            return "Both hands done"
+        case "leg_agility":
+            return "Both legs done"
+        case "facial_movement":
+            return "5 expressions done"
+        case "voice_test", "voice_recording":
+            return "Recorded"
+        default:
+            return "Done"
+        }
+    }
 }
 
 extension SessionTest {
-    /// The nine tests, in the order the design lists them. Identical for all
-    /// three periods (decision D3 in the plan).
+    /// The nine tests, in the order the session hub runs them (Figma 551:2).
+    /// Identical for all three periods (decision D3 in the plan).
     static let dailyBattery: [SessionTest] = [
         SessionTest(id: "trail_making_A", title: "Trail Making",
-                    durationHint: "~30 sec · connect the numbers", iconName: "number.circle"),
+                    durationHint: "~40 sec · attention & speed",
+                    iconName: "point.topleft.down.to.point.bottomright.curvepath"),
         SessionTest(id: "spiral_tracing", title: "Spiral Tracing",
-                    durationHint: "~20 sec · each hand", iconName: "tornado"),
+                    durationHint: "~30 sec · each hand", iconName: "tornado"),
         SessionTest(id: "finger_tapping", title: "Finger Tapping",
-                    durationHint: "~20 sec · each hand", iconName: "hand.point.up"),
+                    durationHint: "~20 sec · each hand", iconName: "hand.point.up.left.fill"),
         SessionTest(id: "hand_turning", title: "Hand Rotation",
-                    durationHint: "~15 sec · each hand", iconName: "arrow.clockwise"),
+                    durationHint: "~15 sec · each hand", iconName: "hand.raised"),
         SessionTest(id: "voice_test", title: "Voice Acoustic",
-                    durationHint: "~15 sec · one long aaah", iconName: "mic.fill"),
+                    durationHint: "~15 sec · one long aaah", iconName: "waveform",
+                    capability: .microphone),
         SessionTest(id: "fingers_test", title: "Free-Space Fingers",
-                    durationHint: "~10 sec · in front of the camera", iconName: "hand.point.up.left.fill"),
+                        durationHint: "~10 sec · camera watches your hand", iconName: "hand.raised.fill",
+                    capability: .camera),
         SessionTest(id: "facial_movement", title: "Facial Movement",
-                    durationHint: "~20 sec · follow expressions", iconName: "face.smiling"),
+                    durationHint: "~20 sec · follow expressions", iconName: "faceid",
+                    capability: .camera),
         SessionTest(id: "leg_agility", title: "Leg Agility",
-                    durationHint: "~10 sec · each leg", iconName: "figure.walk.motion"),
+                    durationHint: "~10 sec · each leg", iconName: "shoeprints.fill"),
         SessionTest(id: "voice_recording", title: "Voice Sample",
-                    durationHint: "~60 sec · describe a picture", iconName: "waveform.and.mic"),
+                    durationHint: "~60 sec · describe a picture", iconName: "mic",
+                    capability: .microphone),
     ]
+
+    /// The Tests tab (Figma 594:11428) lists the same nine in a different
+    /// order — motor tests first, then the two camera tests and the acoustic
+    /// one last — because there it is a browsable menu, not a protocol.
+    static let browseOrder: [SessionTest] = {
+        let order = ["trail_making_A", "spiral_tracing", "finger_tapping", "hand_turning",
+                     "leg_agility", "voice_recording", "facial_movement",
+                     "fingers_test", "voice_test"]
+        return order.compactMap(test(id:))
+    }()
 
     static func test(id: String) -> SessionTest? {
         dailyBattery.first { $0.id == id }

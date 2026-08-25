@@ -40,28 +40,33 @@ if (!url) {
  * Fixed list rather than a catalogue sweep, so the output is a stable report of
  * the tables the migration cares about and a table appearing or vanishing is
  * visible instead of silently changing the shape of the output.
+ *
+ * Schema-qualified since migration 0006: the identifying tables live in `identity`,
+ * and printing them under their schema is a standing reminder of which side of the
+ * boundary a table sits on.
  */
 const TABLES = [
-  'participants',
-  'auth_identities',
-  'participant_profiles',
-  'consents',
-  'participant_id_conflicts',
-  'devices',
-  'uploads',
-  'upload_files',
-  'drive_manifest_exceptions',
-  'events',
-  'test_sessions',
-  'test_metrics',
-  'questionnaire_responses',
-  'medication_logs',
-  'daily_summaries',
-  'reconciliation_runs',
-  'migration_steps',
-  'staff_users',
-  'audit_log',
-] as const;
+  ['public', 'participants'],
+  ['identity', 'auth_identities'],
+  ['identity', 'consents'],
+  ['identity', 'email_otp_codes'],
+  ['public', 'participant_profiles'],
+  ['public', 'participant_id_conflicts'],
+  ['public', 'devices'],
+  ['public', 'uploads'],
+  ['public', 'upload_files'],
+  ['public', 'drive_manifest_exceptions'],
+  ['public', 'events'],
+  ['public', 'test_sessions'],
+  ['public', 'test_metrics'],
+  ['public', 'questionnaire_responses'],
+  ['public', 'medication_logs'],
+  ['public', 'daily_summaries'],
+  ['public', 'reconciliation_runs'],
+  ['public', 'migration_steps'],
+  ['public', 'staff_users'],
+  ['public', 'audit_log'],
+] as const satisfies readonly (readonly [string, string])[];
 
 const target = describeMigrationTarget(url);
 console.log(`inspecting ${target.host}${remote ? ' (remote, read-only)' : ' (local)'}\n`);
@@ -77,23 +82,27 @@ const sql = postgres(url, {
 let exitCode = 1;
 
 try {
-  const present = await sql<{ table_name: string }[]>`
-    select table_name from information_schema.tables where table_schema = 'public'
+  const present = await sql<{ table_schema: string; table_name: string }[]>`
+    select table_schema, table_name from information_schema.tables
+    where table_schema in ('public', 'identity')
   `;
-  const existing = new Set(present.map((row) => row.table_name));
+  const existing = new Set(present.map((row) => `${row.table_schema}.${row.table_name}`));
 
-  const width = Math.max(...TABLES.map((table) => table.length));
+  const labels = TABLES.map(([schema, table]) => `${schema}.${table}`);
+  const width = Math.max(...labels.map((label) => label.length));
 
-  for (const table of TABLES) {
-    if (!existing.has(table)) {
-      console.log(`${table.padEnd(width)}  —  (table does not exist)`);
+  for (const [schema, table] of TABLES) {
+    const label = `${schema}.${table}`;
+
+    if (!existing.has(label)) {
+      console.log(`${label.padEnd(width)}  —  (table does not exist)`);
       continue;
     }
 
     const [row] = await sql<{ count: string }[]>`
-      select count(*)::text as count from ${sql(table)}
+      select count(*)::text as count from ${sql(schema)}.${sql(table)}
     `;
-    console.log(`${table.padEnd(width)}  ${(row?.count ?? '?').padStart(9)}`);
+    console.log(`${label.padEnd(width)}  ${(row?.count ?? '?').padStart(9)}`);
   }
 
   const steps = existing.has('migration_steps')

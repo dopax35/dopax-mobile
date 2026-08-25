@@ -33,12 +33,12 @@ struct EmailCodeView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("Enter the code")
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.dopax(26, .bold))
                     .foregroundColor(.dopaxBlack90)
                     .padding(.top, 8)
 
                 Text("Sent to \(email)")
-                    .font(.system(size: 14.5))
+                    .font(.dopax(14.5))
                     .foregroundColor(.dopaxBlack70)
                     .padding(.top, 8)
 
@@ -57,7 +57,7 @@ struct EmailCodeView: View {
                     resendCode()
                 } label: {
                     Text("Resend")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.dopax(16, .bold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
                         .foregroundColor(canResend ? .onboardingAccent : .dopaxGray50)
@@ -68,14 +68,14 @@ struct EmailCodeView: View {
                 .padding(.top, 12)
 
                 Text(resendCountdownText)
-                    .font(.system(size: 13))
+                    .font(.dopax(13))
                     .foregroundColor(.onboardingTextTertiary)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 8)
 
                 if let errorMessage {
                     Text(errorMessage)
-                        .font(.system(size: 13))
+                        .font(.dopax(13))
                         .foregroundColor(.dopaxError)
                         .padding(.top, 12)
                 }
@@ -136,7 +136,7 @@ struct EmailCodeView: View {
         let isNextEmpty = index == code.count && code.count < 6
 
         return Text(digit)
-            .font(.system(size: 22, weight: .bold))
+            .font(.dopax(22, .bold))
             .foregroundColor(.dopaxBlack90)
             .frame(width: 52, height: 56)
             .background(Color.white)

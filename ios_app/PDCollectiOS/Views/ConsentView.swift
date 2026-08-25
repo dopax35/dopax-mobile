@@ -105,19 +105,19 @@ struct ConsentView: View {
             OnboardingBackground()
 
             VStack(spacing: 0) {
-                OnboardingProgressDots(total: 7, current: 0)
+                OnboardingProgressDots(total: OnboardingFlow.dotCount, current: OnboardingFlow.consentDot)
                     .padding(.horizontal, 24)
                     .padding(.top, 12)
                     .padding(.bottom, 20)
 
                 Text("Research consent")
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.dopax(26, .bold))
                     .foregroundColor(.dopaxBlack90)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
 
                 Text("Please read and sign. Presented in \(language.subtitleLanguageName).")
-                    .font(.system(size: 14.5))
+                    .font(.dopax(14.5))
                     .foregroundColor(.dopaxBlack70)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
@@ -127,7 +127,7 @@ struct ConsentView: View {
                     language = language == .english ? .hebrew : .english
                 } label: {
                     Text(language.chipLabel)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.dopax(13, .medium))
                         .foregroundColor(.onboardingAccent)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -150,7 +150,7 @@ struct ConsentView: View {
                             Text(language == .hebrew
                                  ? "בלחיצה על \"אני מסכים/ה — המשך\" את/ה מאשר/ת שקראת והבנת טופס הסכמה זה ומסכים/ה להשתתף."
                                  : "By tapping \"I agree — continue\", you confirm you have read and understood this consent form and agree to participate.")
-                                .font(.footnote)
+                                .font(.dopax(13))
                                 .foregroundColor(.secondary)
                                 .padding(.top, 8)
                                 .padding(.bottom, 24)
@@ -183,14 +183,14 @@ struct ConsentView: View {
 
                     HStack {
                         Text("Sign with your finger")
-                            .font(.system(size: 13))
+                            .font(.dopax(13))
                             .foregroundColor(.onboardingTextTertiary)
                         Spacer()
                         if !signatureIsEmpty {
                             Button("Clear") {
                                 signatureStrokes = []
                             }
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.dopax(13, .medium))
                             .foregroundColor(.onboardingAccent)
                         }
                     }
@@ -220,11 +220,11 @@ struct ConsentView: View {
     private func consentSection(_ title: String, _ body: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
-                .font(.headline)
+                .font(.dopax(17, .semibold))
                 .foregroundColor(.dopaxBlack90)
                 .multilineTextAlignment(language == .hebrew ? .trailing : .leading)
             Text(body)
-                .font(.body)
+                .font(.dopax(15))
                 .foregroundColor(.dopaxBlack70)
                 .multilineTextAlignment(language == .hebrew ? .trailing : .leading)
         }

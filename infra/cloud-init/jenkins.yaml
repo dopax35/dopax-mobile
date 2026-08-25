@@ -1,0 +1,360 @@
+#cloud-config
+#
+# DopaX build server provisioning. Rendered by infra/ci.bicep, which substitutes
+# __VAULT_NAME__, __SECRET_NAME__, __CLIENT_ID__ and __JENKINS_FQDN__ before the
+# file is passed to the VM as customData.
+#
+# The admin password is fetched from Key Vault at first boot rather than
+# injected here. customData is readable back out of the ARM API by anyone with
+# VM read access, so a password written into this file would not be a secret.
+#
+# Debug a failed run with:
+#   az vm boot-diagnostics get-boot-log -g <rg> -n <vm>
+#   ssh <admin>@<fqdn> 'sudo cat /var/log/dopax-bootstrap.log'
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - openjdk-21-jre-headless
+  - ca-certificates
+  - curl
+  - wget
+  - gnupg
+  - jq
+  - git
+  - unzip
+  - apt-transport-https
+  - debian-keyring
+  - debian-archive-keyring
+
+# 4 GB is enough for Jenkins at this scale but leaves no headroom for a JVM
+# plus a plugin install plus apt at the same time. Swap turns a hard OOM during
+# provisioning into a slow minute.
+swap:
+  filename: /swapfile
+  size: 2147483648
+
+write_files:
+  # ---------------------------------------------------------------------------
+  # sshd privilege separation directory
+  # ---------------------------------------------------------------------------
+  #
+  # Ubuntu 24.04 socket-activates sshd. /run/sshd is created by ssh.service's
+  # RuntimeDirectory, but socket activation runs ssh@.service instead, which
+  # does not declare one — and this image ships no tmpfiles rule for it either.
+  # /run is tmpfs, so the directory is absent from first boot and sshd exits
+  # with "Missing privilege separation directory" the moment a connection
+  # arrives. The symptom is kex_exchange_identification: Connection closed,
+  # which reads like a network or key problem and is neither.
+  - path: /etc/tmpfiles.d/sshd-privsep.conf
+    permissions: '0644'
+    content: |
+      d /run/sshd 0755 root root -
+
+  # ---------------------------------------------------------------------------
+  # Jenkins service configuration
+  # ---------------------------------------------------------------------------
+  #
+  # Bound to loopback deliberately. Caddy in front of it is the only thing that
+  # should ever answer on a routable address, so a misconfigured NSG rule cannot
+  # expose Jenkins over plain HTTP on 8080.
+  - path: /etc/systemd/system/jenkins.service.d/override.conf
+    permissions: '0644'
+    content: |
+      [Service]
+      Environment="JENKINS_LISTEN_ADDRESS=127.0.0.1"
+      Environment="JENKINS_PORT=8080"
+      Environment="CASC_JENKINS_CONFIG=/var/lib/jenkins/casc.yaml"
+      Environment="JAVA_OPTS=-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false -Xmx1536m"
+      EnvironmentFile=/etc/jenkins/admin.env
+
+  # ---------------------------------------------------------------------------
+  # Jenkins Configuration as Code
+  # ---------------------------------------------------------------------------
+  #
+  # This file is authoritative. Changes made through the UI that overlap with
+  # anything declared here are reverted whenever the configuration is reloaded,
+  # which is the point: the security realm should not be editable by accident.
+  - path: /var/lib/jenkins/casc.yaml
+    permissions: '0640'
+    content: |
+      jenkins:
+        systemMessage: "DopaX build server. Configuration is managed by infra/cloud-init/jenkins.yaml."
+        numExecutors: 2
+        mode: NORMAL
+        securityRealm:
+          local:
+            allowsSignup: false
+            users:
+              - id: "admin"
+                name: "DopaX Admin"
+                password: "${JENKINS_ADMIN_PASSWORD}"
+        authorizationStrategy:
+          loggedInUsersCanDoAnything:
+            allowAnonymousRead: false
+        remotingSecurity:
+          enabled: true
+      # No crumbIssuer block. CSRF protection is on by default and current
+      # Jenkins exposes no configurable attributes on DefaultCrumbIssuer —
+      # setting excludeClientIPFromCrumb here aborts startup outright with
+      # UnknownAttributesException rather than being ignored.
+      security:
+        queueItemAuthenticator:
+          authenticators:
+            - global:
+                strategy: triggeringUsersAuthorizationStrategy
+      unclassified:
+        location:
+          url: "https://__JENKINS_FQDN__/"
+          adminAddress: "app@dopa-x.org"
+
+  # ---------------------------------------------------------------------------
+  # TLS terminator
+  # ---------------------------------------------------------------------------
+  #
+  # `tls internal` issues from Caddy's own local CA, so browsers show a warning
+  # that has to be accepted once. This is not laziness: an IP allowlist and
+  # automatic Let's Encrypt are mutually exclusive, because both ACME challenges
+  # need the CA to reach port 443 from addresses nobody can enumerate in
+  # advance. Encrypted-with-a-warning beats a password in cleartext.
+  #
+  # To get a trusted certificate, point a real name such as ci.dopa-x.org at
+  # this address on an Azure DNS zone and swap `tls internal` for the dns
+  # challenge. Nothing else here changes.
+  - path: /etc/caddy/Caddyfile
+    permissions: '0644'
+    content: |
+      {
+        admin off
+      }
+
+      __JENKINS_FQDN__ {
+        tls internal
+        encode gzip
+        reverse_proxy 127.0.0.1:8080 {
+          header_up X-Forwarded-Proto https
+        }
+      }
+
+  # ---------------------------------------------------------------------------
+  # Provisioning script
+  # ---------------------------------------------------------------------------
+  - path: /opt/dopax/bootstrap.sh
+    permissions: '0750'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      exec > >(tee -a /var/log/dopax-bootstrap.log) 2>&1
+      echo "=== DopaX build server provisioning started $(date -u +%FT%TZ) ==="
+
+      # -----------------------------------------------------------------------
+      # Make SSH work first
+      # -----------------------------------------------------------------------
+      #
+      # Deliberately the very first thing, before anything that can fail. This
+      # script runs under `set -e`, so any later error aborts it — and if that
+      # happens you need a way onto the box to find out why. Fixing sshd last
+      # would mean a failed provision is also an unreachable one.
+      echo "--> Ensuring the sshd privilege separation directory exists"
+      install -d -m 0755 /run/sshd
+      systemd-tmpfiles --create /etc/tmpfiles.d/sshd-privsep.conf || true
+
+      VAULT_NAME="__VAULT_NAME__"
+      SECRET_NAME="__SECRET_NAME__"
+      CLIENT_ID="__CLIENT_ID__"
+
+      # -----------------------------------------------------------------------
+      # Fetch the initial admin password from Key Vault
+      # -----------------------------------------------------------------------
+      #
+      # Straight to IMDS rather than through the Azure CLI: this runs before the
+      # CLI is installed, and it avoids depending on whether this CLI version
+      # spells the argument --client-id or --username.
+      #
+      # The retry loop is not defensive padding. A user-assigned identity is
+      # attached to the VM at create time but the vault access policy is a
+      # separate AAD grant, and propagation is measured in tens of seconds.
+      fetch_admin_password() {
+        local token secret attempt
+        for attempt in $(seq 1 30); do
+          token=$(curl -s -H 'Metadata:true' --max-time 10 \
+            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net&client_id=${CLIENT_ID}" \
+            | jq -r '.access_token // empty')
+
+          if [[ -n "${token}" ]]; then
+            secret=$(curl -s --max-time 10 -H "Authorization: Bearer ${token}" \
+              "https://${VAULT_NAME}.vault.azure.net/secrets/${SECRET_NAME}?api-version=7.4" \
+              | jq -r '.value // empty')
+
+            if [[ -n "${secret}" ]]; then
+              printf '%s' "${secret}"
+              return 0
+            fi
+          fi
+
+          echo "  attempt ${attempt}: identity or secret not ready yet, retrying in 10s"
+          sleep 10
+        done
+
+        echo "error: could not read ${SECRET_NAME} from ${VAULT_NAME} after 5 minutes" >&2
+        return 1
+      }
+
+      echo "--> Reading the Jenkins admin password from Key Vault"
+      ADMIN_PASSWORD="$(fetch_admin_password)"
+
+      install -d -m 0750 /etc/jenkins
+      umask 077
+      printf 'JENKINS_ADMIN_PASSWORD=%s\n' "${ADMIN_PASSWORD}" > /etc/jenkins/admin.env
+      chmod 0600 /etc/jenkins/admin.env
+      unset ADMIN_PASSWORD
+      umask 022
+
+      # -----------------------------------------------------------------------
+      # Package repositories
+      # -----------------------------------------------------------------------
+
+      echo "--> Adding the Jenkins and Caddy repositories"
+      install -d -m 0755 /usr/share/keyrings
+
+      # Jenkins rotates this key and publishes each one under a year-stamped
+      # name, so the URL is a moving target. jenkins.io-2023.key is still
+      # served but no longer signs the repository, and using it fails with
+      # NO_PUBKEY 7198F4B714ABFC68 rather than with anything that names the
+      # real problem.
+      #
+      # The fingerprint is pinned so the next rotation stops the build with a
+      # clear message instead of quietly trusting whatever is served. When that
+      # happens, verify the new key against https://www.jenkins.io/redirect/pgp-key
+      # and update both constants together.
+      JENKINS_KEY_URL='https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key'
+      JENKINS_KEY_FPR='5E386EADB55F01504CAE8BCF7198F4B714ABFC68'
+
+      curl -fsSL "${JENKINS_KEY_URL}" -o /usr/share/keyrings/jenkins-keyring.asc
+
+      ACTUAL_FPR="$(gpg --show-keys --with-colons /usr/share/keyrings/jenkins-keyring.asc \
+        | awk -F: '/^fpr:/ { print $10; exit }')"
+
+      if [[ "${ACTUAL_FPR}" != "${JENKINS_KEY_FPR}" ]]; then
+        echo "error: Jenkins signing key fingerprint does not match" >&2
+        echo "  expected ${JENKINS_KEY_FPR}" >&2
+        echo "  received ${ACTUAL_FPR}" >&2
+        echo "  the key at ${JENKINS_KEY_URL} has been rotated" >&2
+        exit 1
+      fi
+      echo "    key fingerprint verified: ${ACTUAL_FPR}"
+
+      echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" \
+        > /etc/apt/sources.list.d/jenkins.list
+
+      curl -fsSL https://dl.cloudsmith.io/public/caddy/stable/gpg.key \
+        | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+      curl -fsSL https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt \
+        > /etc/apt/sources.list.d/caddy-stable.list
+
+      # --force-confold keeps the Caddyfile written above. Without it dpkg has
+      # to decide between our file and the package default, and which way it
+      # goes depends on the frontend.
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update -y
+      apt-get install -y -o Dpkg::Options::=--force-confold jenkins caddy
+
+      # -----------------------------------------------------------------------
+      # Azure CLI
+      # -----------------------------------------------------------------------
+      #
+      # Pipelines authenticate with `az login --identity`. There is no service
+      # principal secret on this machine and nothing to rotate.
+
+      echo "--> Installing the Azure CLI"
+      curl -fsSL https://aka.ms/InstallAzureCLIDeb | bash
+
+      # -----------------------------------------------------------------------
+      # Jenkins plugins
+      # -----------------------------------------------------------------------
+      #
+      # configuration-as-code has to be present before the first start, or the
+      # CASC_JENKINS_CONFIG file is ignored and Jenkins comes up with the setup
+      # wizard and no admin user.
+      #
+      # authorize-project supplies the queueItemAuthenticator in casc.yaml.
+      # JCasC treats an unresolvable block as fatal, so omitting the plugin
+      # does not degrade to a warning — Jenkins refuses to boot.
+
+      echo "--> Installing Jenkins plugins"
+      systemctl stop jenkins || true
+
+      # The jenkins-plugin-cli wrapper only ships in the official Docker
+      # images. The Debian package installs /usr/bin/jenkins and nothing else,
+      # so the tool behind that wrapper is fetched directly and run with java.
+      PM_VERSION='2.15.0'
+      PM_JAR='/opt/dopax/jenkins-plugin-manager.jar'
+      PM_BASE="https://github.com/jenkinsci/plugin-installation-manager-tool/releases/download/${PM_VERSION}"
+
+      curl -fsSL "${PM_BASE}/jenkins-plugin-manager-${PM_VERSION}.jar" -o "${PM_JAR}"
+      curl -fsSL "${PM_BASE}/jenkins-plugin-manager-${PM_VERSION}.jar.sha256" -o "${PM_JAR}.sha256"
+
+      # The jar is executed as root, so verify it rather than trusting that the
+      # release asset is what it was when this version was pinned.
+      EXPECTED_SHA="$(tr -d '[:space:]' < "${PM_JAR}.sha256" | cut -c1-64)"
+      ACTUAL_SHA="$(sha256sum "${PM_JAR}" | cut -d' ' -f1)"
+
+      if [[ "${ACTUAL_SHA}" != "${EXPECTED_SHA}" ]]; then
+        echo "error: plugin manager checksum mismatch" >&2
+        echo "  expected ${EXPECTED_SHA}" >&2
+        echo "  received ${ACTUAL_SHA}" >&2
+        exit 1
+      fi
+      echo "    plugin manager ${PM_VERSION} checksum verified"
+
+      # The download directory is explicit because the default is
+      # /usr/share/jenkins/ref/plugins, a seed directory for container images.
+      # Jenkins loads from JENKINS_HOME/plugins and would start with none of
+      # these. --war points at the installed release so the resolved plugin
+      # versions match this Jenkins rather than the newest published.
+      install -d -o jenkins -g jenkins /var/lib/jenkins/plugins
+
+      java -jar "${PM_JAR}" \
+        --war /usr/share/java/jenkins.war \
+        --plugin-download-directory /var/lib/jenkins/plugins \
+        --plugins \
+        configuration-as-code \
+        authorize-project \
+        workflow-aggregator \
+        git \
+        credentials-binding \
+        matrix-auth \
+        timestamper \
+        ws-cleanup \
+        pipeline-stage-view
+
+      chown -R jenkins:jenkins /var/lib/jenkins
+
+      # -----------------------------------------------------------------------
+      # Start
+      # -----------------------------------------------------------------------
+
+      echo "--> Starting Jenkins and Caddy"
+      systemctl daemon-reload
+      systemctl enable jenkins caddy
+      systemctl restart jenkins
+      systemctl restart caddy
+
+      echo "--> Waiting for Jenkins to answer on loopback"
+      for attempt in $(seq 1 60); do
+        if curl -fsS --max-time 5 -o /dev/null http://127.0.0.1:8080/login; then
+          echo "    Jenkins is up after ${attempt} attempts"
+          break
+        fi
+        sleep 5
+      done
+
+      echo "=== Provisioning finished $(date -u +%FT%TZ) ==="
+      echo "    Jenkins: https://__JENKINS_FQDN__/"
+      echo "    Username: admin"
+      echo "    Password: az keyvault secret show --vault-name ${VAULT_NAME} --name ${SECRET_NAME} --query value -o tsv"
+
+runcmd:
+  - ['bash', '/opt/dopax/bootstrap.sh']

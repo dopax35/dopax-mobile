@@ -1,0 +1,21 @@
+-- Closes a hole left by 0006: participant_id_conflicts is readable by the research
+-- role and it carries `firebase_uids text[]`.
+--
+-- 0006 moved the identifying tables into `identity` and withheld the identifying
+-- columns that stayed in `public`, but it treated this table as an operations queue
+-- rather than as identity. It is both. A Firebase UID is the join key into
+-- identity.auth_identities.firebase_uid, so the array leaks an identity-provider
+-- identifier and, worse, reveals that two participant codes belong to one account —
+-- which is precisely the linkage the pseudonymization boundary exists to prevent.
+--
+-- Withheld whole rather than by column. The table exists only to queue an identity
+-- collision for a human to resolve in the admin console; the research side has no
+-- use for any of it. Data completeness questions are answered by
+-- drive_manifest_exceptions, which stays readable because its detail carries
+-- pseudonymous legacy codes and file paths, never a credential.
+--
+-- A separate migration rather than an edit to 0006, because the migrator decides
+-- what to apply by timestamp: an amended 0006 would be skipped on any database that
+-- had already run it.
+
+REVOKE SELECT ON "public"."participant_id_conflicts" FROM "dopax_research";

@@ -3,6 +3,22 @@ import SwiftUI
 /// Shared visual pieces for the Figma onboarding redesign.
 /// Logic stays in LoginView / ConsentView / ProfileSetupView — these are presentation only.
 
+/// Single source of truth for the progress bar, so ConsentView and
+/// ProfileSetupView cannot disagree about how many dots there are.
+///
+/// Figma names the flow `Onboarding 1…8`. Welcome (1) draws no dots, so the
+/// remaining eight frames each own one dot — including the phone-usage primer,
+/// which the design left unnumbered but both apps ship as a real step.
+enum OnboardingFlow {
+    static let dotCount = 8
+    static let consentDot = 0
+
+    /// ProfileSetupView's steps are 0-based and start immediately after consent.
+    static func dot(forWizardStep step: Int) -> Int {
+        min(step + 1, dotCount - 1)
+    }
+}
+
 struct OnboardingBackground: View {
     var body: some View {
         LinearGradient(
@@ -44,7 +60,7 @@ struct OnboardingPrimaryButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 16, weight: .bold))
+                .font(.dopax(16, .bold))
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .foregroundColor(.white)
@@ -63,7 +79,7 @@ struct OnboardingSecondaryLink: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 14.5, weight: .medium))
+                .font(.dopax(14.5, .medium))
                 .foregroundColor(color)
         }
     }
@@ -73,7 +89,7 @@ struct OnboardingFieldLabel: View {
     let text: String
     var body: some View {
         Text(text.uppercased())
-            .font(.system(size: 12, weight: .bold))
+            .font(.dopax(12, .bold))
             .foregroundColor(.dopaxBlack70)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -87,6 +103,7 @@ struct OnboardingTextField: View {
 
     var body: some View {
         TextField(placeholder, text: $text)
+            .font(.dopax(16))
             .keyboardType(keyboard)
             .padding(.horizontal, 16)
             .frame(height: 56)
@@ -112,7 +129,7 @@ struct OnboardingSegmentRow: View {
                     selection = option
                 } label: {
                     Text(option)
-                        .font(.system(size: fontSize, weight: .bold))
+                        .font(.dopax(fontSize, .bold))
                         .foregroundColor(selected ? .white : .dopaxBlack70)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
@@ -146,7 +163,7 @@ struct OnboardingAuthCardButton: View {
                         .frame(width: 22, height: 22)
                 }
                 Text(title)
-                    .font(.system(size: 15.5, weight: .bold))
+                    .font(.dopax(15.5, .bold))
                     .foregroundColor(.dopaxBlack90)
             }
             .frame(maxWidth: .infinity)
@@ -184,10 +201,10 @@ struct OnboardingPrimerCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.dopax(14, .semibold))
                 .foregroundColor(.dopaxBlack90)
             Text(bodyText)
-                .font(.system(size: 14))
+                .font(.dopax(14))
                 .foregroundColor(.dopaxBlack70)
                 .fixedSize(horizontal: false, vertical: true)
         }

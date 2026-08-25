@@ -9,6 +9,7 @@ import {
   catalogueEntry,
   emptyZipParsePlan,
   ingestStructuredCsv,
+  timestampFromStreamHead,
   type ZipParsePlan,
 } from './zip-parse.js';
 
@@ -52,8 +53,15 @@ function readEntry(zip: ZipFile, entry: Entry): Promise<Buffer> {
   });
 }
 
-/** Counts newline-terminated rows without holding the whole stream. */
-function countLines(zip: ZipFile, entry: Entry): Promise<number> {
+/**
+ * Counts newline-terminated rows without holding the whole stream, and keeps the
+ * first two lines so the file can be dated.
+ *
+ * A single sensor CSV can run to hundreds of megabytes, which is exactly why its
+ * rows are catalogued rather than loaded. Retaining two lines buys `captured_at`
+ * without giving that up.
+ */
+function scanStream(zip: ZipFile, entry: Entry): Promise<{ rows: number; capturedAt: Date | null }> {
   return new Promise((resolve, reject) => {
     zip.openReadStream(entry, (error, stream) => {
       if (error || !stream) {
@@ -62,17 +70,36 @@ function countLines(zip: ZipFile, entry: Entry): Promise<number> {
       }
       let lines = 0;
       let leftover = '';
+      let header: string | undefined;
+      let firstRow: string | undefined;
+
       stream.on('data', (chunk: Buffer) => {
         const text = leftover + chunk.toString('utf8');
         const parts = text.split('\n');
         leftover = parts.pop() ?? '';
+
+        for (const line of parts) {
+          if (header === undefined) header = line;
+          else if (firstRow === undefined && line.trim().length > 0) firstRow = line;
+        }
+
         lines += parts.length;
       });
       stream.on('error', reject);
       stream.on('end', () => {
-        if (leftover.trim().length > 0) lines += 1;
+        if (leftover.trim().length > 0) {
+          if (header === undefined) header = leftover;
+          else if (firstRow === undefined) firstRow = leftover;
+          lines += 1;
+        }
+
+        const capturedAt =
+          header !== undefined && firstRow !== undefined
+            ? timestampFromStreamHead(header, firstRow)
+            : null;
+
         // subtract header if present
-        resolve(Math.max(0, lines - 1));
+        resolve({ rows: Math.max(0, lines - 1), capturedAt });
       });
     });
   });
@@ -111,8 +138,8 @@ export async function parseUploadZipFile(
               collectionDate,
             );
           } else if (kind === 'stream') {
-            const rows = await countLines(zip, entry);
-            catalogueEntry(plan, entry.fileName, bytes, rows);
+            const { rows, capturedAt } = await scanStream(zip, entry);
+            catalogueEntry(plan, entry.fileName, bytes, rows, capturedAt);
           } else if (kind !== 'marker') {
             catalogueEntry(plan, entry.fileName, bytes, 0);
           }

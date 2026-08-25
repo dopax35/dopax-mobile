@@ -28,16 +28,17 @@ struct EmailSignInView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("Sign in with email")
-                    .font(.system(size: 26, weight: .bold))
+                    .font(.dopax(26, .bold))
                     .foregroundColor(.dopaxBlack90)
                     .padding(.top, 8)
 
                 Text("We'll send a 6-digit code to confirm it's you.")
-                    .font(.system(size: 14.5))
+                    .font(.dopax(14.5))
                     .foregroundColor(.dopaxBlack70)
                     .padding(.top, 8)
 
                 TextField("alex@email.com", text: $email)
+                    .font(.dopax(16))
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled(true)
@@ -61,13 +62,13 @@ struct EmailSignInView: View {
                 .padding(.top, 20)
 
                 Text("We only use your email to sign you in.")
-                    .font(.system(size: 13))
+                    .font(.dopax(13))
                     .foregroundColor(.onboardingTextTertiary)
                     .padding(.top, 16)
 
                 if let errorMessage {
                     Text(errorMessage)
-                        .font(.system(size: 13))
+                        .font(.dopax(13))
                         .foregroundColor(.dopaxError)
                         .padding(.top, 12)
                 }

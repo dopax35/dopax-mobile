@@ -104,6 +104,17 @@ class AppState: ObservableObject {
             .sink { [weak self] _ in self?.sessionManager.refresh() }
             .store(in: &cancellables)
 
+        // Every test screen already reports to gamification when it saves.
+        // Forwarding that to the session layer means the hub learns a test
+        // finished without any test screen needing to know sessions exist.
+        // The manager ignores anything it did not itself launch.
+        gamification.onCompletion = { [weak self] testType, score in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                self.sessionManager.testDidComplete(testId: testType, score: score)
+            }
+        }
+
         sensorKitManager.configure(dataManager: dataManager)
 
         bgCollection.configure(healthKit: healthKitManager,

@@ -6,6 +6,12 @@
     android:orientation="vertical"
     android:padding="12dp">
 
+    <!-- Set per row from Kotlin as "MEDICATION 1", "MEDICATION 2", … -->
+    <TextView
+        android:id="@+id/tvMedicationLabel"
+        style="@style/Widget.DopaX.Onboarding.FieldLabel"
+        android:layout_marginBottom="4dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,7 +25,7 @@
             android:layout_weight="1"
             android:background="@null"
             android:fontFamily="@font/lexend_medium"
-            android:hint="Medication name"
+            android:hint="Levodopa"
             android:importantForAutofill="no"
             android:inputType="textCapWords"
             android:minHeight="44dp"

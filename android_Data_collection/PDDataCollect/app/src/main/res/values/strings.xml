@@ -43,5 +43,7 @@
     <string name="title_system_permissions">System Permissions</string>
     <string name="btn_continue_sanctuary">Continue to Sanctuary</string>
     <string name="label_version_placeholder">Version: —</string>
+    <!-- Rendered uppercase by Widget.DopaX.Onboarding.FieldLabel. -->
+    <string name="onboarding_medication_label">Medication %1$d</string>
 </resources>
 

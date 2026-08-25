@@ -89,6 +89,26 @@
             app:iconSize="22dp"
             app:iconTint="@null" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnContinueApple"
+            style="@style/Widget.Material3.Button.ElevatedButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/lexend_bold"
+            android:text="Continue with Apple"
+            android:textAllCaps="false"
+            android:textColor="@color/black_90"
+            android:textSize="15.5sp"
+            app:backgroundTint="@color/white"
+            app:cornerRadius="16dp"
+            app:elevation="2dp"
+            app:icon="@drawable/apple_logo"
+            app:iconGravity="textStart"
+            app:iconPadding="14dp"
+            app:iconSize="22dp"
+            app:iconTint="@null" />
+
         <TextView
             android:id="@+id/btnContinueEmail"
             android:layout_width="wrap_content"

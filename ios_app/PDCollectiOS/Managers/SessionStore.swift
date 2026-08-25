@@ -15,6 +15,11 @@ protocol SessionStoring: AnyObject {
     func loadBaselineDays() -> [String]
     func saveBaselineDays(_ days: [String])
 
+    /// Total sessions finished across the whole baseline period. Counts every
+    /// session, not one per day, which is what the day-14 screen's
+    /// "14 days, 38 sessions" line reports.
+    var completedSessionCount: Int { get set }
+
     /// Raw values of the daily tasks already done on `day`.
     func loadCompletedTasks(day: String) -> [String]
     func saveCompletedTasks(_ taskIds: [String], day: String)
@@ -32,6 +37,7 @@ final class UserDefaultsSessionStore: SessionStoring {
         static let prefix = "session_"
         static let baselineDays = "session_baseline_days"
         static let seenBaselineCompletion = "session_baseline_completion_seen"
+        static let completedSessions = "session_completed_count"
 
         static func progress(day: String, period: SessionPeriod) -> String {
             "\(prefix)progress_\(day)_\(period.rawValue)"
@@ -80,6 +86,11 @@ final class UserDefaultsSessionStore: SessionStoring {
         get { defaults.bool(forKey: Keys.seenBaselineCompletion) }
         set { defaults.set(newValue, forKey: Keys.seenBaselineCompletion) }
     }
+
+    var completedSessionCount: Int {
+        get { defaults.integer(forKey: Keys.completedSessions) }
+        set { defaults.set(newValue, forKey: Keys.completedSessions) }
+    }
 }
 
 // MARK: - In-memory
@@ -90,6 +101,7 @@ final class InMemorySessionStore: SessionStoring {
     private var baselineDays: [String] = []
     private var tasks: [String: [String]] = [:]
     var hasSeenBaselineCompletion = false
+    var completedSessionCount = 0
 
     init() {}
 

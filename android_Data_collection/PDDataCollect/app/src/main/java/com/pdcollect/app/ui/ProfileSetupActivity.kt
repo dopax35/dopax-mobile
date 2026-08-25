@@ -54,8 +54,15 @@ class ProfileSetupActivity : AppCompatActivity() {
         const val STEP_READY = 6
         const val STEP_COUNT = 7
 
-        /** Consent owns dot 0, so the wizard's steps start at the second dot. */
-        const val PROGRESS_DOTS = 7
+        /**
+         * Consent owns dot 0, so the wizard's seven steps take dots 1..7.
+         *
+         * Figma names the flow `Onboarding 1..8`; Welcome draws no dots, leaving
+         * eight dotted frames. The interaction-data primer was left unnumbered in
+         * the design but ships as a real step, so it gets a dot too — at 7 dots
+         * the last two steps collided on the final dot and the bar appeared stuck.
+         */
+        const val PROGRESS_DOTS = 8
         const val STATE_STEP = "onboarding_step"
 
         const val STATUS_CONNECTED = "connected"
@@ -468,11 +475,25 @@ class ProfileSetupActivity : AppCompatActivity() {
             medicationContainer.removeView(view)
             medicationRows.removeAll { it.view === view }
             if (medicationRows.isEmpty()) addMedicationRow()
+            renumberMedicationRows()
             commitMedications()
         }
 
         medicationContainer.addView(view)
         medicationRows.add(row)
+        renumberMedicationRows()
+    }
+
+    /**
+     * Figma labels each entry "MEDICATION 1", "MEDICATION 2", … Rows can be
+     * removed from the middle, so the labels are rewritten from the list order
+     * rather than fixed at inflation time.
+     */
+    private fun renumberMedicationRows() {
+        medicationRows.forEachIndexed { index, row ->
+            row.view.findViewById<TextView>(R.id.tvMedicationLabel).text =
+                getString(R.string.onboarding_medication_label, index + 1)
+        }
     }
 
     private fun composeMedicationDose(count: String, unit: String): String {
@@ -669,7 +690,7 @@ class ProfileSetupActivity : AppCompatActivity() {
     // MARK: - Step 6: reminders primer
 
     private fun bindRemindersStep() {
-        findViewById<MaterialButton>(R.id.btnRemindersContinue).setOnClickListener {
+        findViewById<MaterialButton>(R.id.btnRemindersAllow).setOnClickListener {
             requestNotifications()
         }
         findViewById<TextView>(R.id.btnRemindersSkip).setOnClickListener {

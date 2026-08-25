@@ -2,6 +2,13 @@
   "mcpServers": {
     "figma": {
       "url": "https://mcp.figma.com/mcp"
+    },
+    "azure": {
+      "command": "/Users/jedaans/.nvm/versions/node/v24.11.1/bin/npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"],
+      "env": {
+        "PATH": "/Users/jedaans/.nvm/versions/node/v24.11.1/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      }
     }
   }
 }

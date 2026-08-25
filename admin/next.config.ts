@@ -3,6 +3,11 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   reactStrictMode: true,
 
+  // Emits .next/standalone with only the traced runtime dependencies, so the
+  // container image does not carry the full node_modules tree. Required by
+  // admin/Dockerfile; `next dev` and `next start` are unaffected.
+  output: 'standalone',
+
   // Next writes its own AGENTS.md and CLAUDE.md by default. This repository has
   // authoritative versions at the root describing the project's agent workflow,
   // and a second pair here would compete with them.

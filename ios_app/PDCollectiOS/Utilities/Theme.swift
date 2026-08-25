@@ -20,14 +20,48 @@ extension Color {
     // Today / session flow (Figma "Current Design")
     static let todaySurfaceBrand = Color(hex: 0xF4F1F8)        // task + hub icon wells
     static let todaySurfaceBrandStrong = Color(hex: 0xE9E5F8)  // article thumbnails, window chip
+    static let todaySurfaceBrandIdle = Color(hex: 0xEDE9FA)    // icon well on a not-yet-run hub row
     static let todayTextDisabled = Color(hex: 0xC4BBC8)        // locked session card text
     static let todayAccentWarm = Color(hex: 0xFF8953)          // morning/noon session button
+    static let todayTextOnChip = Color(hex: 0x5A4A8A)          // window chip label
+    static let sessionDemoStroke = Color(hex: 0x9B87E8)        // ready-gate demo line art
+    static let questionScaleIdle = Color(hex: 0xF2F2F5)        // unselected scale segment
+
+    /// The coral the two "commit this" buttons share — Save on the
+    /// questionnaire (601:2) and Add medication on the sheet (475:2). Warmer
+    /// and more urgent than `todayAccentWarm`, which only invites.
+    static let sheetAccentCoral = Color(hex: 0xFF5C33)
     static let todayMorningTop = Color(hex: 0xFFD9AE)
     static let todayMorningBottom = Color(hex: 0xFFC08A)
     static let todayNoonTop = Color(hex: 0xFFD079)
     static let todayNoonBottom = Color(hex: 0xE7D0C6)
     static let todayNightTop = Color(hex: 0x2E2A4A)
     static let todayNightBottom = Color(hex: 0x4A4468)
+
+    /// The success green the session screens use. Deliberately not
+    /// `dopaxStatusSuccess`: that is the Material-derived hue the researcher
+    /// surfaces share with Android, and the design uses a deeper green against
+    /// the cream backgrounds so a check does not read as a system alert.
+    static let sessionSuccess = Color(hex: 0x2E9E63)
+
+    // Session complete (Figma 550:30 morning, 550:89 noon, 483:2 evening).
+    // The page sits a shade warmer than `onboardingCream`, which is why it is
+    // its own token rather than a reuse.
+    static let sessionCream = Color(hex: 0xFFF7F2)
+    static let skyMorningTop = Color(hex: 0xFFD7AB)
+    static let skyMorningBottom = Color(hex: 0xFFC38F)
+    static let skyNoonTop = Color(hex: 0xFFEFBB)
+    static let skyNoonBottom = Color(hex: 0xFFE298)
+    static let skyEveningTop = Color(hex: 0x4444E4)
+    static let skyEveningBottom = Color(hex: 0x6A6ADB)
+
+    /// Completion-screen call to action, one per sky.
+    static let sessionNoonAccent = Color(hex: 0xFF9253)
+    static let sessionNightAccent = Color(hex: 0x5252FF)
+
+    // Baseline complete (Figma 579:2)
+    static let baselineSkyTop = Color(hex: 0xE9E2F9)
+    static let baselineSkyBottom = Color(hex: 0xFCF1E9)
 
     // Neutrals — mirror Android's colors.xml Dopa-X Brand Palette grays
     // (black_90/black_80/black_70/gray_50/gray_30), so both platforms draw
@@ -69,8 +103,11 @@ extension ShapeStyle where Self == Color {
 
     static var todaySurfaceBrand: Color { .todaySurfaceBrand }
     static var todaySurfaceBrandStrong: Color { .todaySurfaceBrandStrong }
+    static var todaySurfaceBrandIdle: Color { .todaySurfaceBrandIdle }
     static var todayTextDisabled: Color { .todayTextDisabled }
     static var todayAccentWarm: Color { .todayAccentWarm }
+    static var todayTextOnChip: Color { .todayTextOnChip }
+    static var sessionSuccess: Color { .sessionSuccess }
 
     static var dopaxBlack90: Color { .dopaxBlack90 }
     static var dopaxBlack80: Color { .dopaxBlack80 }
@@ -98,10 +135,40 @@ extension Color {
     }
 }
 
+// MARK: - Typography
+
+/// Lexend is the product typeface on both platforms (Android sets it app-wide
+/// in themes.xml). These are the four PostScript names bundled in Fonts/ and
+/// registered under UIAppFonts — anything else silently falls back to SF Pro.
+enum LexendFace {
+    static let regular = "Lexend-Regular"
+    static let medium = "Lexend-Medium"
+    static let semibold = "Lexend-SemiBold"
+    static let bold = "Lexend-Bold"
+
+    static func name(for weight: Font.Weight) -> String {
+        switch weight {
+        case .medium: return medium
+        case .semibold: return semibold
+        case .bold, .heavy, .black: return bold
+        default: return regular
+        }
+    }
+}
+
+extension Font {
+    /// Drop-in replacement for `.system(size:weight:)`. Sizes stay fixed rather
+    /// than using `relativeTo:` because the Figma layout pins button and field
+    /// heights to 54/56pt — Dynamic Type scaling would overflow them.
+    static func dopax(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        .custom(LexendFace.name(for: weight), size: size)
+    }
+}
+
 struct DopaxH1: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.custom("Rajdhani-Bold", size: 50))
+            .font(.dopax(50, .bold))
             .lineSpacing(10)
     }
 }
@@ -109,14 +176,14 @@ struct DopaxH1: ViewModifier {
 struct DopaxH2: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.custom("Rajdhani-Bold", size: 28))
+            .font(.dopax(28, .bold))
     }
 }
 
 struct DopaxH3: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .font(.custom("Rajdhani-Medium", size: 20))
+            .font(.dopax(20, .medium))
             .textCase(.uppercase)
             .tracking(1.2)
     }
@@ -125,14 +192,7 @@ struct DopaxH3: ViewModifier {
 struct DopaxH4: ViewModifier {
     func body(content: Content) -> some View {
         content
-            // The bundled Outfit.ttf's real PostScript name is "Outfit-Thin"
-            // (confirmed via the font's name table) — there is no Medium
-            // weight file in the project. Referencing "Outfit-Medium" here
-            // never matched, so this label style silently rendered in the
-            // system font instead of Outfit. If a Medium weight is wanted
-            // for legibility at this small (12pt) size, add an
-            // Outfit-Medium.ttf to the project and register it in Info.plist.
-            .font(.custom("Outfit-Thin", size: 12))
+            .font(.dopax(12, .medium))
             .textCase(.uppercase)
     }
 }

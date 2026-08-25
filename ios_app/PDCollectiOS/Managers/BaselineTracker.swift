@@ -18,11 +18,17 @@ final class BaselineTracker: ObservableObject {
     /// were recorded. Never shrinks and never contains duplicates.
     @Published private(set) var completedDays: [String]
 
+    /// Every session finished, not one per day. The day-14 screen reports
+    /// both figures ("14 days, 38 sessions") because they say different
+    /// things: how long the participant has been at it, and how much they did.
+    @Published private(set) var completedSessions: Int
+
     private let store: SessionStoring
 
     init(store: SessionStoring) {
         self.store = store
         self.completedDays = store.loadBaselineDays()
+        self.completedSessions = store.completedSessionCount
     }
 
     /// 0 before the first completed session, otherwise 1...14.
@@ -60,6 +66,11 @@ final class BaselineTracker: ObservableObject {
     /// no-op.
     @discardableResult
     func recordSessionCompleted(on dayKey: String) -> Bool {
+        // The session total counts every session, so it is incremented before
+        // the day check that the helix return value depends on.
+        completedSessions += 1
+        store.completedSessionCount = completedSessions
+
         guard !completedDays.contains(dayKey) else { return false }
         completedDays.append(dayKey)
         store.saveBaselineDays(completedDays)

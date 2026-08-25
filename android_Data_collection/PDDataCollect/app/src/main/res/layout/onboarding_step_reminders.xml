@@ -90,9 +90,9 @@
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnRemindersContinue"
+        android:id="@+id/btnRemindersAllow"
         style="@style/Widget.DopaX.Onboarding.PrimaryButton"
-        android:text="Continue" />
+        android:text="Allow reminders" />
 
     <TextView
         android:id="@+id/btnRemindersSkip"

@@ -19,9 +19,9 @@ import com.pdcollect.app.data.UserProfile
 import kotlinx.coroutines.launch
 
 /**
- * Welcome / auth entry. Visual shell matches Figma onboarding Welcome;
- * providers and post-auth routing are unchanged (Email / Phone / Google →
- * Consent / ProfileSetup / Main).
+ * Welcome / auth entry. Visual shell matches Figma onboarding Welcome.
+ * Providers are Google / Apple (buttons) plus Email / Phone (links); post-auth
+ * routing is unchanged (Consent → ProfileSetup → Main).
  */
 class LoginActivity : AppCompatActivity() {
 
@@ -96,6 +96,12 @@ class LoginActivity : AppCompatActivity() {
 
         findViewById<MaterialButton>(R.id.btnContinueGoogle).setOnClickListener {
             launchSignIn(listOf(AuthUI.IdpConfig.GoogleBuilder().build()))
+        }
+        // Apple is a generic OAuth provider on Android (web flow), so it needs the
+        // Apple provider enabled in the Firebase console. Until that is done the
+        // launcher's error branch reports it like any other failed sign-in.
+        findViewById<MaterialButton>(R.id.btnContinueApple).setOnClickListener {
+            launchSignIn(listOf(AuthUI.IdpConfig.AppleBuilder().build()))
         }
         emailLink.setOnClickListener {
             startActivity(Intent(this, EmailSignInActivity::class.java))

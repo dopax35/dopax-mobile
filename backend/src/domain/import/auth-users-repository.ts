@@ -111,7 +111,7 @@ export async function countImported(database: Database): Promise<AuthImportCount
   const [counts] = await database
     .select({
       participants: sql<number>`(select count(*)::int from participants)`,
-      identities: sql<number>`(select count(*)::int from auth_identities)`,
+      identities: sql<number>`(select count(*)::int from identity.auth_identities)`,
       conflicts: sql<number>`(select count(*)::int from participant_id_conflicts)`,
       testAccounts: sql<number>`(select count(*)::int from participants where is_test_account)`,
       needsResolution: sql<number>`(select count(*)::int from participants where status = 'needs_id_resolution')`,

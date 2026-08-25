@@ -7,6 +7,15 @@ struct LoginView: View {
     @State private var showEmailSignIn = false
     @State private var emailCodeEnabled = BackendSyncManager.emailCodeEnabled
 
+    /// Figma's Welcome screen offers Google, Apple and email only, so the
+    /// "continue without signing in" escape hatch is hidden on fresh installs.
+    /// It stays reachable on devices that already hold participant data:
+    /// RELEASE.md added it precisely so an existing user who lands back on this
+    /// screen is never walled off from data they already collected.
+    private var showsLegacyAccessEscapeHatch: Bool {
+        appState.userProfile.consentGiven || appState.hasSkippedLogin
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -19,19 +28,19 @@ struct LoginView: View {
                         .padding(.bottom, 26)
 
                     Text("Welcome to dopa-X")
-                        .font(.system(size: 30, weight: .bold))
+                        .font(.dopax(30, .bold))
                         .foregroundColor(.dopaxBlack90)
                         .multilineTextAlignment(.center)
 
                     Text("A few minutes a day to track how your Parkinson’s really behaves.")
-                        .font(.system(size: 15))
+                        .font(.dopax(15))
                         .foregroundColor(.dopaxBlack70)
                         .multilineTextAlignment(.center)
                         .padding(.top, 10)
                         .padding(.horizontal, 36)
 
                     Text("Together, we’re working toward Levodopa timing that fits each person.")
-                        .font(.system(size: 13))
+                        .font(.dopax(13))
                         .foregroundColor(.onboardingTextTertiary)
                         .multilineTextAlignment(.center)
                         .padding(.top, 12)
@@ -60,25 +69,27 @@ struct LoginView: View {
                         }
                         .padding(.horizontal, 24)
 
-                        OnboardingSecondaryLink(title: "Continue without signing in") {
-                            appState.skipSignIn()
-                        }
-                        .padding(.top, 20)
-
                         if emailCodeEnabled {
                             Button("Use email instead") {
                                 showEmailSignIn = true
                             }
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.dopax(14, .medium))
                             .foregroundColor(.onboardingAccent)
-                            .padding(.top, 8)
+                            .padding(.top, 20)
+                        }
+
+                        if showsLegacyAccessEscapeHatch {
+                            OnboardingSecondaryLink(title: "Continue without signing in") {
+                                appState.skipSignIn()
+                            }
+                            .padding(.top, emailCodeEnabled ? 8 : 20)
                         }
                     }
 
                     if let errorMessage {
                         Text(errorMessage)
                             .foregroundColor(.dopaxError)
-                            .font(.caption)
+                            .font(.dopax(12))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                             .padding(.top, 8)
@@ -87,7 +98,7 @@ struct LoginView: View {
                     Spacer(minLength: 24)
 
                     Text("For research participants of dopa-x.org")
-                        .font(.system(size: 12))
+                        .font(.dopax(12))
                         .foregroundColor(.onboardingTextTertiary)
                         .padding(.bottom, 28)
                 }

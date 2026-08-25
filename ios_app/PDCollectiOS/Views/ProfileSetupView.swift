@@ -27,7 +27,10 @@ struct ProfileSetupView: View {
             OnboardingBackground()
 
             VStack(spacing: 0) {
-                OnboardingProgressDots(total: 7, current: min(step + 1, 6))
+                OnboardingProgressDots(
+                    total: OnboardingFlow.dotCount,
+                    current: OnboardingFlow.dot(forWizardStep: step)
+                )
                     .padding(.horizontal, 24)
                     .padding(.top, 12)
                     .padding(.bottom, 20)
@@ -90,10 +93,10 @@ struct ProfileSetupView: View {
     private var aboutYouStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("About you")
-                .font(.system(size: 26, weight: .bold))
+                .font(.dopax(26, .bold))
                 .foregroundColor(.dopaxBlack90)
             Text("This helps us read your tests correctly.")
-                .font(.system(size: 14.5))
+                .font(.dopax(14.5))
                 .foregroundColor(.dopaxBlack70)
                 .padding(.top, 8)
 
@@ -106,19 +109,7 @@ struct ProfileSetupView: View {
                     )
 
                     OnboardingFieldLabel(text: "Year of birth")
-                    OnboardingTextField(
-                        placeholder: "e.g. 1957",
-                        text: Binding(
-                            get: { profile.yearOfBirth },
-                            set: { value in
-                                profile.yearOfBirth = value
-                                if let y = Int(value), y > 1900 {
-                                    profile.age = String(Calendar.current.component(.year, from: Date()) - y)
-                                }
-                            }
-                        ),
-                        keyboard: .numberPad
-                    )
+                    yearOfBirthPicker
 
                     OnboardingFieldLabel(text: "Gender")
                     genderPicker
@@ -155,23 +146,58 @@ struct ProfileSetupView: View {
         .padding(.horizontal, 24)
     }
 
+    /// Figma draws year of birth as a select, not a free numeric field. A bounded
+    /// list also removes the typo class this study kept hitting (1057, 19577).
+    private var birthYearRange: [Int] {
+        let thisYear = Calendar.current.component(.year, from: Date())
+        return Array((thisYear - 110)...(thisYear - 18)).reversed()
+    }
+
+    private var yearOfBirthPicker: some View {
+        Menu {
+            ForEach(birthYearRange, id: \.self) { year in
+                Button(String(year)) { setYearOfBirth(String(year)) }
+            }
+        } label: {
+            dropdownLabel(
+                text: profile.yearOfBirth.isEmpty ? "Select" : profile.yearOfBirth,
+                isPlaceholder: profile.yearOfBirth.isEmpty
+            )
+        }
+    }
+
+    private func setYearOfBirth(_ value: String) {
+        profile.yearOfBirth = value
+        if let year = Int(value), year > 1900 {
+            profile.age = String(Calendar.current.component(.year, from: Date()) - year)
+        }
+    }
+
     private var genderPicker: some View {
         Menu {
             ForEach(["Male", "Female", "Non-binary", "Prefer not to say"], id: \.self) { option in
                 Button(option) { profile.gender = option }
             }
         } label: {
-            HStack {
-                Text(profile.gender.isEmpty ? "Select" : profile.gender)
-                    .foregroundColor(profile.gender.isEmpty ? .dopaxGray50 : .dopaxBlack90)
-                Spacer()
-                Image(systemName: "chevron.down").foregroundColor(.dopaxGray50)
-            }
-            .padding(.horizontal, 16)
-            .frame(height: 56)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            dropdownLabel(
+                text: profile.gender.isEmpty ? "Select" : profile.gender,
+                isPlaceholder: profile.gender.isEmpty
+            )
         }
+    }
+
+    private func dropdownLabel(text: String, isPlaceholder: Bool) -> some View {
+        HStack {
+            Text(text)
+                .font(.dopax(16))
+                .foregroundColor(isPlaceholder ? .dopaxGray50 : .dopaxBlack90)
+            Spacer()
+            Image(systemName: "chevron.down").foregroundColor(.dopaxGray50)
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 56)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     // MARK: - Medications
@@ -179,10 +205,10 @@ struct ProfileSetupView: View {
     private var medicationsStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Your medications")
-                .font(.system(size: 26, weight: .bold))
+                .font(.dopax(26, .bold))
                 .foregroundColor(.dopaxBlack90)
             Text("So one tap can log a dose later.")
-                .font(.system(size: 14.5))
+                .font(.dopax(14.5))
                 .foregroundColor(.dopaxBlack70)
                 .padding(.top, 8)
 
@@ -196,13 +222,13 @@ struct ProfileSetupView: View {
                         profile.medications.append(Medication(name: ""))
                     } label: {
                         Text("+ Add another medication")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.dopax(15, .medium))
                             .foregroundColor(.onboardingAccent)
                     }
                     .padding(.top, 4)
 
                     Text("You can always change these in your Profile.")
-                        .font(.system(size: 13))
+                        .font(.dopax(13))
                         .foregroundColor(.onboardingTextTertiary)
                 }
                 .padding(.top, 28)
@@ -225,6 +251,8 @@ struct ProfileSetupView: View {
 
     private func medicationRow(at index: Int) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+            OnboardingFieldLabel(text: "Medication \(index + 1)")
+
             OnboardingTextField(
                 placeholder: "Levodopa",
                 text: Binding(
@@ -284,10 +312,10 @@ struct ProfileSetupView: View {
     private var testTimesStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Your three daily sessions")
-                .font(.system(size: 26, weight: .bold))
+                .font(.dopax(26, .bold))
                 .foregroundColor(.dopaxBlack90)
             Text("Same times every day teach us fastest.")
-                .font(.system(size: 14.5))
+                .font(.dopax(14.5))
                 .foregroundColor(.dopaxBlack70)
                 .padding(.top, 8)
 
@@ -297,8 +325,8 @@ struct ProfileSetupView: View {
                 lockedSessionRow(title: "Evening window", subtitle: profile.testTimeEvening)
 
                 Text("A reminder arrives when each window opens. Sessions take about 4 minutes.")
-                    .font(.system(size: 13))
-                    .foregroundColor(.dopaxBlack70)
+                    .font(.dopax(13))
+                    .foregroundColor(.onboardingTextTertiary)
                     .padding(.top, 8)
             }
             .padding(.top, 28)
@@ -321,10 +349,10 @@ struct ProfileSetupView: View {
                 .frame(width: 22, height: 22)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.dopax(15, .semibold))
                     .foregroundColor(.todayTextDisabled)
                 Text(subtitle)
-                    .font(.system(size: 13))
+                    .font(.dopax(13))
                     .foregroundColor(.dopaxGray50)
             }
             Spacer()
@@ -343,16 +371,21 @@ struct ProfileSetupView: View {
             showTimePicker = true
         } label: {
             HStack(spacing: 12) {
+                // The design gives the active row the same leading clock as the
+                // two locked rows, in accent rather than grey.
+                Image(systemName: "clock")
+                    .foregroundColor(.onboardingAccent)
+                    .frame(width: 22, height: 22)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Your window")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.dopax(15, .semibold))
                         .foregroundColor(.dopaxBlack90)
                     HStack(spacing: 0) {
                         Text("Choose a time between ")
-                            .font(.system(size: 13))
+                            .font(.dopax(13))
                             .foregroundColor(.onboardingAccent)
                         Text(windowTimeLabel)
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.dopax(13, .bold))
                             .foregroundColor(.dopaxBlack90)
                     }
                 }
@@ -383,10 +416,10 @@ struct ProfileSetupView: View {
     private var healthAppsStep: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Connect health apps")
-                .font(.system(size: 26, weight: .bold))
+                .font(.dopax(26, .bold))
                 .foregroundColor(.dopaxBlack90)
-            Text("Optional — activity data helps us see the full picture.")
-                .font(.system(size: 14.5))
+            Text("Activity data helps us see the full picture.")
+                .font(.dopax(14.5))
                 .foregroundColor(.dopaxBlack70)
                 .padding(.top, 8)
 
@@ -409,17 +442,20 @@ struct ProfileSetupView: View {
             }
             .padding(.top, 28)
 
-            Spacer()
-
-            OnboardingPrimaryButton(title: "Continue") { step = 4 }
-                .padding(.bottom, 12)
+            // Figma places "Skip for now" directly under the three cards, not
+            // beneath the primary button.
             OnboardingSecondaryLink(title: "Skip for now", color: .onboardingTextTertiary) {
                 profile.healthAppleStatus = profile.healthAppleStatus.isEmpty ? "skipped" : profile.healthAppleStatus
                 profile.healthStravaStatus = "skipped"
                 step = 4
             }
             .frame(maxWidth: .infinity)
-            .padding(.bottom, 28)
+            .padding(.top, 20)
+
+            Spacer()
+
+            OnboardingPrimaryButton(title: "Continue") { step = 4 }
+                .padding(.bottom, 28)
         }
         .padding(.horizontal, 24)
     }
@@ -428,14 +464,14 @@ struct ProfileSetupView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Google Fit")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.dopax(15, .semibold))
                 Text("Steps & activity")
-                    .font(.system(size: 13))
+                    .font(.dopax(13))
                     .foregroundColor(.dopaxBlack70)
             }
             Spacer()
             Text("iPhone only")
-                .font(.system(size: 13, weight: .medium))
+                .font(.dopax(13, .medium))
                 .foregroundColor(.dopaxGray50)
         }
         .padding(16)
@@ -451,12 +487,12 @@ struct ProfileSetupView: View {
     ) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 15, weight: .semibold))
-                Text(subtitle).font(.system(size: 13)).foregroundColor(.dopaxBlack70)
+                Text(title).font(.dopax(15, .semibold))
+                Text(subtitle).font(.dopax(13)).foregroundColor(.dopaxBlack70)
             }
             Spacer()
             Button(status == "connected" ? "Connected" : "Connect", action: action)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.dopax(14, .semibold))
                 .foregroundColor(.onboardingAccent)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
@@ -498,17 +534,17 @@ struct ProfileSetupView: View {
                 .font(.system(size: 42))
                 .foregroundColor(.onboardingAccent)
                 .frame(width: 96, height: 96)
-                .background(Color.white)
+                .background(Color.onboardingAccent.opacity(0.15))
                 .clipShape(Circle())
 
             Text("How you use your phone")
-                .font(.system(size: 26, weight: .bold))
+                .font(.dopax(26, .bold))
                 .foregroundColor(.dopaxBlack90)
                 .multilineTextAlignment(.center)
                 .padding(.top, 28)
 
             Text("dopa-X reads simple interaction signals, like typing rhythm and scrolling, to notice changes over time.")
-                .font(.system(size: 15))
+                .font(.dopax(15))
                 .foregroundColor(.dopaxBlack70)
                 .multilineTextAlignment(.center)
                 .padding(.top, 12)
@@ -547,16 +583,16 @@ struct ProfileSetupView: View {
                 .font(.system(size: 42))
                 .foregroundColor(.onboardingAccent)
                 .frame(width: 96, height: 96)
-                .background(Color.white)
+                .background(Color.onboardingAccent.opacity(0.15))
                 .clipShape(Circle())
 
             Text("Gentle reminders")
-                .font(.system(size: 26, weight: .bold))
+                .font(.dopax(26, .bold))
                 .foregroundColor(.dopaxBlack90)
                 .padding(.top, 28)
 
             Text("dopa-X will remind you when a session window opens. Nothing else.")
-                .font(.system(size: 15))
+                .font(.dopax(15))
                 .foregroundColor(.dopaxBlack70)
                 .multilineTextAlignment(.center)
                 .padding(.top, 12)
@@ -569,7 +605,7 @@ struct ProfileSetupView: View {
 
             Spacer()
 
-            OnboardingPrimaryButton(title: "Continue") {
+            OnboardingPrimaryButton(title: "Allow reminders") {
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
                     DispatchQueue.main.async {
                         profile.notificationsOptIn = granted
@@ -604,12 +640,12 @@ struct ProfileSetupView: View {
             .padding(.top, 22)
 
             Text("Your helix starts today")
-                .font(.system(size: 27, weight: .bold))
+                .font(.dopax(27, .bold))
                 .foregroundColor(.dopaxBlack90)
                 .padding(.top, 28)
 
             Text("For the next 14 days, every session teaches dopa-X how you move. Your 14 days begin with your first completed session, inside its time window.")
-                .font(.system(size: 15))
+                .font(.dopax(15))
                 .foregroundColor(.dopaxBlack70)
                 .multilineTextAlignment(.center)
                 .padding(.top, 12)

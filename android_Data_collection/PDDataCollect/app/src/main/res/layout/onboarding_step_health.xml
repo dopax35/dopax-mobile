@@ -12,7 +12,7 @@
 
     <TextView
         style="@style/Widget.DopaX.Onboarding.Subtitle"
-        android:text="Optional — activity data helps us see the full picture." />
+        android:text="Activity data helps us see the full picture." />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -176,6 +176,14 @@
                 android:text="dopa-X only reads workouts and sleep you already recorded. It never writes anything back to these apps."
                 android:textColor="@color/onboarding_text_tertiary"
                 android:textSize="13sp" />
+
+            <!-- Figma puts "Skip for now" directly under the connect cards,
+                 above the primary button, so it scrolls with them. -->
+            <TextView
+                android:id="@+id/btnHealthSkip"
+                style="@style/Widget.DopaX.Onboarding.SecondaryLink"
+                android:layout_marginTop="20dp"
+                android:text="Skip for now" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
@@ -183,10 +191,4 @@
         android:id="@+id/btnHealthContinue"
         style="@style/Widget.DopaX.Onboarding.PrimaryButton"
         android:text="Continue" />
-
-    <TextView
-        android:id="@+id/btnHealthSkip"
-        style="@style/Widget.DopaX.Onboarding.SecondaryLink"
-        android:layout_marginTop="12dp"
-        android:text="Skip for now" />
 </LinearLayout>

@@ -4,6 +4,7 @@ import {
   index,
   integer,
   jsonb,
+  pgSchema,
   pgTable,
   smallint,
   text,
@@ -11,6 +12,17 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+
+/**
+ * The locked half of the design: the pseudo-ID↔identity map, the consent records
+ * that carry a signature, and the table of plaintext email addresses.
+ *
+ * Separation is enforced by PostgreSQL, not by us. `dopax_research` holds USAGE on
+ * `public` only, so a researcher with a direct connection cannot reach anything in
+ * here — see migration 0006. `participants` deliberately stays in `public`: the
+ * participant code is the study's pseudonym, and every research table joins to it.
+ */
+export const identity = pgSchema('identity');
 
 /**
  * Participants keep their production identifier verbatim so that historical
@@ -46,7 +58,7 @@ export const participants = pgTable(
  * captured in Phase 0 purely so the credentials are recoverable if the Firebase
  * project is ever lost; the backend never reads them to authenticate anyone.
  */
-export const authIdentities = pgTable(
+export const authIdentities = identity.table(
   'auth_identities',
   {
     id: uuid('id').primaryKey().defaultRandom(),
@@ -84,7 +96,7 @@ export const authIdentities = pgTable(
  * Only the hash is stored. A dump of this table must not let anyone sign in as
  * a participant, and the plaintext code exists solely in the email we sent.
  */
-export const emailOtpCodes = pgTable(
+export const emailOtpCodes = identity.table(
   'email_otp_codes',
   {
     id: uuid('id').primaryKey().defaultRandom(),
@@ -164,7 +176,7 @@ export const participantIdConflicts = pgTable('participant_id_conflicts', {
  * today. This is a medical study: we must be able to prove what was consented
  * to, by whom, and when.
  */
-export const consents = pgTable(
+export const consents = identity.table(
   'consents',
   {
     id: uuid('id').primaryKey().defaultRandom(),

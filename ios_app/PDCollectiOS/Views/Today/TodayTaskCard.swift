@@ -4,6 +4,10 @@ import SwiftUI
 /// beneath the session cards.
 struct TodayTaskCard: View {
     let task: DailyTask
+    /// Overrides `task.subtitle` where the participant's own data says
+    /// something more useful — the medication card reads "3 doses today" once
+    /// there is a list to count (Figma 477:49).
+    var subtitle: String?
     let action: () -> Void
 
     var body: some View {
@@ -20,10 +24,10 @@ struct TodayTaskCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(task.title)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.dopax(14, .semibold))
                         .foregroundColor(.dopaxBlack90)
-                    Text(task.subtitle)
-                        .font(.system(size: 12))
+                    Text(subtitle ?? task.subtitle)
+                        .font(.dopax(12))
                         .foregroundColor(.dopaxBlack70)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

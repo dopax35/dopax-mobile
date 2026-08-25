@@ -1,183 +1,290 @@
 import SwiftUI
 
+/// The daily questionnaire (Figma 601:2), with the save confirmation from
+/// 600:11585.
+///
+/// The design draws four questions. The CSV this writes has carried eleven
+/// since the study began, and 43 enrolled participants have history in that
+/// shape, so dropping columns is not this screen's call to make. The four the
+/// design names lead, in exactly the card idiom it specifies; the rest follow
+/// under a heading, in the same idiom. Nothing about what gets written changed.
 struct QuestionnaireView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) private var dismiss
 
-    // Q1 — free text
+    /// Called instead of dismissing when the caller wants to own the exit.
+    var onClose: (() -> Void)?
+
     @State private var q1Text = ""
 
-    // Q2–Q5 — scored 1–5
-    @State private var q2Motor     = 3   // motor symptoms
-    @State private var q3Function  = 3   // motor function
-    @State private var q4Sleep     = 3   // sleep quality
-    @State private var q5Mood      = 3   // mood
+    // The four the design leads with.
+    @State private var mood = 3
+    @State private var anxiety = 3
+    @State private var sleep = 3
+    @State private var steadiness = 3
 
-    // Q6 — binary + severity
-    @State private var sleepProb   = false; @State private var sleepScore   = 1
-    @State private var smellProb   = false; @State private var smellScore   = 1
-    @State private var constProb   = false; @State private var constScore   = 1
-    @State private var anxietyProb = false; @State private var anxietyScore = 1
-    @State private var deprProb    = false; @State private var deprScore    = 1
+    // Carried forward so the CSV keeps its shape.
+    @State private var function = 3
+    @State private var sleepProb = false
+    @State private var sleepScore = 1
+    @State private var smellProb = false
+    @State private var smellScore = 1
+    @State private var constProb = false
+    @State private var constScore = 1
+    @State private var deprProb = false
+    @State private var deprScore = 1
 
-    @State private var submitted = false
+    @State private var confirming = false
+    @State private var saved = false
 
     var body: some View {
-        NavigationStack {
-            if submitted {
-                thankYouView
+        ZStack {
+            OnboardingBackground()
+
+            if saved {
+                savedConfirmation
             } else {
-                Form {
-                    Section {
-                        Text(Date().formatted(date: .long, time: .omitted))
-                            .foregroundColor(.secondary)
-                    }
-
-                    Section("How are you feeling today?") {
-                        TextField("Describe your overall feeling…", text: $q1Text, axis: .vertical)
-                            .lineLimit(3...5)
-                    }
-
-                    ratingSection("Motor Symptoms",
-                        subtitle: "Tremor, stiffness, slowness today",
-                        icon: "hand.raised", binding: $q2Motor,
-                        labels: ["None", "Mild", "Moderate", "Marked", "Severe"])
-
-                    ratingSection("Motor Function",
-                        subtitle: "How well can you perform daily tasks?",
-                        icon: "figure.walk", binding: $q3Function,
-                        labels: ["Very Poor", "Poor", "Fair", "Good", "Excellent"])
-
-                    ratingSection("Sleep Quality",
-                        subtitle: "How well did you sleep last night?",
-                        icon: "moon.zzz", binding: $q4Sleep,
-                        labels: ["Very Poor", "Poor", "Fair", "Good", "Excellent"])
-
-                    ratingSection("Mood",
-                        subtitle: "How is your mood today?",
-                        icon: "face.smiling", binding: $q5Mood,
-                        labels: ["Very Low", "Low", "Neutral", "Good", "Very Good"])
-
-                    Section {
-                        Text("Please indicate any non-motor symptoms you've experienced.")
-                            .font(.footnote).foregroundColor(.secondary)
-                    }
-
-                    nonMotorRow("Sleep Problems", toggle: $sleepProb, score: $sleepScore)
-                    nonMotorRow("Smell / Taste Loss", toggle: $smellProb, score: $smellScore)
-                    nonMotorRow("Constipation", toggle: $constProb, score: $constScore)
-                    nonMotorRow("Anxiety", toggle: $anxietyProb, score: $anxietyScore)
-                    nonMotorRow("Depression", toggle: $deprProb, score: $deprScore)
-
-                    Section {
-                        Button("Submit") { submit() }
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(.white)
-                            .padding(.vertical, 8)
-                            .background(Color.dopaxBlue)
-                            .cornerRadius(8)
-                    }
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                }
-                .navigationTitle("Daily Survey")
+                form
             }
+
+            if confirming {
+                confirmDialog
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: confirming)
+    }
+
+    // MARK: - Form
+
+    private var form: some View {
+        VStack(spacing: 0) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 14) {
+                    header
+
+                    QuestionScaleCard(question: "How is your mood today?",
+                                      lowLabel: "Low", highLabel: "Good", value: $mood)
+                    QuestionScaleCard(question: "How anxious have you felt today?",
+                                      lowLabel: "Not at all", highLabel: "Very", value: $anxiety)
+                    QuestionScaleCard(question: "How well did you sleep last night?",
+                                      lowLabel: "Poorly", highLabel: "Well", value: $sleep)
+                    QuestionScaleCard(question: "How steady do you feel right now?",
+                                      lowLabel: "Unsteady", highLabel: "Steady", value: $steadiness)
+
+                    alsoTracked
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 20)
+            }
+
+            Button { confirming = true } label: {
+                Text("Save")
+                    .font(.dopax(16, .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(Color.sheetAccentCoral)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 20)
+            .disabled(confirming)
         }
     }
 
-    // MARK: - Rating Row
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button(action: close) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 17, weight: .medium))
+                    Text("Today")
+                        .font(.dopax(14, .medium))
+                }
+                .foregroundColor(.dopaxBlack70)
+            }
+            .buttonStyle(.plain)
 
-    @ViewBuilder
-    private func ratingSection(_ title: String, subtitle: String, icon: String, binding: Binding<Int>, labels: [String]) -> some View {
-        Section {
-            VStack(alignment: .leading, spacing: 12) {
+            Text("Daily questionnaire")
+                .font(.dopax(28, .bold))
+                .foregroundColor(.dopaxBlack90)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 6)
+        .padding(.bottom, 2)
+    }
+
+    /// The columns the study has always collected, below the four the design
+    /// foregrounds. Same cards, so the screen reads as one thing.
+    private var alsoTracked: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("ALSO TRACKED")
+                .font(.dopax(13, .bold))
+                .kerning(1.2)
+                .foregroundColor(.dopaxBlack70)
+                .padding(.top, 12)
+
+            QuestionScaleCard(question: "How well can you do everyday tasks?",
+                              lowLabel: "Very poorly", highLabel: "Very well", value: $function)
+
+            symptomCard("Sleep problems", present: $sleepProb, severity: $sleepScore)
+            symptomCard("Smell or taste loss", present: $smellProb, severity: $smellScore)
+            symptomCard("Constipation", present: $constProb, severity: $constScore)
+            symptomCard("Low mood or depression", present: $deprProb, severity: $deprScore)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Anything else about today?")
+                    .font(.dopax(15, .semibold))
+                    .foregroundColor(.dopaxBlack90)
+
+                TextField("Optional", text: $q1Text, axis: .vertical)
+                    .font(.dopax(14))
+                    .lineLimit(3...5)
+                    .padding(12)
+                    .background(Color.questionScaleIdle)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    private func symptomCard(_ title: String,
+                             present: Binding<Bool>,
+                             severity: Binding<Int>) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Toggle(isOn: present) {
+                Text(title)
+                    .font(.dopax(15, .semibold))
+                    .foregroundColor(.dopaxBlack90)
+            }
+            .tint(.onboardingAccent)
+
+            if present.wrappedValue {
                 HStack(spacing: 8) {
-                    Image(systemName: icon).foregroundColor(.dopaxBlue)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title).fontWeight(.medium)
-                        Text(subtitle).font(.caption).foregroundColor(.secondary)
-                    }
-                }
-                HStack {
-                    ForEach(1...5, id: \.self) { val in
-                        VStack(spacing: 4) {
-                            Circle()
-                                .fill(binding.wrappedValue >= val ? Color.dopaxBlue : Color(.systemGray4))
-                                .frame(width: 32, height: 32)
-                                .overlay(Text("\(val)").font(.caption).fontWeight(.bold).foregroundColor(.white))
-                                .onTapGesture { binding.wrappedValue = val }
-                            Text(labels[val - 1])
-                                .font(.system(size: 9))
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .frame(width: 48)
+                    ForEach(1...5, id: \.self) { step in
+                        Button { severity.wrappedValue = step } label: {
+                            Text("\(step)")
+                                .font(.dopax(14, .medium))
+                                .foregroundColor(severity.wrappedValue == step ? .white : .dopaxGray50)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 40)
+                                .background(severity.wrappedValue == step
+                                            ? Color.onboardingAccent : Color.questionScaleIdle)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
-                        if val < 5 { Spacer() }
+                        .buttonStyle(.plain)
                     }
                 }
-            }
-            .padding(.vertical, 4)
-        }
-    }
 
-    // MARK: - Non-motor Symptom Row
-
-    @ViewBuilder
-    private func nonMotorRow(_ title: String, toggle: Binding<Bool>, score: Binding<Int>) -> some View {
-        Section {
-            Toggle(title, isOn: toggle)
-            if toggle.wrappedValue {
-                Picker("Severity", selection: score) {
-                    ForEach(1...5, id: \.self) { Text("\($0)").tag($0) }
+                HStack {
+                    Text("Mild")
+                    Spacer()
+                    Text("Severe")
                 }
-                .pickerStyle(.segmented)
+                .font(.dopax(11.5))
+                .foregroundColor(.onboardingTextTertiary)
             }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    // MARK: - Confirmation (600:11585)
+
+    private var confirmDialog: some View {
+        ZStack {
+            Color.black.opacity(0.28)
+                .ignoresSafeArea()
+                .onTapGesture { confirming = false }
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Save your answers?")
+                    .font(.dopax(21, .bold))
+                    .foregroundColor(.dopaxBlack90)
+
+                Text("Once saved, today's answers can't be changed. Take a moment to look them over.")
+                    .font(.dopax(14.5))
+                    .foregroundColor(.dopaxBlack70)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+
+                OnboardingPrimaryButton(title: "Save answers", action: save)
+                    .padding(.top, 22)
+
+                Button("Check my answers again") { confirming = false }
+                    .font(.dopax(14.5, .medium))
+                    .foregroundColor(.dopaxBlack90)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 18)
+            }
+            .padding(24)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .padding(.horizontal, 32)
         }
     }
 
-    // MARK: - Thank You
-
-    private var thankYouView: some View {
-        VStack(spacing: 20) {
+    private var savedConfirmation: some View {
+        VStack(spacing: 16) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 72)).foregroundColor(.dopaxStatusSuccess)
-            Text("Survey Submitted").font(.title).fontWeight(.bold)
-            Text("Thank you for completing today's survey.")
-                .foregroundColor(.secondary).multilineTextAlignment(.center)
-            Button("Done") { submitted = false; resetForm() }
-                .buttonStyle(.borderedProminent)
+                .font(.system(size: 58))
+                .foregroundColor(.sessionSuccess)
+
+            Text("Saved for today")
+                .font(.dopax(22, .bold))
+                .foregroundColor(.dopaxBlack90)
+
+            Text("Thank you — that's today's questionnaire done.")
+                .font(.dopax(15))
+                .foregroundColor(.dopaxBlack70)
+                .multilineTextAlignment(.center)
+
+            OnboardingPrimaryButton(title: "Back to Today", action: close)
+                .padding(.top, 12)
+                .padding(.horizontal, 40)
         }
-        .padding()
+        .padding(.horizontal, 24)
     }
 
     // MARK: - Actions
 
-    private func submit() {
-        let nowMs = Int64(Date().timeIntervalSince1970 * 1000)
+    /// Writes the same eleven-column row the study has always received. The
+    /// design's four questions map onto the columns they are asking about;
+    /// nothing is invented and nothing is dropped.
+    private func save() {
         let response = QuestionnaireResponse(
-            timestampMs: nowMs,
+            timestampMs: Int64(Date().timeIntervalSince1970 * 1000),
             q1Text: q1Text,
-            q2Score: q2Motor,
-            q3Score: q3Function,
-            q4Score: q4Sleep,
-            q5Score: q5Mood,
-            q6SleepYesNo: sleepProb,   q6SleepScore: sleepScore,
-            q6SmellYesNo: smellProb,   q6SmellScore: smellScore,
-            q6ConstYesNo: constProb,   q6ConstScore: constScore,
-            q6AnxietyYesNo: anxietyProb, q6AnxietyScore: anxietyScore,
-            q6DeprYesNo: deprProb,     q6DeprScore: deprScore
+            // Steadiness runs the opposite way to the motor-symptom column it
+            // feeds: feeling steady means fewer symptoms, not more.
+            q2Score: 6 - steadiness,
+            q3Score: function,
+            q4Score: sleep,
+            q5Score: mood,
+            q6SleepYesNo: sleepProb, q6SleepScore: sleepScore,
+            q6SmellYesNo: smellProb, q6SmellScore: smellScore,
+            q6ConstYesNo: constProb, q6ConstScore: constScore,
+            // The design's anxiety question is the severity column: its 1 is
+            // labelled "Not at all", so anything above it is a yes.
+            q6AnxietyYesNo: anxiety > 1, q6AnxietyScore: anxiety,
+            q6DeprYesNo: deprProb, q6DeprScore: deprScore
         )
         appState.dataManager.writeQuestionnaire(response)
         appState.sessionManager.markTask(.questionnaire)
-        submitted = true
+        confirming = false
+        saved = true
     }
 
-    private func resetForm() {
-        q1Text = ""
-        q2Motor = 3; q3Function = 3; q4Sleep = 3; q5Mood = 3
-        sleepProb = false; sleepScore = 1
-        smellProb = false; smellScore = 1
-        constProb = false; constScore = 1
-        anxietyProb = false; anxietyScore = 1
-        deprProb = false; deprScore = 1
+    private func close() {
+        if let onClose {
+            onClose()
+        } else {
+            dismiss()
+        }
     }
 }

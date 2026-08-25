@@ -51,12 +51,12 @@ private struct TodayContent: View {
     private var hero: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(Self.dateFormatter.string(from: session.lastRefresh).uppercased())
-                .font(.system(size: 13.5, weight: .medium))
+                .font(.dopax(13.5, .medium))
                 .kerning(1)
                 .foregroundColor(.dopaxBlack70)
 
             Text(greeting)
-                .font(.system(size: 30, weight: .bold))
+                .font(.dopax(30, .bold))
                 .foregroundColor(.dopaxBlack90)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -110,7 +110,8 @@ private struct TodayContent: View {
 
                 HStack(alignment: .top, spacing: 14) {
                     ForEach(outstanding) { task in
-                        TodayTaskCard(task: task) { presentedTask = task }
+                        TodayTaskCard(task: task,
+                                      subtitle: subtitle(for: task)) { presentedTask = task }
                     }
                     // Keeps a lone remaining card at half width rather than
                     // letting it stretch across the row.
@@ -124,22 +125,26 @@ private struct TodayContent: View {
         }
     }
 
+    /// The medication card counts the participant's own list rather than
+    /// repeating "Track intake" at someone who has already told us what they
+    /// take. Falls back to the generic line when the list is empty.
+    private func subtitle(for task: DailyTask) -> String? {
+        guard task == .medication else { return nil }
+        let count = profile.medications.count
+        guard count > 0 else { return nil }
+        return "\(count) dose\(count == 1 ? "" : "s") today"
+    }
+
     @ViewBuilder
     private func taskSheet(_ task: DailyTask) -> some View {
-        NavigationView {
-            Group {
-                switch task {
-                case .questionnaire: QuestionnaireView()
-                case .medication:    MedicationLogView()
-                }
-            }
-            .navigationTitle(task.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { presentedTask = nil }
-                }
-            }
+        switch task {
+        case .questionnaire:
+            QuestionnaireView(onClose: { presentedTask = nil })
+        case .medication:
+            // Sized to the design's sheet rather than a full page: the list is
+            // short and Today stays visible behind it (Figma 475:2).
+            MedicationSheet()
+                .presentationDetents([.medium, .large])
         }
     }
 
@@ -158,7 +163,7 @@ private struct TodayContent: View {
 
     private func sectionHeader(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 16, weight: .bold))
+            .font(.dopax(16, .bold))
             .kerning(1.2)
             .foregroundColor(.dopaxBlack90)
             .frame(maxWidth: .infinity, alignment: .leading)

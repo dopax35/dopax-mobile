@@ -1,0 +1,701 @@
+diff --git a/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/data/DataManager.kt b/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/data/DataManager.kt
+index 137a684..1e2d23c 100644
+--- a/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/data/DataManager.kt
++++ b/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/data/DataManager.kt
+@@ -75,6 +75,7 @@ class DataManager(private val context: Context, private val userProfile: UserPro
+         android.util.Log.d("DataManager", "Initializing all daily logs for $currentDate...")
+         // Passive / sensor files
+         getWriter(Constants.SENSORS_FILE, Constants.SENSORS_HEADER)
++        getWriter(Constants.MOTION_SESSIONS_FILE, Constants.MOTION_SESSIONS_HEADER)
+         getWriter(Constants.SCREEN_STATE_FILE, Constants.SCREEN_STATE_HEADER)
+         getWriter(Constants.TOUCH_FILE, Constants.TOUCH_HEADER)
+         getWriter(Constants.KEYS_FILE, Constants.KEYS_HEADER)
+@@ -186,6 +187,15 @@ class DataManager(private val context: Context, private val userProfile: UserPro
+ 
+     fun writeScreenStateData(row: String) = postWrite(Constants.SCREEN_STATE_FILE, Constants.SCREEN_STATE_HEADER, row)
+ 
++    /**
++     * Records the open and close of each motion capture window. Without this a
++     * gap in sensors.csv is ambiguous — it could mean the participant was still,
++     * or that the app simply was not recording. Analysis needs to tell those
++     * apart, especially across the change to foreground-only capture.
++     */
++    fun writeMotionSessionEvent(row: String) =
++        postWrite(Constants.MOTION_SESSIONS_FILE, Constants.MOTION_SESSIONS_HEADER, row)
++
+     fun writeTouchEvent(row: String) = postWrite(Constants.TOUCH_FILE, Constants.TOUCH_HEADER, row)
+ 
+     fun writeKeyEvent(row: String) = postWrite(Constants.KEYS_FILE, Constants.KEYS_HEADER, row)
+diff --git a/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/service/PDCollectService.kt b/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/service/PDCollectService.kt
+index 0323995..a2dc186 100644
+--- a/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/service/PDCollectService.kt
++++ b/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/service/PDCollectService.kt
+@@ -19,6 +19,7 @@ import android.os.Looper
+ import android.os.PowerManager
+ import android.os.SystemClock
+ import androidx.core.app.NotificationCompat
++import androidx.core.app.NotificationManagerCompat
+ import androidx.core.content.ContextCompat
+ import androidx.lifecycle.LifecycleService
+ import androidx.localbroadcastmanager.content.LocalBroadcastManager
+@@ -45,6 +46,19 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+     private var isServiceActive = false
+     private var shellyBleScanner: ShellyBleScanner? = null
+ 
++    /** True while the sensor listeners are registered and rows are being recorded. */
++    @Volatile private var motionActive = false
++    @Volatile private var appInForeground = false
++    /** Rows recorded in the current window, reported when the window closes. */
++    private var sessionRowCount = 0L
++
++    private val appForegroundListener = object : PDCollectApp.AppForegroundListener {
++        override fun onAppForegroundChanged(isInForeground: Boolean) {
++            appInForeground = isInForeground
++            syncMotionCollection(if (isInForeground) "app_foreground" else "app_background")
++        }
++    }
++
+     private val flushRunnable = object : Runnable {
+         override fun run() {
+             flushBuffer()
+@@ -82,6 +96,10 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+         bootToEpochOffsetNs = System.currentTimeMillis() * 1_000_000L - SystemClock.elapsedRealtimeNanos()
+ 
++        val app = application as? PDCollectApp
++        appInForeground = app?.isAppInForeground() == true
++        app?.addAppForegroundListener(appForegroundListener)
++
+         if (Constants.SHELLY_BLE_ENABLED) {
+             shellyBleScanner = ShellyBleScanner(this, profile, dataManager)
+         }
+@@ -93,7 +111,6 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+ 
+         updateForegroundNotification()
+ 
+-        registerSensors()
+         handler.removeCallbacks(flushRunnable)
+         handler.postDelayed(flushRunnable, Constants.SENSOR_BUFFER_FLUSH_INTERVAL_MS)
+         dataManager.startPeriodicFlush()
+@@ -101,6 +118,10 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+         // no files are ever missing from a day's directory in the research data.
+         dataManager.initializeAllDailyLogs()
+ 
++        // Sequenced after initializeAllDailyLogs so the session log already carries
++        // its header before the first window event is appended to it.
++        syncMotionCollection("service_start")
++
+         if (Constants.SHELLY_BLE_ENABLED) {
+             try {
+                 shellyBleScanner?.startPassive()
+@@ -114,6 +135,49 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+         return START_STICKY
+     }
+ 
++    /**
++     * Opens or closes the motion capture window to match the current gate.
++     *
++     * The service itself stays alive either way: it also owns the periodic flush
++     * and the daily log initialization that the other collectors depend on. Only
++     * the sensor listeners come and go, which is where the 50 Hz wakeup cost and
++     * essentially all of the data volume live.
++     */
++    private fun syncMotionCollection(reason: String) {
++        val shouldCollect = !Constants.MOTION_FOREGROUND_ONLY || appInForeground
++        if (shouldCollect == motionActive) return
++
++        if (shouldCollect) openMotionWindow(reason) else closeMotionWindow(reason)
++        refreshNotification()
++    }
++
++    private fun openMotionWindow(reason: String) {
++        motionActive = true
++        synchronized(sensorBuffer) { sessionRowCount = 0L }
++        registerSensors()
++        logMotionSession("start", reason)
++    }
++
++    private fun closeMotionWindow(reason: String) {
++        // Unregister before clearing the flag, not after. SENSOR_BATCH_LATENCY_US
++        // means the platform can hand back up to 5 seconds of batched samples as
++        // it tears the listener down, and those were genuinely captured inside
++        // this window — bufferReading has to still accept them.
++        sensorManager.unregisterListener(this)
++        motionActive = false
++        // Flush before logging so rows_written describes the whole window.
++        flushBuffer()
++        logMotionSession("stop", reason)
++    }
++
++    private fun logMotionSession(event: String, reason: String) {
++        val regime = if (Constants.MOTION_FOREGROUND_ONLY) "foreground_only" else "continuous"
++        val rows = synchronized(sensorBuffer) { sessionRowCount }
++        dataManager.writeMotionSessionEvent(
++            "${System.currentTimeMillis()},$event,$reason,$regime,$rows"
++        )
++    }
++
+     private fun registerSensors() {
+         val accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+         val gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+@@ -161,14 +225,37 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+         }
+     }
+ 
++    /**
++     * Updates the existing foreground notification in place. Deliberately not
++     * startForeground(): the service is already foreground by this point, and
++     * re-entering it on every window change would run into the Android 14
++     * foreground-start restrictions for no benefit.
++     */
++    private fun refreshNotification() {
++        try {
++            NotificationManagerCompat.from(this)
++                .notify(Constants.NOTIFICATION_ID_SENSOR, buildNotification())
++        } catch (e: SecurityException) {
++            android.util.Log.w(TAG, "refreshNotification: notify denied", e)
++        }
++    }
++
+     private fun buildNotification(): Notification {
+         val intent = Intent(this, MainActivity::class.java)
+         val pendingIntent = PendingIntent.getActivity(
+             this, 0, intent, PendingIntent.FLAG_IMMUTABLE
+         )
++        // Says which of the two states it is actually in. A notification reading
++        // "collecting" while the sensors are unregistered would misrepresent the
++        // study to the participant carrying the phone.
++        val text = when {
++            motionActive -> "Recording motion data"
++            Constants.MOTION_FOREGROUND_ONLY -> "Paused — open the app to record motion"
++            else -> "Collecting passive sensor data..."
++        }
+         return NotificationCompat.Builder(this, Constants.CHANNEL_SENSOR)
+             .setContentTitle("PD Data Collection")
+-            .setContentText("Collecting passive sensor data...")
++            .setContentText(text)
+             .setSmallIcon(R.drawable.ic_notification)
+             .setContentIntent(pendingIntent)
+             .setOngoing(true)
+@@ -191,6 +278,10 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+     }
+ 
+     private fun bufferReading(timestampNs: Long) {
++        // Drops any stray delivery that arrives after the window has closed, so a
++        // late callback cannot append to the next window or inflate its row count.
++        if (!motionActive) return
++
+         val unixNs = timestampNs + bootToEpochOffsetNs
+         val row = buildString(128) {
+             append(unixNs).append(',')
+@@ -207,6 +298,7 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+ 
+         synchronized(sensorBuffer) {
+             sensorBuffer.add(row)
++            sessionRowCount++
+             if (sensorBuffer.size >= Constants.SENSOR_BUFFER_MAX_SIZE) {
+                 flushBuffer()
+             }
+@@ -232,11 +324,19 @@ class PDCollectService : LifecycleService(), SensorEventListener {
+ 
+     override fun onDestroy() {
+         isServiceActive = false
++        (application as? PDCollectApp)?.removeAppForegroundListener(appForegroundListener)
+         shellyBleScanner?.stopScanning()
+         handler.removeCallbacks(flushRunnable)
+         handler.removeCallbacks(shellyRestartRunnable)
+-        sensorManager.unregisterListener(this)
+-        flushBuffer()
++        // Closes the window through the same path as a background transition, so
++        // every start row in motion_sessions.csv still gets its matching stop even
++        // when the service is killed mid-window.
++        if (motionActive) {
++            closeMotionWindow("service_destroy")
++        } else {
++            sensorManager.unregisterListener(this)
++            flushBuffer()
++        }
+         dataManager.stopPeriodicFlush()
+         dataManager.closeAll()
+         super.onDestroy()
+diff --git a/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/util/Constants.kt b/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/util/Constants.kt
+index 4463f36..940d99e 100644
+--- a/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/util/Constants.kt
++++ b/android_Data_collection/PDDataCollect/app/src/main/java/com/pdcollect/app/util/Constants.kt
+@@ -108,6 +108,30 @@ object Constants {
+     const val SENSOR_BATCH_LATENCY_US = 5_000_000
+     const val SENSOR_DELAY_US = 20_000 // 50 Hz = 20 ms period
+ 
++    // Motion is recorded only while the participant has the app open, instead of
++    // continuously all day. 50 Hz stays unchanged: the tremor band the analysis
++    // uses is 3-12 Hz, so the rate still has to clear the Nyquist floor of 24 Hz.
++    // What changes is duration, not resolution.
++    //
++    // Flip to false to restore all-day capture. Keeping this as a flag rather
++    // than deleting the old path means the study can revert without a release,
++    // and any day's data can be attributed to one regime or the other via
++    // motion_sessions.csv.
++    //
++    // Two known consequences, both deliberate:
++    //   - No overnight or free-living data, so medication ON/OFF fluctuation
++    //     across the day is no longer observable from passive motion.
++    //   - DashboardSummaryStore derives the participant's stride and tremor
++    //     charts from sensors.csv, so those thin out to the windows the app was
++    //     actually open.
++    const val MOTION_FOREGROUND_ONLY = true
++
++    // One row per motion capture window, so analysis can tell "not recording"
++    // apart from "recording, participant still".
++    const val MOTION_SESSIONS_FILE = "motion_sessions.csv"
++    const val MOTION_SESSIONS_HEADER =
++        "timestamp_ms,event,reason,regime,rows_written"
++
+     // Face distance
+     /** 1 Hz — one sample every 1000 ms. */
+     const val FACE_CAPTURE_INTERVAL_MS = 1000L
+diff --git a/ios_app/PDCollectiOS/App/AppState.swift b/ios_app/PDCollectiOS/App/AppState.swift
+index bbdc3ce..890f101 100644
+--- a/ios_app/PDCollectiOS/App/AppState.swift
++++ b/ios_app/PDCollectiOS/App/AppState.swift
+@@ -23,7 +23,6 @@ class AppState: ObservableObject {
+     let appEventLogger = AppEventLogger()
+     let sensorKitManager = SensorKitManager()
+     let bgCollection   = BackgroundCollectionManager.shared
+-    let keepAliveManager = BackgroundKeepAliveManager.shared
+ 
+     // MARK: - Bluetooth
+     let bluetoothManager = BluetoothManager.shared
+@@ -104,6 +103,17 @@ class AppState: ObservableObject {
+             .sink { [weak self] _ in self?.sessionManager.refresh() }
+             .store(in: &cancellables)
+ 
++        // Every test screen already reports to gamification when it saves.
++        // Forwarding that to the session layer means the hub learns a test
++        // finished without any test screen needing to know sessions exist.
++        // The manager ignores anything it did not itself launch.
++        gamification.onCompletion = { [weak self] testType, score in
++            guard let self else { return }
++            DispatchQueue.main.async {
++                self.sessionManager.testDidComplete(testId: testType, score: score)
++            }
++        }
++
+         sensorKitManager.configure(dataManager: dataManager)
+ 
+         bgCollection.configure(healthKit: healthKitManager,
+@@ -183,8 +193,10 @@ class AppState: ObservableObject {
+         // ever missing from a day's directory in the research data — matches Android's
+         // DataManager.initializeAllDailyLogs() called from PDCollectService.onStartCommand().
+         dataManager.initializeDailyFiles()
++        // BackgroundKeepAliveManager is deliberately not started: motion is now
++        // recorded only while the app is in the foreground, so there is nothing to
++        // keep alive. See the note at the top of BackgroundKeepAliveManager.swift.
+         passiveSensor.start(dataManager: dataManager)
+-        keepAliveManager.start()
+         appEventLogger.start(dataManager: dataManager)
+         bgCollection.scheduleAll()
+         // Wire Bluetooth so HR and Beanie data gets written to disk
+@@ -204,7 +216,6 @@ class AppState: ObservableObject {
+ 
+     func stopCollection() {
+         passiveSensor.stop()
+-        keepAliveManager.stop()
+         appEventLogger.stop()
+         faceDistance.stop()
+         bluetoothManager.stop()
+diff --git a/ios_app/PDCollectiOS/Info.plist b/ios_app/PDCollectiOS/Info.plist
+index 2635dcc..eefcfb1 100644
+--- a/ios_app/PDCollectiOS/Info.plist
++++ b/ios_app/PDCollectiOS/Info.plist
+@@ -39,30 +39,29 @@
+ 	<key>NSBluetoothPeripheralUsageDescription</key>
+ 	<string>This app connects to heart rate monitors and temperature sensors to track health metrics</string>
+ 	<key>NSCameraUsageDescription</key>
+-	<string>This app uses the camera to scan documents</string>
++	<string>The camera measures your distance from the screen during tests. No photos or videos are taken.</string>
+ 	<key>NSHealthShareUsageDescription</key>
+ 	<string>This app uses Health data to monitor Parkinson's symptoms</string>
+ 	<key>NSHealthUpdateUsageDescription</key>
+ 	<string>This app writes Health data to track Parkinson's symptoms</string>
+-	<key>NSLocationWhenInUseUsageDescription</key>
+-	<string>PDCollect records movement and gait patterns in the background to analyze Parkinson's symptoms.</string>
+-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+-	<string>PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research.</string>
+-	<key>NSLocationAlwaysUsageDescription</key>
+-	<string>PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research.</string>
+ 	<key>NSMicrophoneUsageDescription</key>
+-	<string>This app records short voice samples of you reading a story aloud during the Voice Sample task, used to analyze speech patterns related to Parkinson's symptoms.</string>
++	<string>Voice is recorded only during the voice test, never in the background.</string>
+ 	<key>NSMotionUsageDescription</key>
+ 	<string>This app uses motion data to detect physical activity and monitor movement patterns</string>
+ 	<key>NSPrincipalClass</key>
+ 	<string>$(PRODUCT_MODULE_NAME).LoggingApplication</string>
++	<key>UIAppFonts</key>
++	<array>
++		<string>Lexend-Regular.ttf</string>
++		<string>Lexend-Medium.ttf</string>
++		<string>Lexend-SemiBold.ttf</string>
++		<string>Lexend-Bold.ttf</string>
++	</array>
+ 	<key>UIBackgroundModes</key>
+ 	<array>
+ 		<string>fetch</string>
+ 		<string>processing</string>
+ 		<string>bluetooth-central</string>
+-		<string>location</string>
+-		<string>audio</string>
+ 	</array>
+ 	<key>UILaunchStoryboardName</key>
+ 	<string>Launch Screen</string>
+diff --git a/ios_app/PDCollectiOS/Managers/BackgroundKeepAliveManager.swift b/ios_app/PDCollectiOS/Managers/BackgroundKeepAliveManager.swift
+index 387c2e3..f653830 100644
+--- a/ios_app/PDCollectiOS/Managers/BackgroundKeepAliveManager.swift
++++ b/ios_app/PDCollectiOS/Managers/BackgroundKeepAliveManager.swift
+@@ -3,12 +3,30 @@ import CoreLocation
+ import AVFoundation
+ import UIKit
+ 
+-/// BackgroundKeepAliveManager — keeps the app awake in the background for continuous
+-/// CoreMotion sensor recording (50 Hz accelerometer, gyroscope, magnetometer).
++/// RETIRED — nothing constructs or starts this. Kept in the target as the revert
++/// path for the move to foreground-only motion capture, not as live code.
+ ///
+-/// Uses dual iOS background keep-alive techniques:
++/// It kept the process awake in the background so CoreMotion could record at 50 Hz
++/// around the clock, using two techniques:
+ /// 1. Background Location Updates (`allowsBackgroundLocationUpdates = true`)
+ /// 2. Silent Audio Loop Playback (`AVAudioSession` + `AVAudioPlayer` loop)
++///
++/// Neither was dependable. PedometerHistoryService was written precisely because
++/// passive_sensors.csv kept coming back covering only the hours the app happened to
++/// be open, so this was paying the battery and review cost of continuous background
++/// execution without reliably delivering the continuous data it existed to protect.
++///
++/// To re-enable, all four of these have to come back together, or it fails at
++/// runtime or at review rather than at compile time:
++///   1. `let keepAliveManager = BackgroundKeepAliveManager.shared` in AppState,
++///      with `.start()` in startCollection and `.stop()` in stopCollection.
++///   2. `location` and `audio` in UIBackgroundModes in project.yml.
++///   3. The NSLocationAlways* / NSLocationWhenInUse usage strings in project.yml.
++///   4. `Constants.MOTION_FOREGROUND_ONLY = false` on the Android side too, so the
++///      two platforms are not silently collecting under different rules.
++///
++/// Note that a silent audio loop declared under the `audio` background mode is a
++/// standard App Review rejection, which is worth weighing before turning it back on.
+ class BackgroundKeepAliveManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+ 
+     static let shared = BackgroundKeepAliveManager()
+diff --git a/ios_app/PDCollectiOS/Managers/DataManager.swift b/ios_app/PDCollectiOS/Managers/DataManager.swift
+index 10e0f3f..0d451af 100644
+--- a/ios_app/PDCollectiOS/Managers/DataManager.swift
++++ b/ios_app/PDCollectiOS/Managers/DataManager.swift
+@@ -28,6 +28,7 @@ class DataManager: ObservableObject {
+                 // Passive / sensor files
+                 (Constants.CSV.sensorsFile,          Constants.CSV.sensorsHeader),
+                 (Constants.CSV.passiveSensorsFile,   Constants.CSV.passiveSensorsHeader),
++                (Constants.CSV.motionSessionsFile,   Constants.CSV.motionSessionsHeader),
+                 (Constants.CSV.touchFile,            Constants.CSV.touchHeader),
+                 (Constants.CSV.keyEventsFile,        Constants.CSV.keyEventsHeader),
+                 (Constants.CSV.appsFile,             Constants.CSV.appsHeader),
+@@ -223,6 +224,16 @@ class DataManager: ObservableObject {
+                header: Constants.CSV.passiveSensorsHeader)
+     }
+ 
++    /// Records the open or close of a passive capture window. Mirrors Android's
++    /// `DataManager.writeMotionSessionEvent`, including the column order, so both
++    /// platforms land the same schema in the research corpus.
++    func writeMotionSessionEvent(event: String, reason: String, rowsWritten: Int) {
++        let ts = Int64(Date().timeIntervalSince1970 * 1000)
++        let row = "\(ts),\(event),\(reason),foreground_only,\(rowsWritten)\n"
++        append(row, to: todayDir, filename: Constants.CSV.motionSessionsFile,
++               header: Constants.CSV.motionSessionsHeader)
++    }
++
+     // MARK: - Touch Writes (new)
+ 
+     func writeTouchEvent(_ event: TouchEvent) {
+@@ -527,6 +538,7 @@ class DataManager: ObservableObject {
+             let files: [(String, String)] = [
+                 (Constants.CSV.sensorsFile,          Constants.CSV.sensorsHeader),
+                 (Constants.CSV.passiveSensorsFile,   Constants.CSV.passiveSensorsHeader),
++                (Constants.CSV.motionSessionsFile,   Constants.CSV.motionSessionsHeader),
+                 (Constants.CSV.touchFile,            Constants.CSV.touchHeader),
+                 (Constants.CSV.keyEventsFile,        Constants.CSV.keyEventsHeader),
+                 (Constants.CSV.appsFile,             Constants.CSV.appsHeader),
+diff --git a/ios_app/PDCollectiOS/Managers/PassiveSensorService.swift b/ios_app/PDCollectiOS/Managers/PassiveSensorService.swift
+index 30d1071..53e8714 100644
+--- a/ios_app/PDCollectiOS/Managers/PassiveSensorService.swift
++++ b/ios_app/PDCollectiOS/Managers/PassiveSensorService.swift
+@@ -2,14 +2,28 @@ import CoreMotion
+ import Foundation
+ import UIKit
+ 
+-/// Passive, continuous sensor collection service analogous to Android's
+-/// SensorCollectionService. Runs while the app is in the foreground, collecting
+-/// accelerometer, gyroscope, and magnetometer at ~50 Hz and flushing to disk
+-/// every 5 seconds (or 250 readings), matching the Android convention.
++/// Passive sensor collection: accelerometer and gyroscope at ~50 Hz, flushed to
++/// disk every 5 seconds (or 250 readings), matching the Android convention.
+ ///
+-/// Unlike CoreMotionManager (used only during active tests), this service is
+-/// started on launch and stopped only when the user explicitly disables collection
+-/// from Settings.
++/// Records only while the app is in the foreground, and stops deterministically
++/// on background. That was already the observed behaviour — PedometerHistoryService
++/// and the passiveSensorsHeader comment both document passive_sensors.csv as
++/// covering only the hours the app happened to be open, because the keep-alive it
++/// used to depend on was never dependable. This makes it the actual contract
++/// instead of an accident of how aggressively iOS suspended the process that day,
++/// so a gap in the data now means one specific thing.
++///
++/// All-day coverage has not disappeared entirely: CMPedometer and CMMotionActivity
++/// run on the motion co-processor regardless of this app, and
++/// PedometerHistoryService / MotionActivityHistoryService backfill step counts and
++/// activity type for hours nobody opened the app. That is coarse context, not the
++/// 50 Hz signal gait and tremor analysis needs.
++///
++/// 50 Hz is unchanged: the tremor band of interest is 3-12 Hz, so the rate still
++/// has to clear a 24 Hz Nyquist floor. What changed is duration, not resolution.
++///
++/// CoreMotionManager remains separate and unaffected — it drives the active motor
++/// tests, which are foreground by definition.
+ class PassiveSensorService: ObservableObject {
+ 
+     // MARK: - State
+@@ -31,6 +45,8 @@ class PassiveSensorService: ObservableObject {
+ 
+     private var isCollectingActive = false
+     private var tokens: [NSObjectProtocol] = []
++    /// Rows recorded in the current window. Only ever touched on `queue`.
++    private var sessionRowCount = 0
+ 
+     // MARK: - Init
+ 
+@@ -47,7 +63,7 @@ class PassiveSensorService: ObservableObject {
+         self.dataManager = dataManager
+ 
+         setupObservers()
+-        startMotionUpdates()
++        startMotionUpdates(reason: "collection_start")
+ 
+         DispatchQueue.main.async { self.isRunning = true }
+     }
+@@ -57,17 +73,24 @@ class PassiveSensorService: ObservableObject {
+         isCollectingActive = false
+ 
+         removeObservers()
+-        stopMotionUpdates()
++        stopMotionUpdates(reason: "collection_stop")
+ 
+         DispatchQueue.main.async { self.isRunning = false }
+     }
+ 
+-    private func startMotionUpdates() {
++    private func startMotionUpdates(reason: String) {
+         guard motion.isAccelerometerAvailable, motion.isGyroAvailable else { return }
+         // Routed through `queue` for the same reason as in `flush()` — avoids racing a
+         // still-in-flight `appendReading` call from a motion callback delivered just
+-        // before this restart.
+-        queue.addOperation { [weak self] in self?.buffer = [] }
++        // before this restart. Resetting and logging in the same operation also keeps
++        // sessionRowCount on one thread, so a start row can never report the previous
++        // window's count.
++        queue.addOperation { [weak self] in
++            guard let self else { return }
++            self.buffer = []
++            self.sessionRowCount = 0
++            self.logSession(event: "start", reason: reason)
++        }
+ 
+         motion.deviceMotionUpdateInterval = 1.0 / hz
+         motion.startDeviceMotionUpdates(using: .xMagneticNorthZVertical, to: queue) { [weak self] data, _ in
+@@ -86,24 +109,41 @@ class PassiveSensorService: ObservableObject {
+         }
+     }
+ 
+-    private func stopMotionUpdates() {
++    private func stopMotionUpdates(reason: String) {
+         motion.stopDeviceMotionUpdates()
+         DispatchQueue.main.async { [weak self] in
+             self?.flushTimer?.invalidate()
+             self?.flushTimer = nil
+         }
+         flush()
++        // Queued behind the flush above so the row count it reports is the finished
++        // total for the window rather than whatever had been written so far.
++        queue.addOperation { [weak self] in
++            guard let self else { return }
++            self.logSession(event: "stop", reason: reason)
++        }
++    }
++
++    /// One row per capture window boundary. Without it a gap in passive_sensors.csv
++    /// is ambiguous between "not recording" and "recording, participant still", which
++    /// matters more now that gaps are the normal case rather than the exception.
++    private func logSession(event: String, reason: String) {
++        let rows = sessionRowCount
++        guard let dm = dataManager else { return }
++        DispatchQueue.global(qos: .utility).async {
++            dm.writeMotionSessionEvent(event: event, reason: reason, rowsWritten: rows)
++        }
+     }
+ 
+     private func setupObservers() {
+-        // Continuous background sensor recording is kept alive by BackgroundKeepAliveManager
+-        // (Location + Silent Audio loop background modes). On background transition, we
+-        // flush the current buffer without stopping CoreMotion updates.
++        // Stop CoreMotion on background rather than trying to outlive it. stopMotionUpdates
++        // flushes on the way out, so the buffered tail of the window is still written.
+         tokens.append(
+             NotificationCenter.default.addObserver(
+                 forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil
+             ) { [weak self] _ in
+-                self?.flush()
++                guard let self, self.isCollectingActive, self.motion.isDeviceMotionActive else { return }
++                self.stopMotionUpdates(reason: "app_background")
+             }
+         )
+         tokens.append(
+@@ -111,7 +151,7 @@ class PassiveSensorService: ObservableObject {
+                 forName: UIApplication.willEnterForegroundNotification, object: nil, queue: nil
+             ) { [weak self] _ in
+                 guard let self, self.isCollectingActive, !self.motion.isDeviceMotionActive else { return }
+-                self.startMotionUpdates()
++                self.startMotionUpdates(reason: "app_foreground")
+             }
+         )
+     }
+@@ -152,6 +192,7 @@ class PassiveSensorService: ObservableObject {
+             gyroZ: data.rotationRate.z
+         )
+         buffer.append(r)
++        sessionRowCount += 1
+ 
+         _ = mag // magnetometer available — add to extended CSV if schema widens
+ 
+diff --git a/ios_app/PDCollectiOS/Utilities/Constants.swift b/ios_app/PDCollectiOS/Utilities/Constants.swift
+index e04df66..8d061ef 100644
+--- a/ios_app/PDCollectiOS/Utilities/Constants.swift
++++ b/ios_app/PDCollectiOS/Utilities/Constants.swift
+@@ -51,6 +51,7 @@ enum Constants {
+         static let sensorsFile          = "sensors.csv"
+         static let gaitMetricsFile      = "gait_metrics.csv"
+         static let passiveSensorsFile   = "passive_sensors.csv"
++        static let motionSessionsFile   = "motion_sessions.csv"
+         static let touchFile            = "touch.csv"
+         static let appsFile             = "apps.csv"
+         static let faceDistanceFile     = "face_distance.csv"
+@@ -77,6 +78,13 @@ enum Constants {
+         static let sensorsHeader        = "timestamp_ns,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n"
+         static let gaitMetricsHeader    = "date,walking_speed_ms,step_length_m,walking_steadiness,double_support_pct,asymmetry_pct,heart_rate_bpm,hrv_sdnn_ms\n"
+         static let passiveSensorsHeader = "timestamp_ns,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z\n"
++        // One row per open and close of a passive capture window, so a gap in
++        // passive_sensors.csv can be read as "not recording" rather than
++        // "recording, participant still". Schema matches Android's
++        // MOTION_SESSIONS_HEADER exactly. `regime` is foreground_only or
++        // continuous, which is what lets analysis span the change in collection
++        // rule instead of silently mixing the two.
++        static let motionSessionsHeader = "timestamp_ms,event,reason,regime,rows_written\n"
+         static let touchHeader          = "timestamp_ms,action,x,y,pressure,tap_interval_ms\n"
+         static let appsHeader           = "timestamp_ms,event,bundle_id,duration_ms\n"
+         static let faceDistanceHeader   = "timestamp_ms,distance_ratio,face_x,face_y,confidence,roll_deg,yaw_deg\n"
+diff --git a/ios_app/project.yml b/ios_app/project.yml
+index 127f2b2..1507f17 100644
+--- a/ios_app/project.yml
++++ b/ios_app/project.yml
+@@ -34,19 +34,28 @@ targets:
+           - CFBundleTypeRole: Editor
+             CFBundleURLSchemes:
+               - com.googleusercontent.apps.225458522869-ipigbhk8f1a3abgp3b4favs94g4f4hm5
+-        NSCameraUsageDescription: "This app uses the camera to scan documents"
++        NSCameraUsageDescription: "The camera measures your distance from the screen during tests. No photos or videos are taken."
+         NSHealthShareUsageDescription: "This app uses Health data to monitor Parkinson's symptoms"
+         NSHealthUpdateUsageDescription: "This app writes Health data to track Parkinson's symptoms"
+-        NSLocationWhenInUseUsageDescription: "PDCollect records movement and gait patterns in the background to analyze Parkinson's symptoms."
+-        NSLocationAlwaysAndWhenInUseUsageDescription: "PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research."
+-        NSLocationAlwaysUsageDescription: "PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research."
+-        NSMicrophoneUsageDescription: "This app records short voice samples of you reading a story aloud during the Voice Sample task, used to analyze speech patterns related to Parkinson's symptoms."
++        # No NSLocation* strings: the app no longer requests location at all. They
++        # existed for BackgroundKeepAliveManager, which is retired — and a prompt
++        # claiming continuous background location tracking for an app that does not
++        # do it is both an App Review flag and a false disclosure to a study
++        # participant. Restore them together with the manager, not before.
++        NSMicrophoneUsageDescription: "Voice is recorded only during the voice test, never in the background."
+         NSBluetoothAlwaysUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
+         NSBluetoothPeripheralUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
+         UIRequiresFullScreen: true
+         UILaunchStoryboardName: "Launch Screen"
+         NSPrincipalClass: "$(PRODUCT_MODULE_NAME).LoggingApplication"
+         NSMotionUsageDescription: "This app uses motion data to detect physical activity and monitor movement patterns"
++        # Bundled .ttf files are only usable by Font.custom once listed here.
++        # Without this key every custom face silently falls back to SF Pro.
++        UIAppFonts:
++          - Lexend-Regular.ttf
++          - Lexend-Medium.ttf
++          - Lexend-SemiBold.ttf
++          - Lexend-Bold.ttf
+         UISupportedInterfaceOrientations:
+           - UIInterfaceOrientationPortrait
+           - UIInterfaceOrientationPortraitUpsideDown
+@@ -55,12 +64,15 @@ targets:
+         BGTaskSchedulerPermittedIdentifiers:
+           - com.pdcollect.ios.bg-refresh
+           - com.pdcollect.ios.bg-processing
++        # fetch/processing drive BackgroundCollectionManager's BGTaskScheduler work,
++        # bluetooth-central keeps the Beanie and HR peripherals connected. `location`
++        # and `audio` are gone with BackgroundKeepAliveManager: motion is recorded
++        # only in the foreground, and declaring a background mode the app does not
++        # exercise is a rejection on its own.
+         UIBackgroundModes:
+           - fetch
+           - processing
+           - bluetooth-central
+-          - location
+-          - audio
+     entitlements:
+       path: PDCollectiOS/PDCollectiOS.entitlements
+       properties:
+diff --git a/backend/src/domain/drive/zip-kinds.ts b/backend/src/domain/drive/zip-kinds.ts
+index 5a94388..d711a0e 100644
+--- a/backend/src/domain/drive/zip-kinds.ts
++++ b/backend/src/domain/drive/zip-kinds.ts
+@@ -46,6 +46,12 @@ const STRUCTURED: Record<string, ZipEntryKind> = {
+ const STREAMS = new Set([
+   'sensors.csv',
+   'passive_sensors.csv',
++  // Window boundaries for passive motion capture, written by both platforms once
++  // recording became foreground-only. Low-rate, but catalogued here rather than
++  // promoted to a structured kind: it needs no table of its own to be useful, and
++  // it is what makes a gap in sensors.csv readable as "not recording" instead of
++  // "recording, participant still".
++  'motion_sessions.csv',
+   'touch_events.csv',
+   'touch.csv',
+   'key_events.csv',
+diff --git a/ios_app/PDCollectiOS/Views/SettingsView.swift b/ios_app/PDCollectiOS/Views/SettingsView.swift
+index 81e83dd..16f1c0b 100644
+--- a/ios_app/PDCollectiOS/Views/SettingsView.swift
++++ b/ios_app/PDCollectiOS/Views/SettingsView.swift
+@@ -82,20 +82,10 @@ struct SettingsView: View {
+                     }
+                     LabeledContent("Readings today",
+                                    value: "\(appState.passiveSensor.totalReadingsToday)")
+-                    HStack {
+-                        Label("Location Keep-Alive", systemImage: "location.fill")
+-                        Spacer()
+-                        statusBadge(running: appState.keepAliveManager.isLocationKeepAliveActive)
+-                    }
+-                    HStack {
+-                        Label("Silent Audio Keep-Alive", systemImage: "speaker.wave.2.fill")
+-                        Spacer()
+-                        statusBadge(running: appState.keepAliveManager.isAudioKeepAliveActive)
+-                    }
+                 } header: {
+-                    Label("Sensor Service & Background Keep-Alive", systemImage: "gyroscope")
++                    Label("Sensor Service", systemImage: "gyroscope")
+                 } footer: {
+-                    Text("Uses Background Location Updates and Silent Audio playback to prevent iOS from suspending CoreMotion, enabling continuous 50 Hz sensor recording when locked or backgrounded.")
++                    Text("Motion is recorded at 50 Hz only while this app is open. Closing it or locking the phone stops recording. Step counts and activity type are still filled in for the rest of the day from the phone's own motion co-processor.")
+                         .font(.caption)
+                 }
+ 

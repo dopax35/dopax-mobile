@@ -58,6 +58,12 @@
                 android:layout_height="7dp"
                 android:layout_marginStart="6dp"
                 android:background="@drawable/onboarding_progress_idle" />
+
+            <View
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/onboarding_progress_idle" />
         </LinearLayout>
 
         <TextView

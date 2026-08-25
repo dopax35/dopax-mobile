@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icon well behind the reminder / interaction primer glyphs. Figma fills this
+  96dp circle with a light lavender tint of the accent, not white — on the cream
+  background a white circle all but disappears.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <solid android:color="@color/white" />
+    <solid android:color="#265B34A4" />
 </shape>

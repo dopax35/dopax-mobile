@@ -14,6 +14,17 @@ struct SessionOutcome: Equatable {
     static let none = SessionOutcome(sessionCompleted: false, helixGrew: false, baselineCompleted: false)
 }
 
+/// The test the participant launched from a hub.
+///
+/// Test screens are shared with the Tests tab and know nothing about
+/// sessions, so the hub records what it opened and the manager uses that to
+/// attribute the completion signal when it arrives. Without it, a test run
+/// for practice from the Tests tab would silently count toward the protocol.
+struct SessionRun: Equatable {
+    let period: SessionPeriod
+    let testId: String
+}
+
 /// Owns the state of today's three sessions.
 ///
 /// This is the single source of truth for "what is the participant supposed to
@@ -36,6 +47,15 @@ final class SessionManager: ObservableObject {
     /// Bumped whenever derived state may have changed, so views observing this
     /// manager re-evaluate window countdowns.
     @Published private(set) var lastRefresh: Date
+
+    /// The test currently open from a hub, or nil when nothing is running
+    /// inside a session.
+    @Published private(set) var activeRun: SessionRun?
+
+    /// What the most recent completion changed. The hub reads this to decide
+    /// between the completion screen and the once-only baseline screen, then
+    /// clears it. Nil at rest.
+    @Published private(set) var lastOutcome: SessionOutcome?
 
     let baseline: BaselineTracker
 
@@ -243,9 +263,47 @@ final class SessionManager: ObservableObject {
 
         let wasBaselineComplete = baseline.isComplete
         let helixGrew = baseline.recordSessionCompleted(on: todayKey)
-        return SessionOutcome(sessionCompleted: true,
-                              helixGrew: helixGrew,
-                              baselineCompleted: baseline.isComplete && !wasBaselineComplete)
+        let outcome = SessionOutcome(sessionCompleted: true,
+                                     helixGrew: helixGrew,
+                                     baselineCompleted: baseline.isComplete && !wasBaselineComplete)
+        lastOutcome = outcome
+        return outcome
+    }
+
+    /// Called once the hub has shown whatever `lastOutcome` called for.
+    func clearOutcome() {
+        lastOutcome = nil
+    }
+
+    // MARK: - Running a test from the hub
+
+    /// Opens `testId` as part of `period`, so the completion signal the test
+    /// screen emits later can be attributed to this session.
+    func beginTest(_ testId: String, in period: SessionPeriod) {
+        guard state(for: period).isActionable, SessionTest.test(id: testId) != nil else { return }
+        activeRun = SessionRun(period: period, testId: testId)
+    }
+
+    /// Clears the attribution when the test screen closes. Safe to call twice
+    /// — closing after a completion has already been recorded is the normal
+    /// path, not an error.
+    func endTestRun() {
+        activeRun = nil
+    }
+
+    /// Bridges `GamificationManager`, which every test screen already calls
+    /// when it saves, into the session layer.
+    ///
+    /// Returns nil unless the finished test is the one this session opened,
+    /// which is what keeps practice runs from the Tests tab out of the
+    /// protocol (decision D5).
+    @discardableResult
+    func testDidComplete(testId: String, score: Double) -> SessionOutcome? {
+        guard let run = activeRun, run.testId == testId else { return nil }
+        guard let test = SessionTest.test(id: testId) else { return nil }
+        return recordTestCompleted(testId,
+                                   in: run.period,
+                                   summary: test.completedSummary(score: score))
     }
 
     private func persist(_ progress: SessionProgress) {

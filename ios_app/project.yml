@@ -34,19 +34,26 @@ targets:
           - CFBundleTypeRole: Editor
             CFBundleURLSchemes:
               - com.googleusercontent.apps.225458522869-ipigbhk8f1a3abgp3b4favs94g4f4hm5
-        NSCameraUsageDescription: "This app uses the camera to scan documents"
+        NSCameraUsageDescription: "The camera measures your distance from the screen during tests. No photos or videos are taken."
         NSHealthShareUsageDescription: "This app uses Health data to monitor Parkinson's symptoms"
         NSHealthUpdateUsageDescription: "This app writes Health data to track Parkinson's symptoms"
         NSLocationWhenInUseUsageDescription: "PDCollect records movement and gait patterns in the background to analyze Parkinson's symptoms."
         NSLocationAlwaysAndWhenInUseUsageDescription: "PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research."
         NSLocationAlwaysUsageDescription: "PDCollect tracks continuous background location to maintain passive sensor collection for Parkinson's research."
-        NSMicrophoneUsageDescription: "This app records short voice samples of you reading a story aloud during the Voice Sample task, used to analyze speech patterns related to Parkinson's symptoms."
+        NSMicrophoneUsageDescription: "Voice is recorded only during the voice test, never in the background."
         NSBluetoothAlwaysUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
         NSBluetoothPeripheralUsageDescription: "This app connects to heart rate monitors and temperature sensors to track health metrics"
         UIRequiresFullScreen: true
         UILaunchStoryboardName: "Launch Screen"
         NSPrincipalClass: "$(PRODUCT_MODULE_NAME).LoggingApplication"
         NSMotionUsageDescription: "This app uses motion data to detect physical activity and monitor movement patterns"
+        # Bundled .ttf files are only usable by Font.custom once listed here.
+        # Without this key every custom face silently falls back to SF Pro.
+        UIAppFonts:
+          - Lexend-Regular.ttf
+          - Lexend-Medium.ttf
+          - Lexend-SemiBold.ttf
+          - Lexend-Bold.ttf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown

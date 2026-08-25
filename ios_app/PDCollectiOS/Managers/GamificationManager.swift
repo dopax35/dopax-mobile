@@ -20,6 +20,12 @@ class GamificationManager: ObservableObject {
     @Published var currentStreak: Int = 0
     @Published var todayCompletedTypes: Set<String> = []
 
+    /// Notified after any test records a result. `AppState` uses this to feed
+    /// the session layer without every test screen having to know a session
+    /// exists — this method is already the one universal "a test just
+    /// finished" signal in the app.
+    var onCompletion: ((String, Double) -> Void)?
+
     // MARK: - Init
     init() {
         refresh()
@@ -70,6 +76,8 @@ class GamificationManager: ObservableObject {
         if isNewPB { ud.set(score, forKey: pbKey) }
         // Refresh published state
         refresh()
+
+        onCompletion?(testType, score)
     }
 
     /// Convenience alias for tests that don't compute a numerical score.
@@ -163,8 +171,11 @@ class GamificationManager: ObservableObject {
 
     private func loadTodayCompleted() -> Set<String> {
         let today = Calendar.current.startOfDay(for: Date())
-        let types = ["finger_tapping", "hand_turning", "spiral_tracing", "leg_agility",
-                     "trail_making_A", "trail_making_B"]
+        // The nine tests the daily protocol runs, plus Trail Making B, which
+        // only exists in the Tests tab. Before the session layer this list
+        // held six, so voice, facial, and camera tests never counted toward
+        // the streak even after the participant finished them.
+        let types = SessionTest.dailyBattery.map(\.id) + ["trail_making_B"]
         return Set(types.filter { type in
             guard let last = ud.object(forKey: Keys.lastCompletedKey(type)) as? Date else { return false }
             return Calendar.current.startOfDay(for: last) == today

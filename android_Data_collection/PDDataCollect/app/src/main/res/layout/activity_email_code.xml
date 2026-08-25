@@ -153,7 +153,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:fontFamily="@font/lexend"
-        android:gravity="center"
+        android:gravity="start"
         android:text="Resend code"
         android:textColor="@color/onboarding_text_tertiary"
         android:textSize="13sp" />

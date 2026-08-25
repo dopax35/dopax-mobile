@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+
+# Never let a credential reach the build context. Both are gitignored, but the
+# build context does not read .gitignore.
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.p8
+*.json.key
+
+# Local dev stack state
+.tmp/
+backups/
+docker-compose.yml
+
+tests/
+*.log
+.DS_Store

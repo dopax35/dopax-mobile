@@ -15,7 +15,7 @@ import {
 import { uploadFiles, uploads } from '../../db/schema/uploads.js';
 import { downloadDriveFile } from '../../infra/drive/download.js';
 import { parseUploadZipFile } from '../drive/parse-upload-zip.js';
-import type { ZipParsePlan } from '../drive/zip-parse.js';
+import { unambiguousSessionPaths, type ZipParsePlan } from '../drive/zip-parse.js';
 
 export interface UploadToParse {
   id: string;
@@ -86,21 +86,12 @@ async function applyPlan(
   await database.transaction(async (tx) => {
     await tx.delete(uploadFiles).where(eq(uploadFiles.uploadId, upload.id));
 
-    if (plan.files.length > 0) {
-      await tx.insert(uploadFiles).values(
-        plan.files.map((file) => ({
-          uploadId: upload.id,
-          pathInZip: file.pathInZip,
-          kind: file.kind,
-          rowCount: file.rowCount,
-          bytes: file.bytes,
-        })),
-      );
-      written += plan.files.length;
-    }
+    const linkable = unambiguousSessionPaths(plan.sessions);
+    const sessionByPath = new Map<string, string>();
 
+    // Sessions are written before files so a file can point at one.
     for (const session of plan.sessions) {
-      await tx
+      const [row] = await tx
         .insert(testSessions)
         .values({
           participantId: upload.participantId,
@@ -129,8 +120,30 @@ async function applyPlan(
             metrics: session.metrics,
             rawObjectKey: session.rawObjectKey,
           },
-        });
+        })
+        .returning({ id: testSessions.id });
+
+      if (row && linkable.has(session.rawObjectKey)) {
+        sessionByPath.set(session.rawObjectKey, row.id);
+      }
       written += 1;
+    }
+
+    if (plan.files.length > 0) {
+      await tx.insert(uploadFiles).values(
+        plan.files.map((file) => ({
+          uploadId: upload.id,
+          pathInZip: file.pathInZip,
+          kind: file.kind,
+          rowCount: file.rowCount,
+          bytes: file.bytes,
+          capturedAt: file.capturedAt,
+          qualityStatus: file.qualityStatus,
+          qualityFlags: file.qualityFlags,
+          sessionId: sessionByPath.get(file.pathInZip) ?? null,
+        })),
+      );
+      written += plan.files.length;
     }
 
     for (const row of plan.questionnaires) {

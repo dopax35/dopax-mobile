@@ -85,6 +85,21 @@ export const uploads = pgTable(
   ],
 );
 
+/**
+ * The asset row. One per file inside an upload ZIP.
+ *
+ * `capturedAt` exists because `uploads.collectionDate` is a date on the ZIP, which
+ * made "this file was recorded within two hours of a levodopa dose" unanswerable —
+ * the tightest available join was same-calendar-day. It stays null wherever the
+ * source carries no usable time, because a guessed capture time is worse than an
+ * absent one.
+ *
+ * `sessionId` is set only when exactly one session claims the file. A motor CSV
+ * holds many START/END cycles and therefore many sessions; choosing one would be a
+ * guess, so those rows keep a null. The FK lives in migration 0006 rather than here
+ * because `results.ts` already imports this module, and a `.references()` back to
+ * `testSessions` would close the cycle.
+ */
 export const uploadFiles = pgTable(
   'upload_files',
   {
@@ -96,10 +111,20 @@ export const uploadFiles = pgTable(
     kind: text('kind').notNull(), // csv schema name | voice_audio | json | crash_log
     rowCount: integer('row_count'),
     bytes: bigint('bytes', { mode: 'number' }),
+    capturedAt: timestamp('captured_at', { withTimezone: true }),
+    // Whether the file is analysable, which status/error/rowCount never described —
+    // those report whether parsing worked.
+    qualityStatus: text('quality_status').notNull().default('unknown'),
+    // ok | suspect | unusable | unknown
+    qualityFlags: jsonb('quality_flags').notNull().default(sql`'[]'::jsonb`),
+    sessionId: uuid('session_id'),
   },
   (t) => [
     index('upload_files_upload_idx').on(t.uploadId),
     index('upload_files_kind_idx').on(t.kind),
+    index('upload_files_captured_at_idx').on(t.capturedAt),
+    index('upload_files_session_idx').on(t.sessionId),
+    index('upload_files_quality_idx').on(t.qualityStatus),
   ],
 );
 
