@@ -82,17 +82,25 @@ if not correlated_users:
                     'file_user_id': file_user_id,
                     'email': row.get('email', ''),
                     'phone': row.get('phone', ''),
-                    'name': row.get('displayName', '') or profile.get('signatureName', ''),
+                    'name': row.get('displayName', '') or profile.get('signatureName', '') or uid,
                     'platform': profile.get('platform', 'Unknown'),
                     'uploaded_file_pattern': f"PDData_{file_user_id}_*.zip"
                 })
 
-manifest_path = os.path.join('backend', '.migration-source', 'drive', 'manifest.jsonl')
-if not os.path.exists(manifest_path):
-    manifest_path = os.path.join('.migration-source', 'drive', 'manifest.jsonl')
+manifest_paths = [
+    os.path.join('drive', 'manifest.jsonl'),
+    os.path.join('backend', '.migration-source', 'drive', 'manifest.jsonl'),
+    os.path.join('.migration-source', 'drive', 'manifest.jsonl'),
+]
+
+manifest_path = None
+for mp in manifest_paths:
+    if os.path.exists(mp):
+        manifest_path = mp
+        break
 
 drive_files_by_code = {}
-if os.path.exists(manifest_path):
+if manifest_path and os.path.exists(manifest_path):
     with open(manifest_path, mode='r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
@@ -105,7 +113,7 @@ if os.path.exists(manifest_path):
                 parts = name.split('_')
                 if len(parts) >= 3 and parts[0] == 'PDData':
                     code = parts[1]
-                    date_part = parts[2].replace('.zip', '')
+                    date_part = parts[2].replace('.zip', '').replace('_iOS', '')
                     if code not in drive_files_by_code:
                         drive_files_by_code[code] = []
                     drive_files_by_code[code].append({
@@ -126,10 +134,11 @@ for u in correlated_users:
     uid = u.get('uid', '')
     code = u.get('file_user_id', '') or uid
     email = u.get('email', '')
-    name = u.get('name', '')
+    name = u.get('name', '').strip() or uid
     platform = (u.get('platform', '') or 'android').lower()
 
-    user_files = drive_files_by_code.get(code, [])
+    # Look up files by code or by uid
+    user_files = drive_files_by_code.get(code, []) or drive_files_by_code.get(uid, [])
     
     daily_loads = {}
     for f in user_files:
