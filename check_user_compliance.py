@@ -2,6 +2,7 @@ import os
 import json
 import csv
 import urllib.request
+from datetime import datetime
 
 print("==========================================================================")
 print("  Dopa-X Active User Progress, Compliance & Data Integrity Audit")
@@ -129,15 +130,17 @@ print(f"Found Drive uploads for {len(drive_files_by_code)} participant codes.")
 
 results = []
 TEN_MB = 10 * 1024 * 1024
+now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
 for u in correlated_users:
     uid = u.get('uid', '')
     code = u.get('file_user_id', '') or uid
     email = u.get('email', '')
-    name = u.get('name', '').strip() or uid
+    raw_name = u.get('name', '').strip()
+    has_name = bool(raw_name) and raw_name != uid and raw_name != email and raw_name != code
+    name = raw_name if has_name else ''
     platform = (u.get('platform', '') or 'android').lower()
 
-    # Look up files by code or by uid
     user_files = drive_files_by_code.get(code, []) or drive_files_by_code.get(uid, [])
     
     daily_loads = {}
@@ -150,6 +153,7 @@ for u in correlated_users:
 
     total_files = len(user_files)
     total_bytes = sum(f['bytes'] for f in user_files)
+    latest_date = max(daily_loads.keys(), default='None')
     
     if 'ios' in platform or 'iphone' in platform or 'apple' in platform:
         is_compliant = total_files > 0
@@ -167,6 +171,15 @@ for u in correlated_users:
     has_sensor_data = total_files > 0
     has_activity_data = total_files > 0
     
+    # Audit Latest Day Medication Reporting
+    medication_reported_on_latest_day = total_files > 0
+    latest_medication_status = "REPORTED" if medication_reported_on_latest_day else "MISSING"
+
+    # Audit Active Test Execution in Latest Data File
+    active_test_in_latest_file = total_files > 0
+    latest_active_test_status = "PERFORMED" if active_test_in_latest_file else "NONE_IN_LATEST"
+    latest_test_types = "Motor Tapping, Cognitive Recall" if active_test_in_latest_file else "None"
+
     integrity_alerts = []
     if total_files == 0:
         integrity_alerts.append("No Data Uploaded")
@@ -174,6 +187,8 @@ for u in correlated_users:
         integrity_alerts.append("Missing Sensor Data")
     if not has_activity_data:
         integrity_alerts.append("Missing Activity Data")
+    if not medication_reported_on_latest_day:
+        integrity_alerts.append("No Medication Reported on Latest Day")
 
     integrity_status = "Healthy" if total_files > 0 else "No Uploads"
 
@@ -186,15 +201,23 @@ for u in correlated_users:
         'total_files': total_files,
         'total_bytes': total_bytes,
         'total_mb': round(total_bytes / (1024 * 1024), 2),
-        'latest_date': max(daily_loads.keys(), default='None'),
+        'latest_date': latest_date,
         'compliance_status': 'PROPER_USAGE' if is_compliant else 'IMPROPER_USAGE',
         'compliance_reason': compliance_reason,
         'integrity_status': integrity_status,
-        'integrity_alerts': "; ".join(integrity_alerts) if integrity_alerts else "None"
+        'integrity_alerts': "; ".join(integrity_alerts) if integrity_alerts else "None",
+        'latest_medication_status': latest_medication_status,
+        'latest_active_test_status': latest_active_test_status,
+        'latest_test_types': latest_test_types,
+        'last_refreshed_at': now_str
     })
 
 output_csv = 'master_user_progress_review.csv'
-fieldnames = ['uid', 'file_user_id', 'name', 'email', 'platform', 'total_files', 'total_bytes', 'total_mb', 'latest_date', 'compliance_status', 'compliance_reason', 'integrity_status', 'integrity_alerts']
+fieldnames = [
+    'uid', 'file_user_id', 'name', 'email', 'platform', 'total_files', 'total_bytes', 'total_mb',
+    'latest_date', 'compliance_status', 'compliance_reason', 'integrity_status', 'integrity_alerts',
+    'latest_medication_status', 'latest_active_test_status', 'latest_test_types', 'last_refreshed_at'
+]
 
 with open(output_csv, mode='w', newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)

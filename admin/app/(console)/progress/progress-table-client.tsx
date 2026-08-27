@@ -1,19 +1,51 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Badge, Card, Cell, EmptyState, Table } from '@/components/ui';
-import { formatBytes, formatDate } from '@/lib/format';
+import { useState, useMemo, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { Badge, Card, Cell, EmptyState, Table, StatTile } from '@/components/ui';
+import { formatBytes, formatDate, formatNumber } from '@/lib/format';
 import type { ProgressSummary } from '@/lib/types';
 
-type SortField = 'name' | 'platform' | 'compliance' | 'activeTests' | 'uploads' | 'latestDate';
+type SortField = 'name' | 'platform' | 'compliance' | 'activeTests' | 'medication' | 'uploads' | 'latestDate';
 type SortOrder = 'asc' | 'desc';
-type FilterTab = 'all' | 'proper' | 'improper' | 'active_tests' | 'has_uploads';
+type FilterTab = 'all' | 'proper' | 'improper' | 'active_tests' | 'meds_logged' | 'has_uploads';
 
-export function ProgressTableClient({ progress }: { progress: ProgressSummary }) {
+export function ProgressTableClient({
+  progress,
+  initialIncludeTests = false,
+}: {
+  progress: ProgressSummary;
+  initialIncludeTests?: boolean;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [sortField, setSortField] = useState<SortField>('uploads');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [includeTests, setIncludeTests] = useState(initialIncludeTests);
+  const [lastRefreshed, setLastRefreshed] = useState<string>(
+    progress.lastRefreshedAt ||
+      new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+  );
+
+  const handleRefresh = () => {
+    startTransition(() => {
+      router.refresh();
+      setLastRefreshed(
+        new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      );
+    });
+  };
+
+  const handleToggleTests = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setIncludeTests(checked);
+    startTransition(() => {
+      router.push(`/progress${checked ? '?tests=true' : ''}`);
+    });
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -45,7 +77,16 @@ export function ProgressTableClient({ progress }: { progress: ProgressSummary })
     } else if (activeTab === 'improper') {
       items = items.filter((p) => p.complianceStatus === 'improper_usage');
     } else if (activeTab === 'active_tests') {
-      items = items.filter((p) => p.activeTestDates.length > 0);
+      items = items.filter(
+        (p) => p.activeTestInLatestFile || (p.activeTestDates && p.activeTestDates.length > 0),
+      );
+    } else if (activeTab === 'meds_logged') {
+      items = items.filter(
+        (p) =>
+          p.medicationReportedOnLatestDay ||
+          p.medicationStatus === 'logged' ||
+          (p.medicationReports && p.medicationReports.length > 0),
+      );
     } else if (activeTab === 'has_uploads') {
       items = items.filter((p) => p.uploadCount > 0);
     }
@@ -65,8 +106,11 @@ export function ProgressTableClient({ progress }: { progress: ProgressSummary })
         valA = a.complianceStatus === 'proper_usage' ? 1 : 0;
         valB = b.complianceStatus === 'proper_usage' ? 1 : 0;
       } else if (sortField === 'activeTests') {
-        valA = a.activeTestDates.length;
-        valB = b.activeTestDates.length;
+        valA = a.activeTestInLatestFile || (a.activeTestDates && a.activeTestDates.length > 0) ? 1 : 0;
+        valB = b.activeTestInLatestFile || (b.activeTestDates && b.activeTestDates.length > 0) ? 1 : 0;
+      } else if (sortField === 'medication') {
+        valA = a.medicationReportedOnLatestDay || a.medicationStatus === 'logged' ? 1 : 0;
+        valB = b.medicationReportedOnLatestDay || b.medicationStatus === 'logged' ? 1 : 0;
       } else if (sortField === 'uploads') {
         valA = a.totalBytes;
         valB = b.totalBytes;
@@ -88,231 +132,376 @@ export function ProgressTableClient({ progress }: { progress: ProgressSummary })
     return <span className="ml-1 font-bold text-accent">{sortOrder === 'asc' ? '↑' : '↓'}</span>;
   };
 
+  const complianceRate =
+    progress.totalRegistered > 0
+      ? ((progress.compliantCount / progress.totalRegistered) * 100).toFixed(1)
+      : '0';
+
+  const activeTestRate =
+    progress.totalRegistered > 0
+      ? ((progress.activeTestUserCount / progress.totalRegistered) * 100).toFixed(1)
+      : '0';
+
+  const medicationRate =
+    progress.totalRegistered > 0
+      ? ((progress.medicationReportCount / progress.totalRegistered) * 100).toFixed(1)
+      : '0';
+
+  const driveUploadersCount = useMemo(
+    () => progress.participants.filter((p) => p.uploadCount > 0).length,
+    [progress.participants],
+  );
+
   return (
-    <Card className="overflow-hidden p-0">
-      {/* Header controls: Search & Quick Filter Tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line bg-surface/40 px-5 py-4">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setActiveTab('all')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              activeTab === 'all'
-                ? 'border border-accent/30 bg-accent/15 text-accent'
-                : 'text-ink-dim hover:bg-surface-2'
-            }`}
-          >
-            All Users ({progress.participants.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('proper')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              activeTab === 'proper'
-                ? 'border border-good/30 bg-good/15 text-good'
-                : 'text-ink-dim hover:bg-surface-2'
-            }`}
-          >
-            Proper Usage ({progress.compliantCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('improper')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              activeTab === 'improper'
-                ? 'border border-warn/30 bg-warn/15 text-warn'
-                : 'text-ink-dim hover:bg-surface-2'
-            }`}
-          >
-            Improper Usage ({progress.nonCompliantCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('active_tests')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              activeTab === 'active_tests'
-                ? 'border border-accent/30 bg-accent/15 text-accent'
-                : 'text-ink-dim hover:bg-surface-2'
-            }`}
-          >
-            Active Tests ({progress.activeTestUserCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('has_uploads')}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              activeTab === 'has_uploads'
-                ? 'border border-good/30 bg-good/15 text-good'
-                : 'text-ink-dim hover:bg-surface-2'
-            }`}
-          >
-            Drive Uploaders ({progress.participants.filter((p) => p.uploadCount > 0).length})
-          </button>
+    <div className="space-y-6">
+      {/* 1. Live Data Status Header */}
+      <header className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface/80 px-6 py-5 backdrop-blur-md">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-good opacity-75"></span>
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-good"></span>
+            </span>
+            <h1 className="text-xl font-bold tracking-tight text-ink">Volunteer Progress Review Console</h1>
+            <Badge tone="good">Live Data Status: Active</Badge>
+          </div>
+          <p className="mt-1 text-xs text-ink-dim">
+            Real-time compliance tracking and Google Drive verification status for study participants.
+          </p>
         </div>
 
-        <div className="relative min-w-[240px]">
-          <input
-            type="text"
-            placeholder="Search by name, email, or code…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-line bg-canvas px-3 py-1.5 text-xs text-ink outline-none transition placeholder:text-ink-faint focus:border-accent/60"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-faint hover:text-ink"
-            >
-              ✕
-            </button>
-          )}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="text-right text-xs">
+            <span className="text-ink-faint">Last refreshed: </span>
+            <span className="font-mono font-medium text-ink">{lastRefreshed}</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={isPending}
+            className="inline-flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/15 px-3.5 py-1.5 text-xs font-semibold text-accent transition hover:border-accent hover:bg-accent/25 disabled:opacity-50"
+          >
+            <span className={isPending ? 'animate-spin' : ''}>🔄</span>
+            {isPending ? 'Refreshing...' : 'Refresh Data'}
+          </button>
+
+          <div className="hidden h-6 w-px bg-line/60 sm:block" />
+
+          <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-ink-dim">
+            <input
+              type="checkbox"
+              checked={includeTests}
+              onChange={handleToggleTests}
+              className="size-3.5 rounded accent-[oklch(0.72_0.13_215)]"
+            />
+            Include test accounts
+          </label>
         </div>
+      </header>
+
+      {/* 2. Simplified KPI Summary Cards Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <StatTile
+          label="Registered Users"
+          value={formatNumber(progress.totalRegistered)}
+          hint={`${progress.compliantCount} compliant / ${progress.nonCompliantCount} non-compliant`}
+        />
+        <StatTile
+          label="Usage Compliance"
+          value={`${complianceRate}%`}
+          tone={Number(complianceRate) >= 50 ? 'good' : 'warn'}
+          hint={`${progress.compliantCount} proper usage (Android >10MB | iOS file)`}
+        />
+        <StatTile
+          label="Active Test Compliant"
+          value={formatNumber(progress.activeTestUserCount)}
+          tone="good"
+          hint={`${activeTestRate}% completed motor/cognitive tests in latest file`}
+        />
+        <StatTile
+          label="Medication Logged"
+          value={formatNumber(progress.medicationReportCount)}
+          tone="good"
+          hint={`${medicationRate}% logged meds on last active day`}
+        />
+        <StatTile
+          label="Verified Drive & Alerts"
+          value={formatNumber(progress.integrityAlertCount)}
+          tone={progress.integrityAlertCount > 0 ? 'warn' : 'good'}
+          hint={`${driveUploadersCount} drive uploaders | ${progress.integrityAlertCount} integrity alerts`}
+        />
       </div>
 
-      {/* Main Table */}
-      <Table
-        head={[
-          <button key="name" type="button" onClick={() => handleSort('name')} className="flex items-center hover:text-ink">
-            Participant Identity {renderSortIndicator('name')}
-          </button>,
-          <button key="platform" type="button" onClick={() => handleSort('platform')} className="flex items-center hover:text-ink">
-            Platform {renderSortIndicator('platform')}
-          </button>,
-          <button key="compliance" type="button" onClick={() => handleSort('compliance')} className="flex items-center hover:text-ink">
-            App Usage Status {renderSortIndicator('compliance')}
-          </button>,
-          <button key="activeTests" type="button" onClick={() => handleSort('activeTests')} className="flex items-center hover:text-ink">
-            Active Test Compliance {renderSortIndicator('activeTests')}
-          </button>,
-          'Data Integrity & Meds',
-          <button key="uploads" type="button" onClick={() => handleSort('uploads')} className="flex items-center hover:text-ink">
-            Verified Drive Uploads {renderSortIndicator('uploads')}
-          </button>,
-        ]}
-        empty={
-          filteredAndSorted.length === 0 ? (
-            <div className="px-5 py-8">
-              <EmptyState title="No matching participants found">
-                Try adjusting your search query or switching active tab filter.
-              </EmptyState>
-            </div>
-          ) : undefined
-        }
-      >
-        {filteredAndSorted.map((p) => {
-          const hasRealName =
-            Boolean(p.displayName) &&
-            p.displayName !== p.email &&
-            p.displayName !== p.participantCode &&
-            p.displayName !== p.firebaseUid;
+      {/* 3. Filter Controls & Participant Matrix Table */}
+      <Card className="overflow-hidden border border-line bg-surface/60 p-0">
+        {/* Header controls: Search & Quick Filter Tabs */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line bg-surface/40 px-5 py-4">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'all'
+                  ? 'border border-accent/40 bg-accent/15 font-semibold text-accent'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              All Users ({progress.participants.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('proper')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'proper'
+                  ? 'border border-good/40 bg-good/15 font-semibold text-good'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              Proper Usage ({progress.compliantCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('improper')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'improper'
+                  ? 'border border-warn/40 bg-warn/15 font-semibold text-warn'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              Improper Usage ({progress.nonCompliantCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('active_tests')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'active_tests'
+                  ? 'border border-accent/40 bg-accent/15 font-semibold text-accent'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              Active Tests ({progress.activeTestUserCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('meds_logged')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'meds_logged'
+                  ? 'border border-good/40 bg-good/15 font-semibold text-good'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              Meds Logged ({progress.medicationReportCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('has_uploads')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'has_uploads'
+                  ? 'border border-good/40 bg-good/15 font-semibold text-good'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              Drive Uploaders ({driveUploadersCount})
+            </button>
+          </div>
 
-          const isIphone =
-            p.platform.includes('ios') ||
-            p.platform.includes('iphone') ||
-            p.platform.includes('apple') ||
-            (p.email && p.email.endsWith('@privaterelay.appleid.com'));
+          <div className="relative min-w-[260px]">
+            <input
+              type="text"
+              placeholder="Search by name, email, code or UID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border border-line bg-canvas px-3 py-1.5 text-xs text-ink outline-none transition placeholder:text-ink-faint focus:border-accent/60"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-faint hover:text-ink"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
 
-          return (
-            <tr key={p.participantId} className="transition hover:bg-surface/50">
-              {/* Participant Identity Column */}
-              <Cell mono={false}>
-                {hasRealName ? (
-                  <div>
-                    <div className="text-sm font-semibold text-ink">{p.displayName}</div>
-                    <div className="mt-0.5 font-mono text-xs text-ink-dim">{p.email ?? '—'}</div>
-                    <div className="font-mono text-[10px] text-ink-faint">Code: {p.participantCode}</div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-sm font-semibold text-ink">{p.email || p.participantCode}</div>
-                    <div className="font-mono text-[10px] text-ink-faint">UID: {p.firebaseUid || p.participantCode}</div>
-                  </div>
-                )}
-              </Cell>
+        {/* Main Matrix Table */}
+        <Table
+          head={[
+            <button key="name" type="button" onClick={() => handleSort('name')} className="flex items-center hover:text-ink">
+              Participant Identity {renderSortIndicator('name')}
+            </button>,
+            <button key="platform" type="button" onClick={() => handleSort('platform')} className="flex items-center hover:text-ink">
+              Platform {renderSortIndicator('platform')}
+            </button>,
+            <button key="compliance" type="button" onClick={() => handleSort('compliance')} className="flex items-center hover:text-ink">
+              Usage Compliance {renderSortIndicator('compliance')}
+            </button>,
+            <button key="activeTests" type="button" onClick={() => handleSort('activeTests')} className="flex items-center hover:text-ink">
+              Latest File Active Tests {renderSortIndicator('activeTests')}
+            </button>,
+            <button key="medication" type="button" onClick={() => handleSort('medication')} className="flex items-center hover:text-ink">
+              Latest Date Med Status {renderSortIndicator('medication')}
+            </button>,
+            <button key="uploads" type="button" onClick={() => handleSort('uploads')} className="flex items-center hover:text-ink">
+              Verified Drive Uploads {renderSortIndicator('uploads')}
+            </button>,
+          ]}
+          empty={
+            filteredAndSorted.length === 0 ? (
+              <div className="px-5 py-8">
+                <EmptyState title="No matching participants found">
+                  Try adjusting your search query or switching the quick filter tab.
+                </EmptyState>
+              </div>
+            ) : undefined
+          }
+        >
+          {filteredAndSorted.map((p) => {
+            const hasRealName =
+              Boolean(p.displayName) &&
+              p.displayName?.trim() !== '' &&
+              p.displayName !== p.email &&
+              p.displayName !== p.participantCode &&
+              p.displayName !== p.firebaseUid;
 
-              {/* Platform Column */}
-              <Cell>
-                <Badge tone={isIphone ? 'accent' : 'neutral'}>
-                  {isIphone ? 'iPhone (iOS)' : 'Android'}
-                </Badge>
-              </Cell>
+            const isIphone =
+              p.platform?.toLowerCase().includes('ios') ||
+              p.platform?.toLowerCase().includes('iphone') ||
+              p.platform?.toLowerCase().includes('apple') ||
+              (p.email && p.email.endsWith('@privaterelay.appleid.com'));
 
-              {/* App Usage Status Column */}
-              <Cell>
-                <Badge tone={p.complianceStatus === 'proper_usage' ? 'good' : 'bad'}>
-                  {p.complianceStatus === 'proper_usage' ? 'PROPER USAGE' : 'IMPROPER USAGE'}
-                </Badge>
-                <div className="mt-1 text-[11px] text-ink-faint">{p.complianceReason}</div>
-              </Cell>
+            const hasActiveTests =
+              p.activeTestInLatestFile || (p.activeTestDates && p.activeTestDates.length > 0);
+            const latestTestInfo = p.activeTestDates && p.activeTestDates.length > 0 ? p.activeTestDates[0] : null;
 
-              {/* Active Test Compliance Column */}
-              <Cell>
-                {p.activeTestDates.length > 0 ? (
-                  <div>
-                    <Badge tone="good">TEST COMPLIANT</Badge>
-                    <div className="mt-1 space-y-0.5 text-xs text-ink-dim">
-                      {p.activeTestDates.slice(0, 2).map((atd) => (
-                        <div key={atd.date} className="tabular">
-                          <span className="font-mono">{formatDate(atd.date)}: </span>
-                          <span className="font-medium text-ink">{atd.testTypes.join(', ')}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <Badge tone="warn">NO ACTIVE TESTS</Badge>
-                    <div className="mt-1 text-[11px] text-ink-faint">No tests recorded</div>
-                  </div>
-                )}
-              </Cell>
+            const hasMedsLogged =
+              p.medicationReportedOnLatestDay ||
+              p.medicationStatus === 'logged' ||
+              (p.medicationReports && p.medicationReports.length > 0);
+            const latestMedInfo = p.medicationReports && p.medicationReports.length > 0 ? p.medicationReports[0] : null;
 
-              {/* Data Integrity & Medication Column */}
-              <Cell>
-                <div className="space-y-1">
-                  {p.integrityStatus === 'healthy' ? (
-                    <Badge tone="good">Healthy (Sensors + Activities)</Badge>
-                  ) : (
-                    p.integrityAlerts.map((alert, idx) => (
-                      <Badge key={idx} tone="warn">
-                        ⚠️ {alert}
-                      </Badge>
-                    ))
-                  )}
-
-                  <div>
-                    <Badge tone={p.medicationStatus === 'logged' ? 'good' : 'neutral'}>
-                      {p.medicationStatus === 'logged' ? 'Medication Logged' : 'No Meds Logged'}
-                    </Badge>
-                  </div>
-                </div>
-              </Cell>
-
-              {/* Verified Drive Uploads Column */}
-              <Cell dim>
-                {p.uploadCount > 0 ? (
-                  <div>
-                    <div className="tabular font-semibold text-ink">
-                      {p.uploadCount} load(s) ({formatBytes(p.totalBytes)})
-                    </div>
-                    {p.latestUploadDate && (
-                      <div className="text-[11px] text-ink-faint">
-                        Latest: {formatDate(p.latestUploadDate)}
+            return (
+              <tr key={p.participantId} className="transition hover:bg-surface/50">
+                {/* 1. Clear Identity Display */}
+                <Cell mono={false}>
+                  {hasRealName ? (
+                    <div>
+                      <div className="text-sm font-bold text-ink">{p.displayName}</div>
+                      {p.email && <div className="mt-0.5 font-mono text-xs text-ink-dim">{p.email}</div>}
+                      <div className="font-mono text-[10px] text-ink-faint">
+                        Code: {p.participantCode} {p.firebaseUid ? `| UID: ${p.firebaseUid.slice(0, 8)}...` : ''}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <span className="text-xs font-medium text-bad">0 uploads</span>
-                    <div className="text-[10px] text-ink-faint">No files in Drive</div>
-                  </div>
-                )}
-              </Cell>
-            </tr>
-          );
-        })}
-      </Table>
-    </Card>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-sm font-bold text-ink">{p.email || p.participantCode}</div>
+                      <div className="font-mono text-[10px] text-ink-faint">
+                        Code: {p.participantCode} {p.firebaseUid ? `| UID: ${p.firebaseUid.slice(0, 8)}...` : ''}
+                      </div>
+                    </div>
+                  )}
+                </Cell>
+
+                {/* 2. Platform Badge */}
+                <Cell>
+                  <Badge tone={isIphone ? 'accent' : 'neutral'}>
+                    {isIphone ? 'iPhone (iOS)' : 'Android'}
+                  </Badge>
+                </Cell>
+
+                {/* 3. Usage Compliance Badge */}
+                <Cell>
+                  <Badge tone={p.complianceStatus === 'proper_usage' ? 'good' : 'bad'}>
+                    {p.complianceStatus === 'proper_usage' ? 'PROPER USAGE' : 'IMPROPER USAGE'}
+                  </Badge>
+                  {p.complianceReason && (
+                    <div className="mt-1 max-w-[180px] truncate text-[11px] text-ink-faint" title={p.complianceReason}>
+                      {p.complianceReason}
+                    </div>
+                  )}
+                </Cell>
+
+                {/* 4. Latest Data File Active Test Status */}
+                <Cell>
+                  {hasActiveTests ? (
+                    <div>
+                      <Badge tone="good">ACTIVE TEST PERFORMED</Badge>
+                      <div className="mt-1 text-xs text-ink-dim">
+                        <span className="font-medium text-ink">
+                          {latestTestInfo ? latestTestInfo.testTypes.join(', ') : 'Motor & Cognitive'}
+                        </span>
+                        {latestTestInfo?.date && (
+                          <div className="font-mono text-[10px] text-ink-faint">
+                            Latest: {formatDate(latestTestInfo.date)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <Badge tone="warn">NO ACTIVE TESTS</Badge>
+                      <div className="mt-1 text-[11px] text-ink-faint">No tests in latest file</div>
+                    </div>
+                  )}
+                </Cell>
+
+                {/* 5. Latest Date Medication Status */}
+                <Cell>
+                  {hasMedsLogged ? (
+                    <div>
+                      <Badge tone="good">MEDICATION LOGGED</Badge>
+                      <div className="mt-1 text-xs text-ink-dim">
+                        {latestMedInfo ? (
+                          <div>
+                            <span className="font-medium text-ink">
+                              {latestMedInfo.medicationName || 'Reported'} {latestMedInfo.dosage ? `(${latestMedInfo.dosage})` : ''}
+                            </span>
+                            {latestMedInfo.date && (
+                              <div className="font-mono text-[10px] text-ink-faint">
+                                Date: {formatDate(latestMedInfo.date)}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-ink-faint">Logged on last active day</span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <Badge tone="neutral">NOT LOGGED</Badge>
+                      <div className="mt-1 text-[11px] text-ink-faint">No meds on latest day</div>
+                    </div>
+                  )}
+                </Cell>
+
+                {/* 6. Verified Drive Upload Metrics */}
+                <Cell dim>
+                  {p.uploadCount > 0 ? (
+                    <div>
+                      <div className="tabular font-semibold text-ink">
+                        {p.uploadCount} load(s) ({formatBytes(p.totalBytes)})
+                      </div>
+                      {p.latestUploadDate && (
+                        <div className="font-mono text-[11px] text-ink-faint">
+                          Latest: {formatDate(p.latestUploadDate)}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="text-xs font-medium text-bad">0 uploads</span>
+                      <div className="text-[10px] text-ink-faint">No files in Drive</div>
+                    </div>
+                  )}
+                </Cell>
+              </tr>
+            );
+          })}
+        </Table>
+      </Card>
+    </div>
   );
 }

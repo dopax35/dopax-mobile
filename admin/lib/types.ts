@@ -242,6 +242,11 @@ export interface ParticipantProgressItem {
   integrityStatus: 'healthy' | 'missing_sensor_data' | 'missing_activity_data' | 'no_uploads';
   integrityAlerts: string[];
   medicationStatus: 'logged' | 'none_reported';
+  medicationReportedOnLatestDay: boolean;
+  latestDayMedicationStatus: 'reported' | 'missing';
+  activeTestInLatestFile: boolean;
+  latestFileActiveTestStatus: 'performed' | 'none_in_latest';
+  latestFileTestTypes: string[];
   activeTestDates: { date: string; testTypes: string[]; totalCompleted: number }[];
   dailyLoads: { collectionDate: string; bytes: number; filename: string; passed: boolean }[];
   medicationReports: { date: string; medicationName: string | null; dosage: string | null }[];
@@ -254,7 +259,9 @@ export interface ProgressSummary {
   activeTestUserCount: number;
   integrityAlertCount: number;
   medicationReportCount: number;
+  latestDayMedicationCount: number;
+  latestFileActiveTestCount: number;
   identityVisible: boolean;
+  lastRefreshedAt: string;
   participants: ParticipantProgressItem[];
 }
-
