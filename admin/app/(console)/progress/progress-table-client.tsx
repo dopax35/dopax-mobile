@@ -6,9 +6,9 @@ import { Badge, Card, Cell, EmptyState, Table, StatTile } from '@/components/ui'
 import { formatBytes, formatDate, formatNumber } from '@/lib/format';
 import type { ProgressSummary } from '@/lib/types';
 
-type SortField = 'name' | 'platform' | 'compliance' | 'activeTests' | 'medication' | 'uploads' | 'latestDate';
+type SortField = 'name' | 'platform' | 'compliance' | 'latestDate' | 'medication' | 'activeTests' | 'uploads';
 type SortOrder = 'asc' | 'desc';
-type FilterTab = 'all' | 'proper' | 'improper' | 'no_uploads' | 'active_tests' | 'recent_yesterday' | 'has_uploads';
+type FilterTab = 'all' | 'proper' | 'improper' | 'no_uploads' | 'meds_logged' | 'active_tests' | 'recent_yesterday' | 'has_uploads';
 
 const RECENT_DATE = '2026-08-26'; // Study yesterday upload date
 
@@ -73,6 +73,17 @@ export function ProgressTableClient({
     [progress.participants],
   );
 
+  const medicationLoggedCount = useMemo(
+    () =>
+      progress.participants.filter(
+        (p) =>
+          p.medicationReportedOnLatestDay ||
+          p.medicationStatus === 'logged' ||
+          (p.medicationReports && p.medicationReports.length > 0),
+      ).length,
+    [progress.participants],
+  );
+
   const filteredAndSorted = useMemo(() => {
     let items = [...progress.participants];
 
@@ -95,6 +106,13 @@ export function ProgressTableClient({
       items = items.filter((p) => p.complianceStatus === 'improper_usage');
     } else if (activeTab === 'no_uploads') {
       items = items.filter((p) => p.complianceStatus === 'no_uploads' || p.uploadCount === 0);
+    } else if (activeTab === 'meds_logged') {
+      items = items.filter(
+        (p) =>
+          p.medicationReportedOnLatestDay ||
+          p.medicationStatus === 'logged' ||
+          (p.medicationReports && p.medicationReports.length > 0),
+      );
     } else if (activeTab === 'active_tests') {
       items = items.filter(
         (p) => p.activeTestInLatestFile || (p.activeTestDates && p.activeTestDates.length > 0),
@@ -120,12 +138,12 @@ export function ProgressTableClient({
         const rankMap: Record<string, number> = { proper_usage: 2, improper_usage: 1, no_uploads: 0 };
         valA = rankMap[a.complianceStatus] ?? 0;
         valB = rankMap[b.complianceStatus] ?? 0;
-      } else if (sortField === 'activeTests') {
-        valA = a.activeTestInLatestFile || (a.activeTestDates && a.activeTestDates.length > 0) ? 1 : 0;
-        valB = b.activeTestInLatestFile || (b.activeTestDates && b.activeTestDates.length > 0) ? 1 : 0;
       } else if (sortField === 'medication') {
         valA = a.medicationReportedOnLatestDay || a.medicationStatus === 'logged' ? 1 : 0;
         valB = b.medicationReportedOnLatestDay || b.medicationStatus === 'logged' ? 1 : 0;
+      } else if (sortField === 'activeTests') {
+        valA = a.activeTestInLatestFile || (a.activeTestDates && a.activeTestDates.length > 0) ? 1 : 0;
+        valB = b.activeTestInLatestFile || (b.activeTestDates && b.activeTestDates.length > 0) ? 1 : 0;
       } else if (sortField === 'uploads') {
         valA = a.uploadCount;
         valB = b.uploadCount;
@@ -155,6 +173,11 @@ export function ProgressTableClient({
   const activeTestRate =
     progress.totalRegistered > 0
       ? ((progress.activeTestUserCount / progress.totalRegistered) * 100).toFixed(1)
+      : '0';
+
+  const medicationRate =
+    progress.totalRegistered > 0
+      ? ((medicationLoggedCount / progress.totalRegistered) * 100).toFixed(1)
       : '0';
 
   const driveUploadersCount = useMemo(
@@ -230,16 +253,16 @@ export function ProgressTableClient({
           hint={`${recentYesterdayCount} participants uploaded files on ${RECENT_DATE}`}
         />
         <StatTile
+          label="Medication Logged"
+          value={formatNumber(medicationLoggedCount)}
+          tone="good"
+          hint={`${medicationRate}% logged meds on last active day`}
+        />
+        <StatTile
           label="Active Test Compliant"
           value={formatNumber(progress.activeTestUserCount)}
           tone="good"
           hint={`${activeTestRate}% completed active tests in latest file`}
-        />
-        <StatTile
-          label="Verified Drive Uploaders"
-          value={formatNumber(driveUploadersCount)}
-          tone="good"
-          hint={`${driveUploadersCount} uploaders | ${progress.integrityAlertCount} integrity alerts`}
         />
       </div>
 
@@ -283,25 +306,14 @@ export function ProgressTableClient({
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('no_uploads')}
+              onClick={() => setActiveTab('meds_logged')}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                activeTab === 'no_uploads'
-                  ? 'border border-bad/40 bg-bad/15 font-semibold text-bad'
-                  : 'text-ink-dim hover:bg-surface-2'
-              }`}
-            >
-              No Uploads ({noUploadsCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('recent_yesterday')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                activeTab === 'recent_yesterday'
+                activeTab === 'meds_logged'
                   ? 'border border-good/40 bg-good/15 font-semibold text-good'
                   : 'text-ink-dim hover:bg-surface-2'
               }`}
             >
-              Uploaded Yesterday ({recentYesterdayCount})
+              Meds Logged ({medicationLoggedCount})
             </button>
             <button
               type="button"
@@ -313,6 +325,17 @@ export function ProgressTableClient({
               }`}
             >
               Active Tests ({progress.activeTestUserCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('no_uploads')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'no_uploads'
+                  ? 'border border-bad/40 bg-bad/15 font-semibold text-bad'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              No Uploads ({noUploadsCount})
             </button>
           </div>
 
@@ -351,6 +374,9 @@ export function ProgressTableClient({
             <button key="latestDate" type="button" onClick={() => handleSort('latestDate')} className="flex items-center hover:text-ink">
               Latest Upload Recency {renderSortIndicator('latestDate')}
             </button>,
+            <button key="medication" type="button" onClick={() => handleSort('medication')} className="flex items-center hover:text-ink">
+              Medication Status {renderSortIndicator('medication')}
+            </button>,
             <button key="activeTests" type="button" onClick={() => handleSort('activeTests')} className="flex items-center hover:text-ink">
               Latest File Active Tests {renderSortIndicator('activeTests')}
             </button>,
@@ -383,6 +409,12 @@ export function ProgressTableClient({
               (p.email && p.email.endsWith('@privaterelay.appleid.com'));
 
             const isYesterdayUpload = p.latestUploadDate === RECENT_DATE;
+
+            const hasMedsLogged =
+              p.medicationReportedOnLatestDay ||
+              p.medicationStatus === 'logged' ||
+              (p.medicationReports && p.medicationReports.length > 0);
+            const latestMedInfo = p.medicationReports && p.medicationReports.length > 0 ? p.medicationReports[0] : null;
 
             const hasActiveTests =
               p.activeTestInLatestFile || (p.activeTestDates && p.activeTestDates.length > 0);
@@ -465,7 +497,37 @@ export function ProgressTableClient({
                   )}
                 </Cell>
 
-                {/* 5. Latest Data File Active Test Status */}
+                {/* 5. Medication Status Column (RESTORED!) */}
+                <Cell>
+                  {hasMedsLogged ? (
+                    <div>
+                      <Badge tone="good">MEDICATION LOGGED</Badge>
+                      <div className="mt-1 text-xs text-ink-dim">
+                        {latestMedInfo ? (
+                          <div>
+                            <span className="font-medium text-ink">
+                              {latestMedInfo.medicationName || 'Reported'} {latestMedInfo.dosage ? `(${latestMedInfo.dosage})` : ''}
+                            </span>
+                            {latestMedInfo.date && (
+                              <div className="font-mono text-[10px] text-ink-faint">
+                                Date: {formatDate(latestMedInfo.date)}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-ink-faint">Logged on last active day</span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <Badge tone="neutral">NOT LOGGED</Badge>
+                      <div className="mt-1 text-[11px] text-ink-faint">No meds on latest day</div>
+                    </div>
+                  )}
+                </Cell>
+
+                {/* 6. Latest Data File Active Test Status */}
                 <Cell>
                   {hasActiveTests ? (
                     <div>
@@ -484,7 +546,7 @@ export function ProgressTableClient({
                   )}
                 </Cell>
 
-                {/* 6. Actual # of Files */}
+                {/* 7. Actual # of Files */}
                 <Cell dim>
                   {p.uploadCount > 0 ? (
                     <div>
