@@ -50,12 +50,12 @@ function loadFallbackProgressSummary(): ProgressSummary {
     const isGenericName = !rawName || rawName === uid || rawName === email || rawName === code;
     const name = !isGenericName ? rawName : '';
 
-    const isMedReportedLatest = cols[13] === 'REPORTED' || totalFiles > 0;
-    const isActiveTestPerformed = cols[14] === 'PERFORMED' || totalFiles > 0;
-    const testTypesStr = cols[15] && cols[15] !== 'None' ? cols[15] : 'Motor Tapping, Cognitive Recall';
+    const isMedReportedLatest = cols[13] === 'REPORTED';
+    const isActiveTestPerformed = cols[14] === 'PERFORMED';
+    const testTypesStr = cols[15] && cols[15] !== 'None' ? cols[15] : '';
 
     const activeTestDates = isActiveTestPerformed && latestDate
-      ? [{ date: latestDate, testTypes: testTypesStr.split(', '), totalCompleted: 2 }]
+      ? [{ date: latestDate, testTypes: testTypesStr.split(', '), totalCompleted: testTypesStr.split(', ').length }]
       : [];
 
     const medicationReports = isMedReportedLatest && latestDate
