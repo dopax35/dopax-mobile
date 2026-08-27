@@ -66,13 +66,16 @@ function loadFallbackData(pathName: string): unknown {
     const totalFiles = parseInt(cols[5] || '0', 10);
     const totalBytes = parseInt(cols[6] || '0', 10);
     const latestDate = cols[8] === 'None' || !cols[8] ? null : cols[8];
-    const isCompliant = cols[9] === 'PROPER_USAGE';
-    const alerts = cols[12] && cols[12] !== 'None' ? cols[12].split(';') : [];
+    const rawCompliance = cols[10] || 'NO_UPLOADS';
+    const alerts = cols[13] && cols[13] !== 'None' ? cols[13].split(';') : [];
 
-    // Deep Raw CSV Audit
-    const isMedReportedLatest = cols[13] === 'REPORTED';
-    const isActiveTestPerformed = cols[14] === 'PERFORMED';
-    const testTypesStr = cols[15] && cols[15] !== 'None' ? cols[15] : '';
+    let complianceStatus: 'proper_usage' | 'improper_usage' | 'no_uploads' = 'no_uploads';
+    if (rawCompliance === 'PROPER_USAGE') complianceStatus = 'proper_usage';
+    else if (rawCompliance === 'IMPROPER_USAGE') complianceStatus = 'improper_usage';
+
+    const isMedReportedLatest = cols[14] === 'REPORTED';
+    const isActiveTestPerformed = cols[15] === 'PERFORMED';
+    const testTypesStr = cols[16] && cols[16] !== 'None' ? cols[16] : '';
 
     const activeTestDates = isActiveTestPerformed && latestDate
       ? [{ date: latestDate, testTypes: testTypesStr.split(', '), totalCompleted: testTypesStr.split(', ').length }]
@@ -103,8 +106,8 @@ function loadFallbackData(pathName: string): unknown {
       platform: (cols[4] || 'ANDROID').toLowerCase(),
       totalBytes,
       latestUploadDate: latestDate,
-      complianceStatus: isCompliant ? 'proper_usage' : 'improper_usage',
-      complianceReason: cols[10] || '',
+      complianceStatus,
+      complianceReason: cols[11] || '',
       hasSensorData: totalFiles > 0,
       hasActivityData: totalFiles > 0,
       integrityStatus: totalFiles > 0 ? 'healthy' : 'no_uploads',
@@ -123,6 +126,8 @@ function loadFallbackData(pathName: string): unknown {
 
   if (pathName === '/progress') {
     const compliantCount = rows.filter((r) => r.complianceStatus === 'proper_usage').length;
+    const improperCount = rows.filter((r) => r.complianceStatus === 'improper_usage').length;
+    const noUploadsCount = rows.filter((r) => r.complianceStatus === 'no_uploads').length;
     const activeTestUserCount = rows.filter((r) => r.activeTestInLatestFile).length;
     const medicationReportCount = rows.filter((r) => r.medicationReportedOnLatestDay).length;
     const now = new Date();
@@ -131,7 +136,8 @@ function loadFallbackData(pathName: string): unknown {
     return {
       totalRegistered: rows.length,
       compliantCount,
-      nonCompliantCount: rows.length - compliantCount,
+      nonCompliantCount: improperCount,
+      noUploadsCount,
       activeTestUserCount,
       integrityAlertCount: rows.filter((r) => r.integrityAlerts.length > 0).length,
       medicationReportCount,

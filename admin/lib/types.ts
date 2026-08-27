@@ -235,7 +235,7 @@ export interface ParticipantProgressItem {
   uploadCount: number;
   totalBytes: number;
   latestUploadDate: string | null;
-  complianceStatus: 'proper_usage' | 'improper_usage';
+  complianceStatus: 'proper_usage' | 'improper_usage' | 'no_uploads';
   complianceReason: string;
   hasSensorData: boolean;
   hasActivityData: boolean;
@@ -256,6 +256,7 @@ export interface ProgressSummary {
   totalRegistered: number;
   compliantCount: number;
   nonCompliantCount: number;
+  noUploadsCount?: number;
   activeTestUserCount: number;
   integrityAlertCount: number;
   medicationReportCount: number;

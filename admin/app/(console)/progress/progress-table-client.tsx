@@ -8,7 +8,7 @@ import type { ProgressSummary } from '@/lib/types';
 
 type SortField = 'name' | 'platform' | 'compliance' | 'activeTests' | 'medication' | 'uploads' | 'latestDate';
 type SortOrder = 'asc' | 'desc';
-type FilterTab = 'all' | 'proper' | 'improper' | 'active_tests' | 'meds_logged' | 'recent_yesterday' | 'has_uploads';
+type FilterTab = 'all' | 'proper' | 'improper' | 'no_uploads' | 'active_tests' | 'recent_yesterday' | 'has_uploads';
 
 const RECENT_DATE = '2026-08-26'; // Study yesterday upload date
 
@@ -63,6 +63,16 @@ export function ProgressTableClient({
     [progress.participants],
   );
 
+  const improperCount = useMemo(
+    () => progress.participants.filter((p) => p.complianceStatus === 'improper_usage').length,
+    [progress.participants],
+  );
+
+  const noUploadsCount = useMemo(
+    () => progress.participants.filter((p) => p.complianceStatus === 'no_uploads').length,
+    [progress.participants],
+  );
+
   const filteredAndSorted = useMemo(() => {
     let items = [...progress.participants];
 
@@ -83,16 +93,11 @@ export function ProgressTableClient({
       items = items.filter((p) => p.complianceStatus === 'proper_usage');
     } else if (activeTab === 'improper') {
       items = items.filter((p) => p.complianceStatus === 'improper_usage');
+    } else if (activeTab === 'no_uploads') {
+      items = items.filter((p) => p.complianceStatus === 'no_uploads' || p.uploadCount === 0);
     } else if (activeTab === 'active_tests') {
       items = items.filter(
         (p) => p.activeTestInLatestFile || (p.activeTestDates && p.activeTestDates.length > 0),
-      );
-    } else if (activeTab === 'meds_logged') {
-      items = items.filter(
-        (p) =>
-          p.medicationReportedOnLatestDay ||
-          p.medicationStatus === 'logged' ||
-          (p.medicationReports && p.medicationReports.length > 0),
       );
     } else if (activeTab === 'recent_yesterday') {
       items = items.filter((p) => p.latestUploadDate === RECENT_DATE);
@@ -112,8 +117,9 @@ export function ProgressTableClient({
         valA = a.platform;
         valB = b.platform;
       } else if (sortField === 'compliance') {
-        valA = a.complianceStatus === 'proper_usage' ? 1 : 0;
-        valB = b.complianceStatus === 'proper_usage' ? 1 : 0;
+        const rankMap: Record<string, number> = { proper_usage: 2, improper_usage: 1, no_uploads: 0 };
+        valA = rankMap[a.complianceStatus] ?? 0;
+        valB = rankMap[b.complianceStatus] ?? 0;
       } else if (sortField === 'activeTests') {
         valA = a.activeTestInLatestFile || (a.activeTestDates && a.activeTestDates.length > 0) ? 1 : 0;
         valB = b.activeTestInLatestFile || (b.activeTestDates && b.activeTestDates.length > 0) ? 1 : 0;
@@ -149,11 +155,6 @@ export function ProgressTableClient({
   const activeTestRate =
     progress.totalRegistered > 0
       ? ((progress.activeTestUserCount / progress.totalRegistered) * 100).toFixed(1)
-      : '0';
-
-  const medicationRate =
-    progress.totalRegistered > 0
-      ? ((progress.medicationReportCount / progress.totalRegistered) * 100).toFixed(1)
       : '0';
 
   const driveUploadersCount = useMemo(
@@ -214,13 +215,13 @@ export function ProgressTableClient({
         <StatTile
           label="Registered Users"
           value={formatNumber(progress.totalRegistered)}
-          hint={`${progress.compliantCount} compliant / ${progress.nonCompliantCount} non-compliant`}
+          hint={`${progress.compliantCount} proper / ${improperCount} improper / ${noUploadsCount} no uploads`}
         />
         <StatTile
-          label="Usage Compliance"
+          label="Proper Usage Rate"
           value={`${complianceRate}%`}
           tone={Number(complianceRate) >= 50 ? 'good' : 'warn'}
-          hint={`${progress.compliantCount} proper usage (Android >10MB | iOS file)`}
+          hint={`${progress.compliantCount} proper usage (Android >10MB | iOS stream)`}
         />
         <StatTile
           label="Uploaded Yesterday"
@@ -235,7 +236,7 @@ export function ProgressTableClient({
           hint={`${activeTestRate}% completed active tests in latest file`}
         />
         <StatTile
-          label="Verified Drive Files"
+          label="Verified Drive Uploaders"
           value={formatNumber(driveUploadersCount)}
           tone="good"
           hint={`${driveUploadersCount} uploaders | ${progress.integrityAlertCount} integrity alerts`}
@@ -260,17 +261,6 @@ export function ProgressTableClient({
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab('recent_yesterday')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                activeTab === 'recent_yesterday'
-                  ? 'border border-good/40 bg-good/15 font-semibold text-good'
-                  : 'text-ink-dim hover:bg-surface-2'
-              }`}
-            >
-              Uploaded Yesterday ({recentYesterdayCount})
-            </button>
-            <button
-              type="button"
               onClick={() => setActiveTab('proper')}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                 activeTab === 'proper'
@@ -289,7 +279,29 @@ export function ProgressTableClient({
                   : 'text-ink-dim hover:bg-surface-2'
               }`}
             >
-              Improper Usage ({progress.nonCompliantCount})
+              Improper Usage ({improperCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('no_uploads')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'no_uploads'
+                  ? 'border border-bad/40 bg-bad/15 font-semibold text-bad'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              No Uploads ({noUploadsCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('recent_yesterday')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                activeTab === 'recent_yesterday'
+                  ? 'border border-good/40 bg-good/15 font-semibold text-good'
+                  : 'text-ink-dim hover:bg-surface-2'
+              }`}
+            >
+              Uploaded Yesterday ({recentYesterdayCount})
             </button>
             <button
               type="button"
@@ -301,17 +313,6 @@ export function ProgressTableClient({
               }`}
             >
               Active Tests ({progress.activeTestUserCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('has_uploads')}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                activeTab === 'has_uploads'
-                  ? 'border border-good/40 bg-good/15 font-semibold text-good'
-                  : 'text-ink-dim hover:bg-surface-2'
-              }`}
-            >
-              Drive Uploaders ({driveUploadersCount})
             </button>
           </div>
 
@@ -416,14 +417,26 @@ export function ProgressTableClient({
                   </Badge>
                 </Cell>
 
-                {/* 3. Usage Compliance Badge */}
+                {/* 3. Refined 3-Tier Usage Compliance Badge */}
                 <Cell>
-                  <Badge tone={p.complianceStatus === 'proper_usage' ? 'good' : 'bad'}>
-                    {p.complianceStatus === 'proper_usage' ? 'PROPER USAGE' : 'IMPROPER USAGE'}
-                  </Badge>
-                  {p.complianceReason && (
-                    <div className="mt-1 max-w-[180px] truncate text-[11px] text-ink-faint" title={p.complianceReason}>
-                      {p.complianceReason}
+                  {p.complianceStatus === 'proper_usage' ? (
+                    <div>
+                      <Badge tone="good">PROPER USAGE</Badge>
+                      <div className="mt-1 max-w-[180px] truncate text-[11px] font-medium text-good" title={p.complianceReason}>
+                        {p.complianceReason}
+                      </div>
+                    </div>
+                  ) : p.complianceStatus === 'improper_usage' ? (
+                    <div>
+                      <Badge tone="warn">IMPROPER USAGE</Badge>
+                      <div className="mt-1 max-w-[180px] truncate text-[11px] font-medium text-warn" title={p.complianceReason}>
+                        {p.complianceReason}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <Badge tone="bad">NO UPLOADS</Badge>
+                      <div className="mt-1 text-[11px] text-bad font-medium">0 files in Google Drive</div>
                     </div>
                   )}
                 </Cell>

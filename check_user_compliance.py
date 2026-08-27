@@ -5,7 +5,7 @@ import urllib.request
 from datetime import datetime
 
 print("==========================================================================")
-print("  Dopa-X File Count & Recency Highlight Audit (Green = Yesterday, Red = Missing)")
+print("  Dopa-X Refined Usage Compliance Audit (Proper Usage, Improper Usage, No Uploads)")
 print("==========================================================================")
 
 user_profile = os.environ.get('USERPROFILE', '')
@@ -126,11 +126,11 @@ if manifest_path and os.path.exists(manifest_path):
                 pass
 
 print(f"Loaded {len(correlated_users)} registered users.")
-print(f"Counting actual files & auditing upload recency...")
+print(f"Auditing usage compliance (Proper Usage vs Improper Usage vs No Uploads)...")
 
 results = []
 TEN_MB = 10 * 1024 * 1024
-RECENT_THRESHOLD_DATE = "2026-08-26" # Yesterday / Study upload cutoff date
+RECENT_THRESHOLD_DATE = "2026-08-26"
 now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
 VERIFIED_ACTIVE_TEST_USERS = {
@@ -160,7 +160,7 @@ for u in correlated_users:
 
     user_files = drive_files_by_code.get(code, []) or drive_files_by_code.get(uid, [])
     
-    total_files = len(user_files) # Actual # of files
+    total_files = len(user_files)
     total_bytes = sum(f['bytes'] for f in user_files)
     
     daily_loads = {}
@@ -172,27 +172,32 @@ for u in correlated_users:
         daily_loads[d]['files'].append(f)
 
     latest_date = max(daily_loads.keys(), default='None')
-    
-    # Recency check: Is latest file date yesterday / recent (2026-08-26)?
     is_recent_upload = (latest_date == RECENT_THRESHOLD_DATE)
     recency_status = "RECENT" if is_recent_upload else "OUTDATED"
 
-    if 'ios' in platform or 'iphone' in platform or 'apple' in platform:
-        is_compliant = total_files > 0 and total_bytes > 100000
-        compliance_reason = "Valid Passive Stream (iPhone)" if is_compliant else "No Files Uploaded (iPhone)"
+    # 3-Tier Usage Classification: PROPER_USAGE | IMPROPER_USAGE | NO_UPLOADS
+    if total_files == 0:
+        compliance_status = 'NO_UPLOADS'
+        compliance_reason = 'No Files Uploaded to Drive'
+    elif 'ios' in platform or 'iphone' in platform or 'apple' in platform:
+        if is_recent_upload and total_bytes > 100000:
+            compliance_status = 'PROPER_USAGE'
+            compliance_reason = 'Valid Daily Stream (iPhone)'
+        else:
+            compliance_status = 'IMPROPER_USAGE'
+            compliance_reason = 'Missed Recent Upload (iPhone)' if not is_recent_upload else 'Small File Stream'
     else:
         max_daily_bytes = max([dl['total_bytes'] for dl in daily_loads.values()], default=0)
-        is_compliant = max_daily_bytes > TEN_MB
-        if is_compliant:
-            compliance_reason = f"Daily Load > 10MB ({round(max_daily_bytes/(1024*1024), 2)}MB)"
-        elif total_files > 0:
-            compliance_reason = f"File Size Under 10MB ({round(max_daily_bytes/(1024*1024), 2)}MB)"
+        if is_recent_upload and max_daily_bytes > TEN_MB:
+            compliance_status = 'PROPER_USAGE'
+            compliance_reason = f"Daily Load > 10MB ({round(max_daily_bytes/(1024*1024), 1)}MB)"
+        elif not is_recent_upload:
+            compliance_status = 'IMPROPER_USAGE'
+            compliance_reason = f"Missed Yesterday Upload (Last: {latest_date})"
         else:
-            compliance_reason = "No Files Uploaded (Android)"
+            compliance_status = 'IMPROPER_USAGE'
+            compliance_reason = f"Daily Load Under 10MB ({round(max_daily_bytes/(1024*1024), 2)}MB)"
 
-    has_sensor_data = total_files > 0
-    has_activity_data = total_files > 0
-    
     medication_reported_on_latest_day = code in VERIFIED_MEDICATION_USERS or uid in VERIFIED_MEDICATION_USERS
     latest_medication_status = "REPORTED" if medication_reported_on_latest_day else "MISSING"
 
@@ -218,7 +223,7 @@ for u in correlated_users:
     if not medication_reported_on_latest_day:
         integrity_alerts.append("No Medication Reported on Last Day")
 
-    integrity_status = "Healthy" if (total_files > 0 and is_compliant and is_recent_upload) else "Outdated / Non-compliant"
+    integrity_status = "Healthy" if (total_files > 0 and compliance_status == 'PROPER_USAGE') else "Outdated / Improper"
 
     results.append({
         'uid': uid,
@@ -231,7 +236,7 @@ for u in correlated_users:
         'total_mb': round(total_bytes / (1024 * 1024), 2),
         'latest_date': latest_date,
         'recency_status': recency_status,
-        'compliance_status': 'PROPER_USAGE' if is_compliant else 'IMPROPER_USAGE',
+        'compliance_status': compliance_status,
         'compliance_reason': compliance_reason,
         'integrity_status': integrity_status,
         'integrity_alerts': "; ".join(integrity_alerts) if integrity_alerts else "None",
@@ -253,6 +258,11 @@ with open(output_csv, mode='w', newline='', encoding='utf-8') as f:
     writer.writeheader()
     writer.writerows(results)
 
+proper_cnt = len([r for r in results if r['compliance_status'] == 'PROPER_USAGE'])
+improper_cnt = len([r for r in results if r['compliance_status'] == 'IMPROPER_USAGE'])
+no_upload_cnt = len([r for r in results if r['compliance_status'] == 'NO_UPLOADS'])
+
 print("--------------------------------------------------------------------------")
-print(f"SUCCESS: Exported file count & upload recency audit report '{output_csv}' with {len(results)} records.")
+print(f"SUCCESS: Exported 3-tier usage compliance audit '{output_csv}':")
+print(f"  Proper Usage: {proper_cnt} | Improper Usage: {improper_cnt} | No Uploads: {no_upload_cnt}")
 print("==========================================================================")
